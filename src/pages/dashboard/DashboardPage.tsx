@@ -130,7 +130,8 @@ export function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-slate-900 rounded-lg p-4 text-white">
+          <div className="ware-housing-cnt-1 fs-a-1 bg-slate-900 rounded-lg p-4 text-white">
+            
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400">Warehouse</p>
@@ -140,9 +141,10 @@ export function DashboardPage() {
                 <Package className="w-4 h-4 text-slate-400" />
               </div>
             </div>
+
           </div>
 
-          <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <div className="ware-housing-info-cnt-1 bg-white rounded-lg border border-slate-200 p-4">
             <span className="text-[10px] font-medium text-slate-500 uppercase">Avg. Ticket</span>
             <p className="text-xl font-bold text-slate-900 mt-1">$90.42 <span className="text-[10px] text-emerald-500 font-medium">↑ 4%</span></p>
           </div>
