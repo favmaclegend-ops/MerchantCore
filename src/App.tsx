@@ -36,7 +36,10 @@ export default function App() {
             <Route path="/customers" element={<CustomersPage />} />
           </Routes>
         </div>
-        <MobileNavbar />
+        {
+          isUserLoggedIn &&
+          <MobileNavbar />
+        }
       </div>
     </div>
   )
