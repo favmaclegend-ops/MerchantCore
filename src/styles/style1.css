@@ -60,7 +60,7 @@
     gap: 1rem;
     border-radius: 1rem !important;
     border: none;
-    box-shadow: var(--primary-box-shadow);
+    box-shadow: 1px 1px .9rem rgba(128, 128, 128, 0.447);
 }
 
 /*Dashboard greeting cnt*/
