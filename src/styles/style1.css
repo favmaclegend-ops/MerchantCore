@@ -6,8 +6,6 @@
     align-items: center;
     width: 100%;
     padding: 0;
-    border: 1px solid green;
-
 }
 
 /*Sub app wrapper*/
@@ -17,6 +15,10 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+}
+
+.wrapper-1 .sub_wrapper2-1 {
+    width: 100%;
 }
 
 /*Mobile Header*/
@@ -34,6 +36,10 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-    width: 100% !important;
-
+    width: 100%;
+    padding-inline-start: 1rem;
+    padding-inline-end: 1rem;
+}
+.dashboard-sub-cnt-1{
+    width: 100%;
 }

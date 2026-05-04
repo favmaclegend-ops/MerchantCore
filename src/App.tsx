@@ -16,7 +16,7 @@ export default function App() {
       <div className="wrapper-1 flex-1 flex flex-col min-w-0 overflow-hidden">
         <DesktopHeader />
         <MobileHeader />
-        <div className="flex-1 overflow-y-auto overflow-x-hidden pb-16 lg:pb-0">
+        <div className="sub_wrapper2-1 flex-1 overflow-y-auto overflow-x-hidden pb-16 lg:pb-0">
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/inventory" element={<InventoryPage />} />

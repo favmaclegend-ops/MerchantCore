@@ -4,13 +4,14 @@ import { cn } from '@/lib/utils'
 
 export function DashboardPage() {
   return (
-    <div className=" p-3 lg:p-4 space-y-3 lg:space-y-4 m-dashboard-page-1">
-      <div>
+    <div className="m-dashboard-page-1">
+      
+      <div className='dashboard-sub-cnt-1'>
         <h1 className="text-lg font-bold text-slate-900">Good morning, John</h1>
         <p className="text-xs text-slate-500 mt-0.5">Here's what's happening with MerchantCore today.</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="dashboard-sub-cnt-1 grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Daily Revenue</span>
@@ -60,7 +61,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
           <div className="flex items-center justify-between p-4 border-b border-slate-100">
             <h3 className="text-xs font-semibold text-slate-900">Recent Transactions</h3>
