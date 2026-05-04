@@ -1,6 +1,7 @@
 import { ArrowUpRight, AlertTriangle, DollarSign, Package, Eye } from 'lucide-react'
 import { transactions, alerts } from '@/data/mockData'
 import { cn } from '@/lib/utils'
+import DLineChart from '@/components/layout/chart'
 
 export function DashboardPage() {
   return (
@@ -63,7 +64,10 @@ export function DashboardPage() {
         </div>
       </div>
         <div className='total_sales_stat-2'>
-          
+          <div className='tss-heaad-2'>
+            <span>Sales</span>
+          </div>
+          <DLineChart />
         </div>
       <div className="dash-rcnt-trc-1 dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
         

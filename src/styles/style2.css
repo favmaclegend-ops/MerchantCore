@@ -1,0 +1,16 @@
+/*MOBILE FIRST APPROACH*/
+.total_sales_stat-2 {
+    width: 100%;
+    padding: 1rem;
+    background-color: white;
+    border-radius: var(--primary-bd-radius);
+    box-shadow: var(--primary-box-shadow-a);
+    display:flex;
+    flex-direction: column;
+    gap: .5rem;
+    align-items: center;
+}
+
+.tss-heaad-2 {
+    width: 100%;
+}
