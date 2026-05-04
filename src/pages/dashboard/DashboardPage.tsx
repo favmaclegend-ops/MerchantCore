@@ -6,14 +6,14 @@ import DLineChart from '@/components/layout/chart'
 export function DashboardPage() {
   return (
     <div className="m-dashboard-page-1">
-      
+
       <div className='dashboard-sub-cnt-1 dash-greeting-cnt-1'>
         <h1 className="text-lg font-bold text-slate-900">Good morning, John</h1>
         <p className="text-xs text-slate-500 mt-0.5">Here's what's happening with MerchantCore today.</p>
       </div>
 
       <div className="dashboard-sub-cnt-1 grid grid-cols-2 lg:grid-cols-4 gap-3">
-        
+
         <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Daily Revenue</span>
@@ -63,16 +63,27 @@ export function DashboardPage() {
           </p>
         </div>
       </div>
-        <div className='total_sales_stat-2'>
-          <div className='tss-heaad-2'>
-            <span>Sales</span>
+      <div className='total_sales_stat-2'>
+        <div className='tss-heaad-2'>
+          <h3>Sales</h3>
+
+          <div className='tss-calender-2'>
+            <img src='https://img.icons8.com/?size=100&id=23&format=png&color=7a7a7a' width="20" height="20" alt='calender' />
+            <select className='tss-select-2' name="callender" id="cal" hidden>
+              <option>Monthly</option>
+              <option>Weekly</option>
+              <option>Daily</option>
+            </select>
+            <span>Monthly</span>
           </div>
-          <DLineChart />
         </div>
+        <DLineChart />
+
+      </div>
       <div className="dash-rcnt-trc-1 dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
-        
+
         <div className="rcnt-trc-sub-cnt-1 lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
-          
+
           <div className="rc-cnt1-1 flex items-center justify-between p-4 border-b border-slate-100">
             <h3 className="rc-h1-1 text-xs font-semibold text-slate-900">Recent Transactions</h3>
             <button className="text-[10px] text-slate-500 hover:text-slate-700 flex-shrink-0">View All</button>
@@ -137,7 +148,7 @@ export function DashboardPage() {
           </div>
 
           <div className="ware-housing-cnt-1 fs-a-1 bg-slate-900 rounded-lg p-4 text-white">
-            
+
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400">Warehouse</p>
