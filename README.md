@@ -1,73 +1,103 @@
-# React + TypeScript + Vite
+# MerchantCore
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive React dashboard application for merchant management. Built with React, TypeScript, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Dashboard** - Real-time overview of revenue, sales, stock alerts, and critical notifications
+- **Inventory Manager** - Track stock levels, SKUs, and automate reorder alerts
+- **POS Terminal** - Point-of-sale system with product catalog, cart, and multi-payment support
+- **Credit Ledger** - Manage customer credit accounts, payment logs, and debt aging
+- **Customer Directory** - View customer profiles, purchase history, and loyalty tiers
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 |
+| Language | TypeScript 6 |
+| Build Tool | Vite 8 |
+| Styling | Tailwind CSS v4 |
+| Routing | React Router v7 |
+| Icons | Lucide React |
+| Linting | ESLint + typescript-eslint |
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js >= 20
+- npm >= 10
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Clone the repository
+git clone https://github.com/anomalyco/merchant-core.git
+cd merchant-core
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The app will be available at `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Available Scripts
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start the development server with HMR |
+| `npm run build` | Type-check and build for production |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | Run ESLint |
+
+## Project Structure
+
 ```
+merchant-core/
+├── src/
+│   ├── components/
+│   │   └── layout/          # DesktopSidebar, DesktopHeader, MobileNavbar, MobileHeader
+│   ├── data/
+│   │   └── mockData.ts      # Mock data and TypeScript interfaces
+│   ├── lib/
+│   │   └── utils.ts         # Utility functions (cn helper)
+│   ├── pages/
+│   │   ├── dashboard/       # DashboardPage
+│   │   ├── inventory/       # InventoryPage
+│   │   ├── pos/             # POSPage
+│   │   ├── credit/          # CreditLedgerPage
+│   │   └── customers/       # CustomersPage
+│   ├── App.tsx              # Main routing and layout
+│   ├── index.css            # Global styles and Tailwind imports
+│   └── main.tsx             # App entry point
+├── index.html
+├── vite.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+## Architecture
+
+- **Mobile-first responsive design**: Desktop sidebar/header hidden on mobile; bottom tab navigation shown instead
+- **Feature-based pages**: Each page is self-contained with its own components and state
+- **Mock data layer**: All data flows through `mockData.ts` for easy swap to real APIs
+- **Path aliases**: `@/*` maps to `src/*` for clean imports
+
+## Design System
+
+| Token | Value |
+|-------|-------|
+| Font Family | Inter (Google Fonts) |
+| Primary Color | Slate 900 |
+| Success | Emerald 500/600 |
+| Warning | Amber 500/600 |
+| Danger | Red 500/600 |
+| Info | Blue 500/600 |
+
+## License
+
+MIT
