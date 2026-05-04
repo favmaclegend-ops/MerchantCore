@@ -6,7 +6,7 @@ export function DashboardPage() {
   return (
     <div className="m-dashboard-page-1">
       
-      <div className='dashboard-sub-cnt-1'>
+      <div className='dashboard-sub-cnt-1 dash-greeting-cnt-1'>
         <h1 className="text-lg font-bold text-slate-900">Good morning, John</h1>
         <p className="text-xs text-slate-500 mt-0.5">Here's what's happening with MerchantCore today.</p>
       </div>
@@ -63,12 +63,14 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div className="dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
+      <div className="dash-rcnt-trc-1 dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        
+        <div className="rcnt-trc-sub-cnt-1 lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
           <div className="flex items-center justify-between p-4 border-b border-slate-100">
             <h3 className="text-xs font-semibold text-slate-900">Recent Transactions</h3>
             <button className="text-[10px] text-slate-500 hover:text-slate-700 flex-shrink-0">View All</button>
           </div>
+
           <div className="divide-y divide-slate-50">
             {transactions.map((tx) => (
               <div key={tx.id} className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
