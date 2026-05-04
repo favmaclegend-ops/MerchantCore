@@ -67,8 +67,8 @@ export function DashboardPage() {
         
         <div className="rcnt-trc-sub-cnt-1 lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
           
-          <div className="flex items-center justify-between p-4 border-b border-slate-100">
-            <h3 className="text-xs font-semibold text-slate-900">Recent Transactions</h3>
+          <div className="rc-cnt1-1 flex items-center justify-between p-4 border-b border-slate-100">
+            <h3 className="rc-h1-1 text-xs font-semibold text-slate-900">Recent Transactions</h3>
             <button className="text-[10px] text-slate-500 hover:text-slate-700 flex-shrink-0">View All</button>
           </div>
 
