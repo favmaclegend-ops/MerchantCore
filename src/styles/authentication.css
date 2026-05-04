@@ -29,6 +29,7 @@
     border-radius: 2rem;
     padding: .6rem 3rem .6rem 3rem;
     color: gray;
+    transition: background .5s ease;
 }
 
 .log-sig-cnt-btn-auth button.active {
