@@ -62,7 +62,9 @@ export function DashboardPage() {
           </p>
         </div>
       </div>
-
+        <div className='total_sales_stat-2'>
+          
+        </div>
       <div className="dash-rcnt-trc-1 dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
         
         <div className="rcnt-trc-sub-cnt-1 lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
