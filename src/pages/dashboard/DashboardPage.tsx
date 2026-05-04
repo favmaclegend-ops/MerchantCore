@@ -12,7 +12,8 @@ export function DashboardPage() {
       </div>
 
       <div className="dashboard-sub-cnt-1 grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white rounded-lg border border-slate-200 p-4 min-w-0">
+        
+        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Daily Revenue</span>
             <button className="text-slate-400 hover:text-slate-600 flex-shrink-0"><Eye className="w-3.5 h-3.5" /></button>
@@ -29,7 +30,8 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 p-4 min-w-0">
+
+        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Credit Outstanding</span>
           </div>
@@ -48,12 +50,12 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 p-4 min-w-0">
+        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <span className="text-[10px] font-medium text-slate-500 uppercase">Total Sales</span>
           <p className="text-xl font-bold text-slate-900 mt-1">142 <span className="text-[10px] font-normal text-slate-500">Units</span></p>
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 p-4 min-w-0">
+        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <span className="text-[10px] font-medium text-slate-500 uppercase">Low Stock Alerts</span>
           <p className="text-xl font-bold text-amber-600 mt-1 flex items-center gap-1.5">
             8 Items <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
