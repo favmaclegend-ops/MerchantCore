@@ -1,0 +1,39 @@
+/*MOBILE FIRST APPROACH*/
+
+.app-1 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    border: 1px solid green;
+
+}
+
+/*Sub app wrapper*/
+.wrapper-1 {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+/*Mobile Header*/
+.m-header-1 {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    padding-block-start: 1.3rem;
+}
+
+/*Dahsboard Page*/
+.m-dashboard-page-1 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100% !important;
+
+}

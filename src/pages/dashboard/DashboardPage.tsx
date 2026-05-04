@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 export function DashboardPage() {
   return (
-    <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
+    <div className=" p-3 lg:p-4 space-y-3 lg:space-y-4 m-dashboard-page-1">
       <div>
         <h1 className="text-lg font-bold text-slate-900">Good morning, John</h1>
         <p className="text-xs text-slate-500 mt-0.5">Here's what's happening with MerchantCore today.</p>
