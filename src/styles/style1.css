@@ -7,8 +7,15 @@
     --primary-box-shadow-a: 1px 6px .9rem rgba(128, 128, 128, 0.447);
     --component-bg-cl-a: #0f172a;
     --componet-cl-a: white;
+    --font-size-a: 1rem;
+
 }
 
+/*general font-size a*/
+.fs-a-1 {
+    font-size: 1rem;
+    line-height: 1rem;
+}
 
 .app-1 {
     display: flex;
@@ -16,6 +23,7 @@
     align-items: center;
     width: 100%;
     padding: 0;
+    overflow-x: hidden;
 }
 
 /*Sub app wrapper*/
@@ -25,6 +33,7 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+    overflow-x: hidden;
 }
 
 .wrapper-1 .sub_wrapper2-1 {
@@ -121,4 +130,31 @@
     padding: 1rem .5rem 1rem .5rem;
     box-shadow: var(--primary-box-shadow);
     border-radius: var(--primary-bd-radius-small);
+}
+
+/*COntainer of the critical alert*/
+.critical-cnt-1 {
+    width: 100%;
+    padding: .5rem;
+    border-radius: var(--primary-bd-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.critical-cnt-1 .critical-sub-cnt-1 {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.alert-style-cnt-1 {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.alert-style-1 {
+    padding: .4rem;
 }

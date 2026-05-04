@@ -102,18 +102,19 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="space-y-3 min-w-0">
-          <div className="bg-white rounded-lg border border-slate-200">
+        <div className="critical-cnt-1 space-y-3 min-w-0">
+          <div className="critical-sub-cnt-1 bg-white rounded-lg border border-slate-200">
             <div className="p-4 border-b border-slate-100">
-              <h3 className="text-xs font-semibold text-slate-900">Critical Alerts</h3>
+              <h3 className="fs-a-1 text-xs font-semibold text-slate-900">Critical Alerts</h3>
             </div>
-            <div className="p-3 space-y-2">
+
+            <div className="p-3 space-y-2 alert-style-cnt-1">
               {alerts.map((alert) => (
-                <div key={alert.id} className={cn('p-2.5 rounded-lg border',
+                <div key={alert.id} className={`alert-style-1 ${cn('p-2.5 rounded-lg border',
                   alert.type === 'low-stock' && 'bg-amber-50 border-amber-200',
                   alert.type === 'overdue' && 'bg-red-50 border-red-200',
                   alert.type === 'system' && 'bg-slate-50 border-slate-200'
-                )}>
+                )}`}>
                   <div className="flex items-start gap-2">
                     <AlertTriangle className={cn('w-3.5 h-3.5 mt-0.5 flex-shrink-0',
                       alert.type === 'low-stock' && 'text-amber-500',
@@ -146,6 +147,7 @@ export function DashboardPage() {
             <p className="text-xl font-bold text-slate-900 mt-1">$90.42 <span className="text-[10px] text-emerald-500 font-medium">↑ 4%</span></p>
           </div>
         </div>
+
       </div>
     </div>
   )
