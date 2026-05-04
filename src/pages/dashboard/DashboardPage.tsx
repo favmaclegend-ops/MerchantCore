@@ -66,14 +66,15 @@ export function DashboardPage() {
       <div className="dash-rcnt-trc-1 dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
         
         <div className="rcnt-trc-sub-cnt-1 lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
+          
           <div className="flex items-center justify-between p-4 border-b border-slate-100">
             <h3 className="text-xs font-semibold text-slate-900">Recent Transactions</h3>
             <button className="text-[10px] text-slate-500 hover:text-slate-700 flex-shrink-0">View All</button>
           </div>
 
-          <div className="divide-y divide-slate-50">
+          <div className="recent-cards-sec-1 divide-y divide-slate-50">
             {transactions.map((tx) => (
-              <div key={tx.id} className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <div key={tx.id} className="recent-t-list-1 p-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
                     tx.type === 'sale' && 'bg-emerald-50 text-emerald-600',
