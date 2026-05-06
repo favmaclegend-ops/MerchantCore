@@ -3,11 +3,11 @@ import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Plus } from 'luci
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { path: '/dashboard', label: 'Sales', icon: LayoutGrid },
-  { path: '/inventory', label: 'Stock', icon: Package },
-  { path: '/pos', label: 'POS', icon: ShoppingCart },
-  { path: '/credit', label: 'Credit', icon: CreditCard },
-  { path: '/customers', label: 'More', icon: Users },
+  { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
+  { path: '/home/inventory', label: 'Stock', icon: Package },
+  { path: '/home/pos', label: 'POS', icon: ShoppingCart },
+  { path: '/home/credit', label: 'Credit', icon: CreditCard },
+  { path: '/home/customers', label: 'More', icon: Users },
 ]
 
 export function MobileNavbar() {
