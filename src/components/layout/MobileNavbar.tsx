@@ -3,7 +3,7 @@ import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Plus } from 'luci
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { path: '/', label: 'Sales', icon: LayoutGrid },
+  { path: '/dashboard', label: 'Sales', icon: LayoutGrid },
   { path: '/inventory', label: 'Stock', icon: Package },
   { path: '/pos', label: 'POS', icon: ShoppingCart },
   { path: '/credit', label: 'Credit', icon: CreditCard },

@@ -1,8 +1,38 @@
-
+import { logData } from "@/account/data/login_data";
+import { useRef } from "react"
+import { useNavigate } from "react-router-dom";
 
 
 
 export default function LoginPage() {
+
+    const username = useRef<HTMLInputElement>(null);
+    const email = useRef<HTMLInputElement>(null);
+    const password = useRef<HTMLInputElement>(null);
+    const submitBtn = useRef<HTMLInputElement>(null);
+    const form = useRef<HTMLFormElement>(null);
+
+    const { userDatabase } = logData();
+    const navigate = useNavigate();
+
+    const handleAuthentication = (e: Event) => {
+        e.preventDefault();
+
+        if (userDatabase[`${username.current?.value}`]) {
+            if (email.current?.value === userDatabase[`${username.current?.value}`].email &&
+                password.current?.value === userDatabase[`${username.current?.value}`].password
+            ) {
+                navigate('/dashboard', { replace: true });
+            }
+            else {
+                alert('invalid Credential')
+
+            }
+        }
+        else {
+            alert('invalid Credential');
+        }
+    }
 
     return (
         <>
@@ -12,22 +42,22 @@ export default function LoginPage() {
                     <p>Please Enter your personal info</p>
                 </div>
 
-                <form className="form">
+                <form ref={form} className="form" onSubmit={(e) => handleAuthentication(e)}>
 
                     <div>
-                        <input id="user-input" className="inp" placeholder="Username" type="text" required />
+                        <input ref={username} id="user-input" className="inp" placeholder="Username" type="text" required />
                     </div>
 
                     <div>
-                        <input id="user-email" className="inp" placeholder="Email Address" required type="email" />
+                        <input ref={email} id="user-email" className="inp" placeholder="Email Address" required type="email" />
                     </div>
 
                     <div>
-                        <input id="user-password" className="inp" placeholder="Password" type="password" required />
+                        <input ref={password} id="user-password" className="inp" placeholder="Password" type="password" required />
                     </div>
 
                     <div>
-                        <button id="sub-btn" className="sub-btn-auth" type="submit">Submit</button>
+                        <button ref={submitBtn} id="sub-btn" className="sub-btn-auth" type="submit">Submit</button>
                     </div>
 
                 </form>
