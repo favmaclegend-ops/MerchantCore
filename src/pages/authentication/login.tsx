@@ -14,10 +14,10 @@ export default function LoginPage() {
     const { userDatabase } = logData();
     const navigate = useNavigate();
 
-    const key = username.current?.value;
-
-    const handleAuthentication = (e: Event) => {
+    
+    const handleAuthentication = (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
+        const key = username.current?.value;
 
         if (userDatabase[`${key}`]) {
             if (email.current?.value === userDatabase[`${key}`].email &&
@@ -26,11 +26,11 @@ export default function LoginPage() {
                 navigate('/home/dashboard', { replace: true });
             }
             else {
-                alert('invalid Credential');
+                alert('2 invalid Credential');
             }
         }
         else {
-            alert('invalid Credential');
+            alert('1 invalid Credential');
         }
     }
 
