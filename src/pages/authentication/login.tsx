@@ -22,11 +22,10 @@ export default function LoginPage() {
             if (email.current?.value === userDatabase[`${username.current?.value}`].email &&
                 password.current?.value === userDatabase[`${username.current?.value}`].password
             ) {
-                navigate('/dashboard', { replace: true });
+                navigate('/home/dashboard', { replace: true });
             }
             else {
                 alert('invalid Credential')
-
             }
         }
         else {

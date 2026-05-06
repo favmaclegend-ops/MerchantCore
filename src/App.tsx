@@ -10,7 +10,7 @@ export default function App() {
 
     <Routes>
       <Route path='/' element={<DefaultPage />}/>
-      <Route path='/home' element={<Home />} />
+      <Route path='/home/*' element={<Home />} />
     </Routes>
   )
 }
