@@ -9,23 +9,24 @@ export default function LoginPage() {
     const username = useRef<HTMLInputElement>(null);
     const email = useRef<HTMLInputElement>(null);
     const password = useRef<HTMLInputElement>(null);
-    const submitBtn = useRef<HTMLInputElement>(null);
     const form = useRef<HTMLFormElement>(null);
 
     const { userDatabase } = logData();
     const navigate = useNavigate();
 
+    const key = username.current?.value;
+
     const handleAuthentication = (e: Event) => {
         e.preventDefault();
 
-        if (userDatabase[`${username.current?.value}`]) {
-            if (email.current?.value === userDatabase[`${username.current?.value}`].email &&
-                password.current?.value === userDatabase[`${username.current?.value}`].password
+        if (userDatabase[`${key}`]) {
+            if (email.current?.value === userDatabase[`${key}`].email &&
+                password.current?.value === userDatabase[`${key}`].password
             ) {
                 navigate('/home/dashboard', { replace: true });
             }
             else {
-                alert('invalid Credential')
+                alert('invalid Credential');
             }
         }
         else {
@@ -56,7 +57,7 @@ export default function LoginPage() {
                     </div>
 
                     <div>
-                        <button ref={submitBtn} id="sub-btn" className="sub-btn-auth" type="submit">Submit</button>
+                        <button id="sub-btn" className="sub-btn-auth" type="submit">Submit</button>
                     </div>
 
                 </form>

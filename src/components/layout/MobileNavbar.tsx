@@ -11,7 +11,7 @@ const navItems = [
 ]
 
 export function MobileNavbar() {
-  const location = useLocation()
+  const location = useLocation();
 
   return (
     <nav className="m-nav-1 lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex items-center justify-around py-2 px-1 z-40">

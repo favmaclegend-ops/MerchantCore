@@ -1,8 +1,16 @@
 
 
+interface User {
+    username: string,
+    fullname: string,
+    email: string,
+    password: string
+}
+
+
 export function logData() {
 
-    const userDatabase: object = {
+    const userDatabase: Record<string, User> = {
 
         'ElktrumElk': {
             username: 'ElktrumElk',
