@@ -1,6 +1,7 @@
 import { logData } from "@/account/data/login_data";
 import { useRef } from "react"
 import { useNavigate } from "react-router-dom";
+import AlertDialog from "../../components/layout/alert_dialog";
 
 
 
@@ -36,6 +37,7 @@ export default function LoginPage() {
 
     return (
         <>
+        <AlertDialog alert={{message: 'Hello', type: 'success'}}/>
             <div className="login-cnt-auth">
                 <div className="log-info-auth">
                     <h1>Login</h1>
