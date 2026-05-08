@@ -1,17 +1,20 @@
 import { ArrowUpRight, AlertTriangle, DollarSign, Package, Eye } from 'lucide-react'
 import { transactions, alerts } from '@/data/mockData'
 import { cn } from '@/lib/utils'
+import DLineChart from '@/components/layout/chart'
 
 export function DashboardPage() {
   return (
-    <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
-      <div>
+    <div className="m-dashboard-page-1">
+
+      <div className='dashboard-sub-cnt-1 dash-greeting-cnt-1'>
         <h1 className="text-lg font-bold text-slate-900">Good morning, John</h1>
         <p className="text-xs text-slate-500 mt-0.5">Here's what's happening with MerchantCore today.</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white rounded-lg border border-slate-200 p-4 min-w-0">
+      <div className="dashboard-sub-cnt-1 grid grid-cols-2 lg:grid-cols-4 gap-3">
+
+        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Daily Revenue</span>
             <button className="text-slate-400 hover:text-slate-600 flex-shrink-0"><Eye className="w-3.5 h-3.5" /></button>
@@ -28,7 +31,8 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 p-4 min-w-0">
+
+        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Credit Outstanding</span>
           </div>
@@ -47,28 +51,47 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 p-4 min-w-0">
+        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <span className="text-[10px] font-medium text-slate-500 uppercase">Total Sales</span>
           <p className="text-xl font-bold text-slate-900 mt-1">142 <span className="text-[10px] font-normal text-slate-500">Units</span></p>
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 p-4 min-w-0">
+        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
           <span className="text-[10px] font-medium text-slate-500 uppercase">Low Stock Alerts</span>
           <p className="text-xl font-bold text-amber-600 mt-1 flex items-center gap-1.5">
             8 Items <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
           </p>
         </div>
       </div>
+      <div className='total_sales_stat-2'>
+        <div className='tss-heaad-2'>
+          <h3>Sales</h3>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
-          <div className="flex items-center justify-between p-4 border-b border-slate-100">
-            <h3 className="text-xs font-semibold text-slate-900">Recent Transactions</h3>
+          <div className='tss-calender-2'>
+            <img src='https://img.icons8.com/?size=100&id=23&format=png&color=7a7a7a' width="20" height="20" alt='calender' />
+            <select className='tss-select-2' name="callender" id="cal" hidden>
+              <option>Monthly</option>
+              <option>Weekly</option>
+              <option>Daily</option>
+            </select>
+            <span>Monthly</span>
+          </div>
+        </div>
+        <DLineChart />
+
+      </div>
+      <div className="dash-rcnt-trc-1 dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        <div className="rcnt-trc-sub-cnt-1 lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
+
+          <div className="rc-cnt1-1 flex items-center justify-between p-4 border-b border-slate-100">
+            <h3 className="rc-h1-1 text-xs font-semibold text-slate-900">Recent Transactions</h3>
             <button className="text-[10px] text-slate-500 hover:text-slate-700 flex-shrink-0">View All</button>
           </div>
-          <div className="divide-y divide-slate-50">
+
+          <div className="recent-cards-sec-1 divide-y divide-slate-50">
             {transactions.map((tx) => (
-              <div key={tx.id} className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <div key={tx.id} className="recent-t-list-1 p-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
                     tx.type === 'sale' && 'bg-emerald-50 text-emerald-600',
@@ -96,18 +119,19 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="space-y-3 min-w-0">
-          <div className="bg-white rounded-lg border border-slate-200">
+        <div className="critical-cnt-1 space-y-3 min-w-0">
+          <div className="critical-sub-cnt-1 bg-white rounded-lg border border-slate-200">
             <div className="p-4 border-b border-slate-100">
-              <h3 className="text-xs font-semibold text-slate-900">Critical Alerts</h3>
+              <h3 className="fs-a-1 text-xs font-semibold text-slate-900">Critical Alerts</h3>
             </div>
-            <div className="p-3 space-y-2">
+
+            <div className="p-3 space-y-2 alert-style-cnt-1">
               {alerts.map((alert) => (
-                <div key={alert.id} className={cn('p-2.5 rounded-lg border',
+                <div key={alert.id} className={`alert-style-1 ${cn('p-2.5 rounded-lg border',
                   alert.type === 'low-stock' && 'bg-amber-50 border-amber-200',
                   alert.type === 'overdue' && 'bg-red-50 border-red-200',
                   alert.type === 'system' && 'bg-slate-50 border-slate-200'
-                )}>
+                )}`}>
                   <div className="flex items-start gap-2">
                     <AlertTriangle className={cn('w-3.5 h-3.5 mt-0.5 flex-shrink-0',
                       alert.type === 'low-stock' && 'text-amber-500',
@@ -123,7 +147,8 @@ export function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-slate-900 rounded-lg p-4 text-white">
+          <div className="ware-housing-cnt-1 fs-a-1 bg-slate-900 rounded-lg p-4 text-white">
+
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-[10px] text-slate-400">Warehouse</p>
@@ -133,13 +158,15 @@ export function DashboardPage() {
                 <Package className="w-4 h-4 text-slate-400" />
               </div>
             </div>
+
           </div>
 
-          <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <div className="ware-housing-info-cnt-1 bg-white rounded-lg border border-slate-200 p-4">
             <span className="text-[10px] font-medium text-slate-500 uppercase">Avg. Ticket</span>
             <p className="text-xl font-bold text-slate-900 mt-1">$90.42 <span className="text-[10px] text-emerald-500 font-medium">↑ 4%</span></p>
           </div>
         </div>
+
       </div>
     </div>
   )

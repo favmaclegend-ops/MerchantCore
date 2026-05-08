@@ -1,0 +1,177 @@
+/*MOBILE FIRST APPROACH*/
+
+:root {
+    --primary-bd-radius: 1rem;
+    --primary-bd-radius-small: .5rem;
+    --primary-box-shadow: 0 6px 1rem rgb(227, 222, 222);
+    --primary-box-shadow-a: 1px 6px .9rem rgba(128, 128, 128, 0.447);
+    --component-bg-cl-a: #0f172a;
+    --componet-cl-a: white;
+    --font-size-a: 1rem;
+
+}
+
+/*general font-size a*/
+.fs-a-1 {
+    font-size: 1rem;
+    line-height: 1rem;
+}
+
+.app-1 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/*Sub app wrapper*/
+.wrapper-1 {
+    width: 100%;
+    overflow-x: hidden;
+    padding-bottom: 3rem;
+}
+
+.wrapper-1 .sub_wrapper2-1 {
+    width: 100%;
+    padding-bottom: 1.5rem;
+    padding-block-start: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+/*Mobile Header*/
+.m-header-1 {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    padding-block-start: 1.3rem;
+}
+
+/*Dahsboard container. Comment: class name should be change*/
+.m-dashboard-page-1 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    width: 100%;
+    padding-inline-start: .5rem;
+    padding-inline-end: .5rem;
+}
+
+/*Sub containers of the dashboard*/
+.dashboard-sub-cnt-1 {
+    width: 100%;
+}
+
+/*Dashboard stats cards*/
+.dash-cards-1 {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-radius: 1rem !important;
+    border: none;
+    box-shadow: var(--primary-box-shadow-a);
+}
+
+/*Dashboard greeting cnt*/
+.dash-greeting-cnt-1 {
+    padding: 1rem;
+    border-radius: 1rem;
+    box-shadow: 0 0 1rem rgb(227, 222, 222);
+    background-color: var(--component-bg-cl-a);
+    
+}
+
+.dash-greeting-cnt-1 h1 {
+    font-size: 1.3rem;
+    color: var(--componet-cl-a);
+}
+
+.dash-rcnt-trc-1 {
+    padding: 0rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rcnt-trc-sub-cnt-1 {
+    padding: 1rem;
+    width: 100%;
+    border-radius: var(--primary-bd-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+
+/*The sub container rcnt-trc-sub-cnt1-1 */
+.rc-cnt1-1 {
+    padding-bottom: .5rem;
+}
+
+.rc-h1-1 {
+    font-size: 1rem;
+    line-height: 1rem;
+}
+
+/*The recent card section*/
+.recent-cards-sec-1 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+
+.recent-t-list-1 {
+    width: 100%;
+    padding: 1rem .5rem 1rem .5rem;
+    box-shadow: var(--primary-box-shadow);
+    border-radius: var(--primary-bd-radius-small);
+}
+
+/*COntainer of the critical alert*/
+.critical-cnt-1 {
+    width: 100%;
+    padding: .5rem;
+    border-radius: var(--primary-bd-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.critical-cnt-1 .critical-sub-cnt-1 {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.alert-style-cnt-1 {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.alert-style-1 {
+    padding: .4rem;
+}
+
+.ware-housing-cnt-1 {
+    padding: 1rem;
+}
+
+.ware-housing-info-cnt-1 {
+    margin-block-end: 0rem;
+    padding: 1rem;
+}
+
+.m-nav-1 {
+    padding: .5rem;
+}
