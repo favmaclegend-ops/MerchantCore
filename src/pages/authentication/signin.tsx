@@ -1,15 +1,19 @@
-
-
-
+import { useState, useRef } from "react";
 
 
 export default function SigninPage() {
 
+    const email = useRef<HTMLInputElement>(null);
+    const password = useRef<HTMLInputElement>(null);
+    const form = useRef<HTMLFormElement>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
     return (
+
         <>
             <div className="login-cnt-auth">
                 <div className="log-info-auth">
-                    <h1>Sign in</h1>
+                    <h1>Sign Up</h1>
                     <p>Please Fill in the form below to continue</p>
                 </div>
 
@@ -32,7 +36,7 @@ export default function SigninPage() {
                     </div>
 
                     <div>
-                        <button id="sub-btn" className="sub-btn-auth" type="submit">Submit</button>
+                        <button id="sub-btn" className={`sub-btn-auth ${isLoading ? 'loading-bg-2' : ''}`} type="submit" disabled={isLoading}>{isLoading ? 'Validating...' : 'Submit'}</button>
                     </div>
 
                 </form>

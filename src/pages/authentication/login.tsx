@@ -7,32 +7,44 @@ import { login } from "@/account/authentication/auth";
 
 export default function LoginPage() {
 
-   
+
     const email = useRef<HTMLInputElement>(null);
     const password = useRef<HTMLInputElement>(null);
     const form = useRef<HTMLFormElement>(null);
-    const [alertInfo, setAlert] = useState({message: '', type: ''});
+    const [alertInfo, setAlert] = useState({ message: '', type: '' });
     const [isAlert, setIsAlert] = useState('none');
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
-   // const navigate = useNavigate();
-
-    login
-    
     const handleAuthentication = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
-        setIsLoading(true);
-        const data = await login({email: email.current?.value, password: password.current?.value});
-        setIsLoading(false);
-        console.log(data);
 
+        try {
+            setIsLoading(true);
+            const { data, response } = await login({ email: email.current?.value, password: password.current?.value });
+            setIsLoading(false);
+
+            if (response.ok) {
+                setIsAlert('flex');
+                setAlert({ message: 'Login SuccessFull', type: 'success' });
+                navigate('home/dashboard', {replace: true});
+                return;
+            }
+
+            setIsAlert('flex');
+            console.log(data)
+            setAlert({ message: data.detail, type: 'invalid' });
+            return;
+        }
+        catch (e) {
+            console.error(e);
+        }
     }
-    
+
     return (
         <>
 
-        <AlertDialog alert={{message: alertInfo.message, type: alertInfo.type}} display={isAlert} setdisplay={setIsAlert}/>
+            <AlertDialog alert={{ message: alertInfo.message, type: alertInfo.type }} display={isAlert} setdisplay={setIsAlert} />
 
             <div className="login-cnt-auth">
                 <div className="log-info-auth">

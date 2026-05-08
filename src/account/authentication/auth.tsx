@@ -32,6 +32,7 @@ async function register({email, username, full_name, password}: regParam) {
 
 // Login
 async function login({email, password}: logParam) {
+
   const response = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: {
@@ -47,7 +48,7 @@ async function login({email, password}: logParam) {
     localStorage.setItem('token', data.access_token);
   }
   
-  return data;
+  return {data, response};
 }
 
 
