@@ -27,7 +27,7 @@ ChartJS.register(
 );
 
 
-export default function DLineChart({labels, datas}) {
+export default function DLineChart({labels, datas}: {labels: string[], datas: number[]}) {
     // Specify 'line' in the generic type for better Autocomplete
     const data: ChartData<'line'> = {
         labels: labels,

@@ -40,7 +40,7 @@ export default function AlertDialog({ alert, display, setdisplay }: AlertProps) 
             <div className="alert_cnt-2" style={{
                 display: display
             }}>
-                <img src={alertType[`${alert.type}`]} />
+                <img src={alertType[alert.type as keyof alertIc]} />
                 <p>{alert.message}</p>
             </div>
         </>

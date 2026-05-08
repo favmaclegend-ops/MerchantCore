@@ -14,7 +14,7 @@ interface logParam {
 }
 
 
-const API_BASE = 'https://merchantcore-api.onrender.com/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 
 // Register
@@ -67,16 +67,17 @@ async function getProfile() {
   return response.json();
 }
 
-// Verify email
-async function verifyEmail(token) {
+// Verify email with OTP
+async function verifyEmail(email: string, otp: string) {
   const response = await fetch(`${API_BASE}/auth/verify-email`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ token }),
+    body: JSON.stringify({ email, otp }),
   });
-  return response.json();
+  const data = await response.json();
+  return { data, response };
 }
 
 export {register, login, getProfile, verifyEmail};
