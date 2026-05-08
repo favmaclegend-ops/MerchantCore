@@ -1,8 +1,12 @@
+import { useEffect } from "react"
+
 interface AlertProps {
-    alert : {
+    alert: {
         message: string,
         type: string
-    }
+    },
+    display: string,
+    setdisplay: CallableFunction
 }
 
 interface alertIc {
@@ -13,21 +17,32 @@ interface alertIc {
 }
 
 
-export default function AlertDialog({alert}: AlertProps) {
+const alertType: alertIc = {
+    success: 'https://img.icons8.com/?size=100&id=11695&format=png&color=05c505',
+    invalid: 'https://img.icons8.com/?size=100&id=3062&format=png&color=ff0000',
+    error: 'https://img.icons8.com/?size=100&id=360&format=png&color=ff0000',
+    warning: 'https://img.icons8.com/?size=100&id=24549&format=png&color=c8c801',
+}
 
-    const alertType: alertIc = {
-        success: 'https://img.icons8.com/?size=100&id=11695&format=png&color=000000',
-        invalid: 'https://img.icons8.com/?size=100&id=3062&format=png&color=000000',
-        error: 'https://img.icons8.com/?size=100&id=360&format=png&color=000000',
-        warning: 'https://img.icons8.com/?size=100&id=24549&format=png&color=000000',
-    }
+export default function AlertDialog({ alert, display, setdisplay }: AlertProps) {
+
+
+    useEffect(() => {
+        const id = setTimeout(() => {
+            setdisplay('none');
+        }, 1000);
+
+        return () => clearTimeout(id);
+    }, [display]);
 
     return (
         <>
-        <div className="alert_cnt-2">
-            <img src={alertType[`${alert.type}`]}/>
-            <p>{alert.message}</p>
-        </div>
+            <div className="alert_cnt-2" style={{
+                display: display
+            }}>
+                <img src={alertType[`${alert.type}`]} />
+                <p>{alert.message}</p>
+            </div>
         </>
     )
 };

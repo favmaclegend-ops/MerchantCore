@@ -1,5 +1,5 @@
 import { logData } from "@/account/data/login_data";
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import AlertDialog from "../../components/layout/alert_dialog";
 
@@ -11,33 +11,47 @@ export default function LoginPage() {
     const email = useRef<HTMLInputElement>(null);
     const password = useRef<HTMLInputElement>(null);
     const form = useRef<HTMLFormElement>(null);
+    const [alertInfo, setAlert] = useState({message: '', type: ''});
+    const [isAlert, setIsAlert] = useState('none');
 
     const { userDatabase } = logData();
     const navigate = useNavigate();
 
     
     const handleAuthentication = (e: React.SubmitEvent<HTMLFormElement>) => {
+
         e.preventDefault();
         const key = username.current?.value;
 
         if (userDatabase[`${key}`]) {
+
             if (email.current?.value === userDatabase[`${key}`].email &&
                 password.current?.value === userDatabase[`${key}`].password
             ) {
-                navigate('/home/dashboard', { replace: true });
+                setAlert({message: 'Login SuccessFul', type: 'success'});
+                setIsAlert('flex');
+                
+                setTimeout(() => {
+                    navigate('/home/dashboard', { replace: true });
+                }, 1500);
             }
             else {
-                alert('2 invalid Credential');
+                setIsAlert('flex');
+                setAlert({message: 'Invalid Credential', type: 'invalid'});
             }
         }
+
         else {
-            alert('1 invalid Credential');
+            setIsAlert('flex');
+            setAlert({message: 'Invalid Credential', type: 'invalid'});
         }
     }
-
+    
     return (
         <>
-        <AlertDialog alert={{message: 'Hello', type: 'success'}}/>
+
+        <AlertDialog alert={{message: alertInfo.message, type: alertInfo.type}} display={isAlert} setdisplay={setIsAlert}/>
+
             <div className="login-cnt-auth">
                 <div className="log-info-auth">
                     <h1>Login</h1>
