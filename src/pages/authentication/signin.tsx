@@ -35,10 +35,9 @@ export default function SigninPage() {
                 setIsAlert('flex');
                 setAlert({ message: data.message, type: 'success' });
                 console.log(data)
-               /* setTimeout(() => {
+               setTimeout(() => {
                     navigate('home/dashboard', { replace: true });
                 }, 1500);
-                */
                 return;
             }
 

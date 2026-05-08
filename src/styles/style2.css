@@ -9,7 +9,6 @@
     flex-direction: column;
     gap: .5rem;
     align-items: center;
-    color: #c8c801;
 }
 
 .tss-heaad-2 {
@@ -50,6 +49,8 @@
     align-items: center;
     gap: 1rem;
 }
+
+
 
 .alert_cnt-2 p {
     color: rgb(87, 87, 87);

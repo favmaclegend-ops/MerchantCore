@@ -2,29 +2,32 @@ import { useState } from 'react'
 import { Download, Plus, AlertTriangle, BarChart3, Eye } from 'lucide-react'
 import { products, inventoryStats, stockTrends } from '@/data/mockData'
 import { cn } from '@/lib/utils'
+import SearchInput from '@/components/layout/search_cmp'
 
 export function InventoryPage() {
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
   const filtered = filter === 'all' ? products : filter === 'low' ? products.filter(p => p.status === 'low-stock') : products.filter(p => p.status === 'out-of-stock')
 
   return (
-    <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="min-w-0">
-          <h1 className="text-lg font-bold text-slate-900">Inventory Manager</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Real-time stock tracking and SKU management</p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 flex items-center gap-1.5 transition-colors">
-            <Download className="w-3.5 h-3.5" /> Export
-          </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 flex items-center gap-1.5 transition-colors">
-            <Plus className="w-3.5 h-3.5" /> Add Item
-          </button>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+    <div className="inventory-cnt-3 p-3 lg:p-4 space-y-3 lg:space-y-4">
+      <div className="iventory_manager-cnt-3 flex items-center justify-between">
+
+        <div className="min-w-0">
+          <h1 className="text-lg font-bold text-slate-900">Inventory </h1>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button className="add-btn-3 px-3 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 flex items-center gap-1.5 transition-colors">
+            <Plus className="w-3.5 h-3.5" /> 
+            Add Item
+          </button>
+        </div>
+
+      </div>
+      
+
+      <div className="stat-cnt-3 grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-medium text-slate-500 uppercase">Total Items</span>
@@ -59,6 +62,7 @@ export function InventoryPage() {
         </div>
       </div>
 
+      <SearchInput />
       <div className="bg-white rounded-lg border border-slate-200">
         <div className="flex items-center justify-between p-3 border-b border-slate-100">
           <div className="flex items-center gap-1">
