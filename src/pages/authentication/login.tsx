@@ -1,43 +1,53 @@
-import { logData } from "@/account/data/login_data";
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import AlertDialog from "../../components/layout/alert_dialog";
+import { login } from "@/account/authentication/auth";
 
 
 
 export default function LoginPage() {
 
-    const username = useRef<HTMLInputElement>(null);
+
     const email = useRef<HTMLInputElement>(null);
     const password = useRef<HTMLInputElement>(null);
     const form = useRef<HTMLFormElement>(null);
-
-    const { userDatabase } = logData();
+    const [alertInfo, setAlert] = useState({ message: '', type: '' });
+    const [isAlert, setIsAlert] = useState('none');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    
-    const handleAuthentication = (e: React.SubmitEvent<HTMLFormElement>) => {
+    const handleAuthentication = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const key = username.current?.value;
 
-        if (userDatabase[`${key}`]) {
-            if (email.current?.value === userDatabase[`${key}`].email &&
-                password.current?.value === userDatabase[`${key}`].password
-            ) {
-                navigate('/home/dashboard', { replace: true });
+        try {
+            setIsLoading(true);
+            const { data, response } = await login({ email: email.current?.value, password: password.current?.value });
+            setIsLoading(false);
+
+            if (response.ok) {
+                setIsAlert('flex');
+                setAlert({ message: 'Login SuccessFull', type: 'success' });
+                setTimeout(() => {
+                    navigate('home/dashboard', {replace: true});
+                }, 1500);
+                return;
             }
-            else {
-                alert('2 invalid Credential');
-            }
+
+            setIsAlert('flex');
+            console.log(data)
+            setAlert({ message: data.detail, type: 'invalid' });
+            return;
         }
-        else {
-            alert('1 invalid Credential');
+        catch (e) {
+            console.error(e);
         }
     }
 
     return (
         <>
-        <AlertDialog alert={{message: 'Hello', type: 'success'}}/>
+
+            <AlertDialog alert={{ message: alertInfo.message, type: alertInfo.type }} display={isAlert} setdisplay={setIsAlert} />
+
             <div className="login-cnt-auth">
                 <div className="log-info-auth">
                     <h1>Login</h1>
@@ -45,10 +55,6 @@ export default function LoginPage() {
                 </div>
 
                 <form ref={form} className="form" onSubmit={(e) => handleAuthentication(e)}>
-
-                    <div>
-                        <input ref={username} id="user-input" className="inp" placeholder="Username" type="text" required />
-                    </div>
 
                     <div>
                         <input ref={email} id="user-email" className="inp" placeholder="Email Address" required type="email" />
@@ -59,7 +65,7 @@ export default function LoginPage() {
                     </div>
 
                     <div>
-                        <button id="sub-btn" className="sub-btn-auth" type="submit">Submit</button>
+                        <button id="sub-btn" className={`sub-btn-auth ${isLoading ? 'loading-bg-2' : ''}`} type="submit" disabled={isLoading}>{isLoading ? 'Validating...' : 'Submit'}</button>
                     </div>
 
                 </form>

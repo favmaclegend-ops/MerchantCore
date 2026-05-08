@@ -1,30 +1,34 @@
 import { useState } from 'react'
-import { Download, Plus, AlertTriangle, BarChart3, Eye } from 'lucide-react'
-import { products, inventoryStats, stockTrends } from '@/data/mockData'
+import { Plus, AlertTriangle, BarChart3, Eye } from 'lucide-react'
+import { products, inventoryStats} from '@/data/mockData'
 import { cn } from '@/lib/utils'
+import SearchInput from '@/components/layout/search_cmp'
+
 
 export function InventoryPage() {
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
   const filtered = filter === 'all' ? products : filter === 'low' ? products.filter(p => p.status === 'low-stock') : products.filter(p => p.status === 'out-of-stock')
 
   return (
-    <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
-      <div className="flex items-center justify-between">
+
+    <div className="inventory-cnt-3 p-3 lg:p-4 space-y-3 lg:space-y-4">
+      <div className="iventory_manager-cnt-3 flex items-center justify-between">
+
         <div className="min-w-0">
-          <h1 className="text-lg font-bold text-slate-900">Inventory Manager</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Real-time stock tracking and SKU management</p>
+          <h1 className="text-lg font-bold text-slate-900">Inventory</h1>
         </div>
+
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 flex items-center gap-1.5 transition-colors">
-            <Download className="w-3.5 h-3.5" /> Export
-          </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 flex items-center gap-1.5 transition-colors">
-            <Plus className="w-3.5 h-3.5" /> Add Item
+          <button className="add-btn-3 px-3 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 flex items-center gap-1.5 transition-colors">
+            <Plus className="w-3.5 h-3.5" />
+            Add Item
           </button>
         </div>
+
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+
+      <div className="stat-cnt-3 grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-medium text-slate-500 uppercase">Total Items</span>
@@ -59,9 +63,11 @@ export function InventoryPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200">
-        <div className="flex items-center justify-between p-3 border-b border-slate-100">
-          <div className="flex items-center gap-1">
+      <SearchInput />
+
+      <div className="rounded-lg stock-cnt-3">
+        <div className="header-3 flex items-center justify-between p-3 border-b border-slate-100">
+          <div className="header-cont-3 flex items-center gap-1">
             {(['all', 'low', 'out'] as const).map((f) => (
               <button
                 key={f}
@@ -75,74 +81,44 @@ export function InventoryPage() {
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full" style={{ minWidth: '480px' }}>
-            <thead>
-              <tr className="text-[10px] text-slate-500 border-b border-slate-100">
-                <th className="text-left font-medium p-3">Product</th>
-                <th className="text-left font-medium p-3">SKU</th>
-                <th className="text-left font-medium p-3">Stock</th>
-                <th className="text-right font-medium p-3">Price</th>
-                <th className="text-right font-medium p-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filtered.map((product) => (
-                <tr key={product.id} className="hover:bg-slate-50">
-                  <td className="p-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 bg-slate-100 rounded flex items-center justify-center flex-shrink-0">
-                        <span className="text-[10px] font-bold text-slate-600">{product.name[0]}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-slate-900 truncate">{product.name}</p>
-                        <p className="text-[10px] text-slate-500">{product.category}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3 text-[10px] text-slate-600 font-mono whitespace-nowrap">{product.sku}</td>
-                  <td className="p-3">
-                    <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap',
-                      product.status === 'in-stock' && 'bg-emerald-50 text-emerald-700',
-                      product.status === 'low-stock' && 'bg-amber-50 text-amber-700',
-                      product.status === 'out-of-stock' && 'bg-red-50 text-red-700'
-                    )}>
-                      {product.status === 'in-stock' && `${product.stock}`}
-                      {product.status === 'low-stock' && `${product.stock}`}
-                      {product.status === 'out-of-stock' && `0`}
-                    </span>
-                  </td>
-                  <td className="p-3 text-xs font-medium text-slate-900 text-right whitespace-nowrap">${product.price.toFixed(2)}</td>
-                  <td className="p-3 text-right">
-                    <button className="text-slate-400 hover:text-slate-600 text-sm">•••</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+        <div className="stock-table-3">
+          {filtered.map((product) => (
+            <div className='product-card-3' key={product.id} >
+              <div className='p-profile-3'><span>{product.name.substring(0, 1)}</span></div>
+
+              <div className='p-info-3'>
+
+                <div>
+                  <h2>{product.name}</h2>
+                  <span className='p-cat-3'>{product.category}</span>
+                </div>
+
+                <div className='p-price-cnt-3'>
+                  <strong className='p-price'>{product.price}</strong>
+                  <span>{product.sku}</span>
+                </div>
+
+              </div>
+            </div>
+          ))}
         </div>
         <div className="p-3 border-t border-slate-100 text-[10px] text-slate-500">
           Showing {filtered.length} of {products.length} items
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 p-4">
+      <div className="stock-trend-cnt-3 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="stock-trend-sub-cnt-3 lg:col-span-2 bg-white rounded-lg border border-slate-200 p-4">
           <h3 className="text-xs font-semibold text-slate-900 mb-3">Stock Trends</h3>
-          <div className="flex items-end gap-1 h-16">
-            {stockTrends.map((t) => (
-              <div key={t.month} className="flex-1">
-                <div className="w-full bg-emerald-500 rounded-sm opacity-20" style={{ height: `${t.value}%` }}></div>
-              </div>
-            ))}
+          
+          <div className='chart-cnt-3'>
+            <span>Under Development</span>
           </div>
-          <div className="flex justify-between mt-1.5 text-[10px] text-slate-400">
-            {stockTrends.map((t) => (
-              <span key={t.month}>{t.month}</span>
-            ))}
-          </div>
+
         </div>
-        <div className="bg-slate-900 rounded-lg p-4 text-white">
+
+        <div className="adv-3 bg-slate-900 rounded-lg p-4 text-white">
           <h3 className="text-xs font-semibold mb-1.5">Automate Orders</h3>
           <p className="text-[10px] text-slate-400 mb-3">Enable smart replenishment to auto-reorder stock.</p>
           <button className="w-full py-2 text-[10px] font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">

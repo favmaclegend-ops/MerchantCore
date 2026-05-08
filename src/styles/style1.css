@@ -3,8 +3,8 @@
 :root {
     --primary-bd-radius: 1rem;
     --primary-bd-radius-small: .5rem;
-    --primary-box-shadow: 0 6px 1rem rgb(227, 222, 222);
-    --primary-box-shadow-a: 1px 6px .9rem rgba(128, 128, 128, 0.447);
+    --primary-box-shadow: 0 6px .3rem rgba(128, 128, 128, 0.287);
+    --primary-box-shadow-a: 1px 6px .3rem rgba(128, 128, 128, 0.287);
     --component-bg-cl-a: #0f172a;
     --componet-cl-a: white;
     --font-size-a: 1rem;
