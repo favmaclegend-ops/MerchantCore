@@ -26,7 +26,8 @@ async function register({email, username, full_name, password}: regParam) {
     },
     body: JSON.stringify({ email, username, full_name, password }),
   });
-  return response.json();
+  const data = await response.json();
+  return {response, data};
 }
 
 

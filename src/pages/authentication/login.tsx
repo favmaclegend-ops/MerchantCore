@@ -27,7 +27,9 @@ export default function LoginPage() {
             if (response.ok) {
                 setIsAlert('flex');
                 setAlert({ message: 'Login SuccessFull', type: 'success' });
-                navigate('home/dashboard', {replace: true});
+                setTimeout(() => {
+                    navigate('home/dashboard', {replace: true});
+                }, 1500);
                 return;
             }
 

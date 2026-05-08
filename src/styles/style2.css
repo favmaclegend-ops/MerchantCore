@@ -39,6 +39,7 @@
 
 .alert_cnt-2 {
     width: auto;
+    max-width: 300px;
     height: auto;
     padding: 1rem;
     border-radius: 2rem;
