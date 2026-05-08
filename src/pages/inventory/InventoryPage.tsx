@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Plus, AlertTriangle, BarChart3, Eye } from 'lucide-react'
-import { products, inventoryStats, stockTrends } from '@/data/mockData'
+import { products, inventoryStats} from '@/data/mockData'
 import { cn } from '@/lib/utils'
 import SearchInput from '@/components/layout/search_cmp'
-import DLineChart from '@/components/layout/chart'
+
 
 export function InventoryPage() {
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')

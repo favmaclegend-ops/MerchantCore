@@ -41,12 +41,12 @@ export function POSPage() {
   }
 
   return (
-    <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
+    <div className="pos-cnt-3 p-3 lg:p-4 space-y-3 lg:space-y-4">
       <div>
         <h1 className="text-lg font-bold text-slate-900">POS Terminal</h1>
       </div>
 
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+      <div className="pos-btn-cnt-3 flex items-center gap-1.5 overflow-x-auto pb-1">
         {categories.map(cat => (
           <button
             key={cat}
