@@ -113,7 +113,7 @@ export function InventoryPage() {
           <h3 className="text-xs font-semibold text-slate-900 mb-3">Stock Trends</h3>
           
           <div className='chart-cnt-3'>
-            <DLineChart labels={filtered.map(product => product.name)} datas={filtered.map(product => product.price)} />
+            <span>Under Development</span>
           </div>
 
         </div>

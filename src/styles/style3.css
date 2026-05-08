@@ -176,7 +176,13 @@
     width: 100%;
     flex: 1;
     overflow-x: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
 }
+
+
 
 .adv-3 {
     display: flex;
