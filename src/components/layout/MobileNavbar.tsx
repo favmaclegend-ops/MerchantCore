@@ -3,15 +3,15 @@ import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Plus } from 'luci
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { path: '/', label: 'Sales', icon: LayoutGrid },
-  { path: '/inventory', label: 'Stock', icon: Package },
-  { path: '/pos', label: 'POS', icon: ShoppingCart },
-  { path: '/credit', label: 'Credit', icon: CreditCard },
-  { path: '/customers', label: 'More', icon: Users },
+  { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
+  { path: '/home/inventory', label: 'Stock', icon: Package },
+  { path: '/home/pos', label: 'POS', icon: ShoppingCart },
+  { path: '/home/credit', label: 'Credit', icon: CreditCard },
+  { path: '/home/customers', label: 'More', icon: Users },
 ]
 
 export function MobileNavbar() {
-  const location = useLocation()
+  const location = useLocation();
 
   return (
     <nav className="m-nav-1 lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex items-center justify-around py-2 px-1 z-40">
