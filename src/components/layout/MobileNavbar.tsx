@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Plus } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Plus} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -21,11 +21,15 @@ export function MobileNavbar() {
         return (
           <Link
             key={item.path}
-            to={item.path}
+            to={{
+              pathname: item.path,
+              hash: '#hash'
+            }}
             className={cn(
               'flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium transition-colors min-w-[56px]',
               isActive ? 'text-slate-900' : 'text-slate-400'
             )}
+        
           >
             <Icon className={cn('w-5 h-5', isActive && 'text-slate-900')} />
             <span>{item.label}</span>

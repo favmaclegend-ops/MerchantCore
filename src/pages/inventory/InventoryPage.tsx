@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download, Plus, AlertTriangle, BarChart3, Eye } from 'lucide-react'
+import { Plus, AlertTriangle, BarChart3, Eye } from 'lucide-react'
 import { products, inventoryStats, stockTrends } from '@/data/mockData'
 import { cn } from '@/lib/utils'
 import SearchInput from '@/components/layout/search_cmp'
@@ -14,7 +14,7 @@ export function InventoryPage() {
       <div className="iventory_manager-cnt-3 flex items-center justify-between">
 
         <div className="min-w-0">
-          <h1 className="text-lg font-bold text-slate-900">Inventory </h1>
+          <h1 className="text-lg font-bold text-slate-900">Inventory</h1>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
