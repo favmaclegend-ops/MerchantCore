@@ -44,7 +44,6 @@ export default function DLineChart({labels, datas}) {
 
     const options: ChartOptions<'line'> = {
         responsive: true,
-        maintainAspectRatio: false, // Essential for custom sizing
         plugins: {
             legend: {
                 position: 'top' as const,

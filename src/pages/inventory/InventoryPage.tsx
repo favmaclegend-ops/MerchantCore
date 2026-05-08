@@ -118,7 +118,7 @@ export function InventoryPage() {
 
         </div>
 
-        <div className="bg-slate-900 rounded-lg p-4 text-white">
+        <div className="adv-3 bg-slate-900 rounded-lg p-4 text-white">
           <h3 className="text-xs font-semibold mb-1.5">Automate Orders</h3>
           <p className="text-[10px] text-slate-400 mb-3">Enable smart replenishment to auto-reorder stock.</p>
           <button className="w-full py-2 text-[10px] font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">

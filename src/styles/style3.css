@@ -176,5 +176,19 @@
     width: 100%;
     flex: 1;
     overflow-x: auto;
-    border: 1px solid red;
+}
+
+.adv-3 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    gap: 1rem;
+}
+.adv-3 h3, p {
+    align-self: flex-start;
+}
+
+.adv-3 button {
+    padding: .4rem 1rem;
 }
