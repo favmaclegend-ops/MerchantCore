@@ -85,16 +85,19 @@ export function InventoryPage() {
             {filtered.map((product) => (
                 <div className='product-card-3' key={product.id} >
                   <div className='p-profile-3'><span>{product.name.substring(0, 1)}</span></div>
-                  <div>
+                  
+                  <div className='p-info-3'>
 
                     <div>
                       <h2>{product.name}</h2>
                       <span>{product.category}</span>
                     </div>
-                    <div>
-                      <span className='p-price'>{product.price}</span>
+
+                    <div className='p-price-cnt-3'>
+                      <strong className='p-price'>{product.price}</strong>
                       <span>{product.sku}</span>
                     </div>
+
                   </div>
                 </div>
               ))}
