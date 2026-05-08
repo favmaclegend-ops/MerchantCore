@@ -21,10 +21,7 @@ export function MobileNavbar() {
         return (
           <Link
             key={item.path}
-            to={{
-              pathname: item.path,
-              hash: '#hash'
-            }}
+            to={item.path}
             className={cn(
               'flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium transition-colors min-w-[56px]',
               isActive ? 'text-slate-900' : 'text-slate-400'

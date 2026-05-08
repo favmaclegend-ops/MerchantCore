@@ -27,29 +27,31 @@ ChartJS.register(
 );
 
 
-// Specify 'line' in the generic type for better Autocomplete
-const data: ChartData<'line'> = {
-    labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-    datasets: [
-        {
-            label: 'Steps Walked',
-            data: [3000, 5000, 4500, 7000],
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-            tension: 0.3, // Adds a slight curve to the line
-        },
-    ],
-};
+export default function DLineChart({labels, datas}) {
+    // Specify 'line' in the generic type for better Autocomplete
+    const data: ChartData<'line'> = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Steps Walked',
+                data: datas,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                tension: 0.3, // Adds a slight curve to the line
+            },
+        ],
+    };
 
-const options: ChartOptions<'line'> = {
-    responsive: true,
-    plugins: {
-        legend: {
-            position: 'top' as const,
+    const options: ChartOptions<'line'> = {
+        responsive: true,
+        maintainAspectRatio: false, // Essential for custom sizing
+        plugins: {
+            legend: {
+                position: 'top' as const,
+            },
         },
-    },
-};
+    };
 
-export default function DLineChart() {
+
     return <Line data={data} options={options} />;
 }

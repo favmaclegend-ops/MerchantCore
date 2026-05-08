@@ -3,6 +3,7 @@ import { Plus, AlertTriangle, BarChart3, Eye } from 'lucide-react'
 import { products, inventoryStats, stockTrends } from '@/data/mockData'
 import { cn } from '@/lib/utils'
 import SearchInput from '@/components/layout/search_cmp'
+import DLineChart from '@/components/layout/chart'
 
 export function InventoryPage() {
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
@@ -19,13 +20,13 @@ export function InventoryPage() {
 
         <div className="flex items-center gap-2 flex-shrink-0">
           <button className="add-btn-3 px-3 py-1.5 text-xs font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 flex items-center gap-1.5 transition-colors">
-            <Plus className="w-3.5 h-3.5" /> 
+            <Plus className="w-3.5 h-3.5" />
             Add Item
           </button>
         </div>
 
       </div>
-      
+
 
       <div className="stat-cnt-3 grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
         <div className="bg-white rounded-lg border border-slate-200 p-4">
@@ -82,47 +83,41 @@ export function InventoryPage() {
         </div>
 
         <div className="stock-table-3">
-            {filtered.map((product) => (
-                <div className='product-card-3' key={product.id} >
-                  <div className='p-profile-3'><span>{product.name.substring(0, 1)}</span></div>
-                  
-                  <div className='p-info-3'>
+          {filtered.map((product) => (
+            <div className='product-card-3' key={product.id} >
+              <div className='p-profile-3'><span>{product.name.substring(0, 1)}</span></div>
 
-                    <div>
-                      <h2>{product.name}</h2>
-                      <span>{product.category}</span>
-                    </div>
+              <div className='p-info-3'>
 
-                    <div className='p-price-cnt-3'>
-                      <strong className='p-price'>{product.price}</strong>
-                      <span>{product.sku}</span>
-                    </div>
-
-                  </div>
+                <div>
+                  <h2>{product.name}</h2>
+                  <span className='p-cat-3'>{product.category}</span>
                 </div>
-              ))}
+
+                <div className='p-price-cnt-3'>
+                  <strong className='p-price'>{product.price}</strong>
+                  <span>{product.sku}</span>
+                </div>
+
+              </div>
+            </div>
+          ))}
         </div>
         <div className="p-3 border-t border-slate-100 text-[10px] text-slate-500">
           Showing {filtered.length} of {products.length} items
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 p-4">
+      <div className="stock-trend-cnt-3 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="stock-trend-sub-cnt-3 lg:col-span-2 bg-white rounded-lg border border-slate-200 p-4">
           <h3 className="text-xs font-semibold text-slate-900 mb-3">Stock Trends</h3>
-          <div className="flex items-end gap-1 h-16">
-            {stockTrends.map((t) => (
-              <div key={t.month} className="flex-1">
-                <div className="w-full bg-emerald-500 rounded-sm opacity-20" style={{ height: `${t.value}%` }}></div>
-              </div>
-            ))}
+          
+          <div className='chart-cnt-3'>
+            <DLineChart labels={filtered.map(product => product.name)} datas={filtered.map(product => product.price)} />
           </div>
-          <div className="flex justify-between mt-1.5 text-[10px] text-slate-400">
-            {stockTrends.map((t) => (
-              <span key={t.month}>{t.month}</span>
-            ))}
-          </div>
+
         </div>
+
         <div className="bg-slate-900 rounded-lg p-4 text-white">
           <h3 className="text-xs font-semibold mb-1.5">Automate Orders</h3>
           <p className="text-[10px] text-slate-400 mb-3">Enable smart replenishment to auto-reorder stock.</p>

@@ -116,10 +116,10 @@
 .product-card-3 {
     width: 100%;
     padding: 1rem;
-    border-radius: 1.5rem;
+    border-radius: 1rem;
     background-color: white;
     display: grid;
-    grid-template-columns: .3fr 1fr;
+    grid-template-columns: .2fr 1fr;
     gap: .5rem;
 }
 
@@ -136,6 +136,13 @@
     flex-direction: column;
     width: 100%;
     gap: .5rem;
+    font-size: .8rem;
+    line-height: .8rem;
+}
+
+.p-cat-3 {
+    color: gray;
+    margin-top: .3rem;
 }
 
 .p-price-cnt-3 {
@@ -146,4 +153,28 @@
 
 .p-price-cnt-3 span {
     color: gray;
+}
+
+.stock-trend-cnt-3 {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.stock-trend-sub-cnt-3 {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+}
+.stock-trend-sub-cnt-3 > div {
+    width: 100%;
+}
+
+.chart-cnt-3 {
+    width: 100%;
+    flex: 1;
+    overflow-x: auto;
+    border: 1px solid red;
 }

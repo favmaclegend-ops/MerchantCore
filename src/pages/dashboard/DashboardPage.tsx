@@ -77,7 +77,7 @@ export function DashboardPage() {
             <span>Monthly</span>
           </div>
         </div>
-        <DLineChart />
+        <DLineChart datas={[2900, 4500, 6709, 1000, 4980, 8370]} labels={['1st', '2nd', '3rd', '4th', '5th', '6th']}/>
 
       </div>
       <div className="dash-rcnt-trc-1 dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
