@@ -63,9 +63,10 @@ export function InventoryPage() {
       </div>
 
       <SearchInput />
-      <div className="bg-white rounded-lg border border-slate-200">
-        <div className="flex items-center justify-between p-3 border-b border-slate-100">
-          <div className="flex items-center gap-1">
+
+      <div className="rounded-lg stock-cnt-3">
+        <div className="header-3 flex items-center justify-between p-3 border-b border-slate-100">
+          <div className="header-cont-3 flex items-center gap-1">
             {(['all', 'low', 'out'] as const).map((f) => (
               <button
                 key={f}
@@ -79,51 +80,24 @@ export function InventoryPage() {
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full" style={{ minWidth: '480px' }}>
-            <thead>
-              <tr className="text-[10px] text-slate-500 border-b border-slate-100">
-                <th className="text-left font-medium p-3">Product</th>
-                <th className="text-left font-medium p-3">SKU</th>
-                <th className="text-left font-medium p-3">Stock</th>
-                <th className="text-right font-medium p-3">Price</th>
-                <th className="text-right font-medium p-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filtered.map((product) => (
-                <tr key={product.id} className="hover:bg-slate-50">
-                  <td className="p-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 bg-slate-100 rounded flex items-center justify-center flex-shrink-0">
-                        <span className="text-[10px] font-bold text-slate-600">{product.name[0]}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-slate-900 truncate">{product.name}</p>
-                        <p className="text-[10px] text-slate-500">{product.category}</p>
-                      </div>
+
+        <div className="stock-table-3">
+            {filtered.map((product) => (
+                <div className='product-card-3' key={product.id} >
+                  <div className='p-profile-3'><span>{product.name.substring(0, 1)}</span></div>
+                  <div>
+
+                    <div>
+                      <h2>{product.name}</h2>
+                      <span>{product.category}</span>
                     </div>
-                  </td>
-                  <td className="p-3 text-[10px] text-slate-600 font-mono whitespace-nowrap">{product.sku}</td>
-                  <td className="p-3">
-                    <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap',
-                      product.status === 'in-stock' && 'bg-emerald-50 text-emerald-700',
-                      product.status === 'low-stock' && 'bg-amber-50 text-amber-700',
-                      product.status === 'out-of-stock' && 'bg-red-50 text-red-700'
-                    )}>
-                      {product.status === 'in-stock' && `${product.stock}`}
-                      {product.status === 'low-stock' && `${product.stock}`}
-                      {product.status === 'out-of-stock' && `0`}
-                    </span>
-                  </td>
-                  <td className="p-3 text-xs font-medium text-slate-900 text-right whitespace-nowrap">${product.price.toFixed(2)}</td>
-                  <td className="p-3 text-right">
-                    <button className="text-slate-400 hover:text-slate-600 text-sm">•••</button>
-                  </td>
-                </tr>
+                    <div>
+                      <span className='p-price'>{product.price}</span>
+                      <span>{product.sku}</span>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
         </div>
         <div className="p-3 border-t border-slate-100 text-[10px] text-slate-500">
           Showing {filtered.length} of {products.length} items
