@@ -52,6 +52,7 @@ export const api = {
   getRevenueTrend: () => request<{ months: { month: string; revenue: number }[] }>('/dashboard/revenue-trend'),
 
   getCreditEntries: () => request<any[]>('/credit-entries'),
+  createCreditEntry: (data: any) => request<any>('/credit-entries', { method: 'POST', body: JSON.stringify(data) }),
   updateCreditEntry: (id: string, data: any) => request<any>(`/credit-entries/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   checkout: (data: { items: any[]; total: number; payment_method: string }) =>
