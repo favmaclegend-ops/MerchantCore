@@ -45,8 +45,8 @@ async function login({email, password}: logParam) {
   const data = await response.json();
   
   if (response.ok) {
-    // Store the token
     localStorage.setItem('token', data.access_token);
+    localStorage.setItem('login', 'true');
   }
   
   return {data, response};

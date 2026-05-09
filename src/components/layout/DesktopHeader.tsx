@@ -1,5 +1,8 @@
+import { useContext } from 'react'
 import { Bell, User, Search } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { Authcontext } from '@/context/auth_context'
 
 const pageConfig: Record<string, { title: string; search?: string }> = {
   '/': { title: 'Dashboard' },
@@ -11,33 +14,37 @@ const pageConfig: Record<string, { title: string; search?: string }> = {
 
 export function DesktopHeader() {
   const location = useLocation()
+  const bp = useBreakpoint()
+  const { user } = useContext(Authcontext)
   const config = pageConfig[location.pathname] ?? pageConfig['/']
 
+  if (!bp.lg) return null
+
   return (
-    <header className="hidden lg:flex flex-shrink-0 bg-white/80 backdrop-blur-sm border-b border-slate-200 px-4 py-3 items-center justify-between z-30">
-      <h2 className="text-sm font-semibold text-slate-900 truncate">{config.title}</h2>
-      <div className="flex items-center gap-2">
+    <header style={{ display: 'flex', flexShrink: 0, background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #e2e8f0', padding: '12px 16px', alignItems: 'center', justifyContent: 'space-between', zIndex: 30 }}>
+      <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{config.title}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {config.search && (
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <div style={{ position: 'relative' }}>
+            <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: '#94a3b8' }} />
             <input
               type="text"
               placeholder={config.search}
-              className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs w-48 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+              style={{ paddingLeft: '32px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '12px', width: '192px', outline: 'none', color: '#0f172a' }}
             />
           </div>
         )}
-        <button className="relative p-2 text-slate-500 hover:text-slate-700 transition-colors">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+        <button style={{ position: 'relative', padding: '8px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+          <Bell style={{ width: '16px', height: '16px' }} />
+          <span style={{ position: 'absolute', top: '4px', right: '4px', width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%' }}></span>
         </button>
-        <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-          <div className="w-7 h-7 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">
-            <User className="w-3.5 h-3.5 text-slate-600" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #e2e8f0' }}>
+          <div style={{ width: '28px', height: '28px', background: '#e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <User style={{ width: '14px', height: '14px', color: '#475569' }} />
           </div>
-          <div className="text-right">
-            <p className="text-xs font-medium text-slate-900 leading-tight">John Doe</p>
-            <p className="text-[10px] text-slate-500 leading-tight">Admin</p>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a', lineHeight: 1.3, margin: 0 }}>{user?.full_name || 'User'}</p>
+            <p style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.3, margin: 0 }}>Admin</p>
           </div>
         </div>
       </div>

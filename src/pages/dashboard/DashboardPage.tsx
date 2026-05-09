@@ -1,172 +1,166 @@
+import { useEffect, useState } from 'react'
 import { ArrowUpRight, AlertTriangle, DollarSign, Package, Eye } from 'lucide-react'
-import { transactions, alerts } from '@/data/mockData'
-import { cn } from '@/lib/utils'
 import DLineChart from '@/components/layout/chart'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { api } from '@/lib/api'
+
+interface Tx {
+  id: string
+  type: string
+  customer_name?: string
+  amount: number
+  status: string
+  items?: string
+  date?: string
+}
+
+interface Alert {
+  id: string
+  type: 'low-stock' | 'overdue' | 'system' | 'info'
+  title: string
+  description: string
+}
 
 export function DashboardPage() {
-  return (
-    <div className="m-dashboard-page-1">
+  const bp = useBreakpoint()
+  const [stats, setStats] = useState({ totalRevenue: 0, monthlyRevenue: 0, totalOrders: 0, activeCustomers: 0, lowStockAlerts: 0, inventoryValue: 0 })
+  const [txns, setTxns] = useState<Tx[]>([])
+  const [alertList, setAlertList] = useState<Alert[]>([])
+  const [loading, setLoading] = useState(true)
 
-      <div className='dashboard-sub-cnt-1 dash-greeting-cnt-1'>
-        <h1 className="text-lg font-bold text-slate-900">Good morning, John</h1>
-        <p className="text-xs text-slate-500 mt-0.5">Here's what's happening with MerchantCore today.</p>
+  useEffect(() => {
+    Promise.all([
+      api.getDashboardStats().catch(() => null),
+      api.getTransactions().catch(() => [] as Tx[]),
+      api.getProducts().catch(() => []),
+    ]).then(([s, t, p]) => {
+      if (s) setStats(s)
+      if (t) setTxns(t)
+      const alerts: Alert[] = []
+      const lowItems = (p as any[]).filter(x => x.status === 'low-stock')
+      if (lowItems.length) {
+        alerts.push({
+          id: 'low-stock-1',
+          type: 'low-stock',
+          title: 'Low Stock Alert',
+          description: `${lowItems.length} items are running low on stock. Restock suggested.`,
+        })
+      }
+      setAlertList(alerts)
+    }).finally(() => setLoading(false))
+  }, [])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', width: '100%', padding: '0 8px' }}>
+      <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>Dashboard</h1>
+        <p style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', marginBottom: 0 }}>Here's what's happening with MerchantCore today.</p>
       </div>
 
-      <div className="dashboard-sub-cnt-1 grid grid-cols-2 lg:grid-cols-4 gap-3">
-
-        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Daily Revenue</span>
-            <button className="text-slate-400 hover:text-slate-600 flex-shrink-0"><Eye className="w-3.5 h-3.5" /></button>
+      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px' }}>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Revenue</span>
+            <button style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}><Eye style={{ width: '14px', height: '14px' }} /></button>
           </div>
-          <p className="text-xl font-bold text-slate-900 truncate">$12,840.50</p>
-          <div className="flex items-center gap-1 mt-1">
-            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-            <span className="text-[10px] font-medium text-emerald-600">+14.2%</span>
-          </div>
-          <div className="mt-3 flex items-end gap-0.5 h-10">
-            {[40, 55, 90, 50, 35, 55, 70].map((h, i) => (
-              <div key={i} className={cn('flex-1 rounded-sm', i === 2 || i === 6 ? 'bg-slate-900' : 'bg-slate-200')} style={{ height: `${h}%` }} />
-            ))}
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>${stats.totalRevenue.toLocaleString()}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+            <ArrowUpRight style={{ width: '14px', height: '14px', color: '#10b981', flexShrink: 0 }} />
+            <span style={{ fontSize: '10px', fontWeight: 500, color: '#059669' }}>Current</span>
           </div>
         </div>
-
-
-        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Credit Outstanding</span>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Orders</span>
           </div>
-          <p className="text-xl font-bold text-slate-900 truncate">$4,210.00</p>
-          <div className="mt-2">
-            <div className="flex items-center justify-between text-[10px] mb-1">
-              <span className="text-slate-500">Overdue (3)</span>
-              <span className="text-red-600 font-medium bg-red-50 px-1.5 py-0.5 rounded text-[10px]">Action</span>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{stats.totalOrders}</p>
+          <div style={{ marginTop: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+              <span style={{ color: '#64748b' }}>{stats.activeCustomers} active customers</span>
             </div>
-            <div className="w-full bg-slate-100 rounded-full h-1">
-              <div className="bg-red-500 h-1 rounded-full" style={{ width: '65%' }}></div>
-            </div>
-            <button className="mt-2 w-full py-1.5 text-[10px] font-medium text-slate-700 bg-slate-50 rounded border border-slate-200 hover:bg-slate-100 transition-colors">
-              View Ledger
-            </button>
           </div>
         </div>
-
-        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
-          <span className="text-[10px] font-medium text-slate-500 uppercase">Total Sales</span>
-          <p className="text-xl font-bold text-slate-900 mt-1">142 <span className="text-[10px] font-normal text-slate-500">Units</span></p>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
+          <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Inventory Value</span>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginTop: '4px', margin: 0 }}>${stats.inventoryValue.toLocaleString()}</p>
         </div>
-
-        <div className="dash-cards-1 bg-white rounded-lg border border-slate-200 p-4 min-w-0">
-          <span className="text-[10px] font-medium text-slate-500 uppercase">Low Stock Alerts</span>
-          <p className="text-xl font-bold text-amber-600 mt-1 flex items-center gap-1.5">
-            8 Items <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
+          <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Low Stock Alerts</span>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#d97706', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+            {stats.lowStockAlerts} Items <AlertTriangle style={{ width: '14px', height: '14px', flexShrink: 0 }} />
           </p>
         </div>
       </div>
-      <div className='total_sales_stat-2'>
-        <div className='tss-heaad-2'>
-          <h3>Sales</h3>
 
-          <div className='tss-calender-2'>
+      <div style={{ width: '100%', padding: '16px', background: '#fff', borderRadius: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ fontWeight: 700, fontSize: '16px', margin: 0 }}>Sales</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 0 3px rgb(227,222,222)', padding: '6px', borderRadius: '6px' }}>
             <img src='https://img.icons8.com/?size=100&id=23&format=png&color=7a7a7a' width="20" height="20" alt='calender' />
-            <select className='tss-select-2' name="callender" id="cal" hidden>
-              <option>Monthly</option>
-              <option>Weekly</option>
-              <option>Daily</option>
-            </select>
-            <span>Monthly</span>
+            <span style={{ fontSize: '14px' }}>Monthly</span>
           </div>
         </div>
         <DLineChart datas={[2900, 4500, 6709, 1000, 4980, 8370]} labels={['1st', '2nd', '3rd', '4th', '5th', '6th']}/>
-
       </div>
-      <div className="dash-rcnt-trc-1 dashboard-sub-cnt-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        <div className="rcnt-trc-sub-cnt-1 lg:col-span-2 bg-white rounded-lg border border-slate-200 min-w-0">
-
-          <div className="rc-cnt1-1 flex items-center justify-between p-4 border-b border-slate-100">
-            <h3 className="rc-h1-1 text-xs font-semibold text-slate-900">Recent Transactions</h3>
-            <button className="text-[10px] text-slate-500 hover:text-slate-700 flex-shrink-0">View All</button>
+      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? '2fr 1fr' : '1fr', gap: '16px' }}>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: 0 }}>Recent Transactions</h3>
+            <button style={{ fontSize: '10px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View All</button>
           </div>
-
-          <div className="recent-cards-sec-1 divide-y divide-slate-50">
-            {transactions.map((tx) => (
-              <div key={tx.id} className="recent-t-list-1 p-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
-                    tx.type === 'sale' && 'bg-emerald-50 text-emerald-600',
-                    tx.type === 'payment' && 'bg-blue-50 text-blue-600',
-                    tx.type === 'restock' && 'bg-amber-50 text-amber-600'
-                  )}>
-                    {tx.type === 'sale' && <DollarSign className="w-3.5 h-3.5" />}
-                    {tx.type === 'payment' && <DollarSign className="w-3.5 h-3.5" />}
-                    {tx.type === 'restock' && <Package className="w-3.5 h-3.5" />}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            {txns.slice(0, 5).map((tx) => (
+              <div key={tx.id} style={{ width: '100%', padding: '8px 16px', boxShadow: '0 6px 3px rgba(128,128,128,0.287)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                  <div style={{
+                    width: '32px', height: '32px', borderRadius: '8px', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    background: tx.type === 'sale' ? '#ecfdf5' : tx.type === 'payment' ? '#eff6ff' : '#fffbeb',
+                    color: tx.type === 'sale' ? '#059669' : tx.type === 'payment' ? '#2563eb' : '#d97706',
+                  }}>
+                    {tx.type === 'sale' || tx.type === 'payment' ? <DollarSign style={{ width: '14px', height: '14px' }} /> : <Package style={{ width: '14px', height: '14px' }} />}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-slate-900 truncate">{tx.customer} #{tx.id}</p>
-                    <p className="text-[10px] text-slate-500 truncate">{tx.items} • {tx.date}</p>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{tx.customer_name || 'Transaction'} #{tx.id}</p>
+                    <p style={{ fontSize: '10px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{tx.items} {tx.date ? `• ${tx.date}` : ''}</p>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0 ml-2">
-                  <p className="text-xs font-semibold text-slate-900">${tx.amount.toLocaleString()}</p>
-                  <p className={cn('text-[10px] font-semibold uppercase',
-                    tx.status === 'completed' && 'text-emerald-600',
-                    tx.status === 'pending' && 'text-blue-600'
-                  )}>{tx.status}</p>
+                <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '8px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', margin: 0 }}>${tx.amount.toLocaleString()}</p>
+                  <p style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', color: tx.status === 'completed' ? '#059669' : '#2563eb', margin: 0 }}>{tx.status}</p>
                 </div>
               </div>
             ))}
+            {txns.length === 0 && !loading && <p style={{ fontSize: '12px', color: '#94a3b8' }}>No transactions yet</p>}
           </div>
         </div>
 
-        <div className="critical-cnt-1 space-y-3 min-w-0">
-          <div className="critical-sub-cnt-1 bg-white rounded-lg border border-slate-200">
-            <div className="p-4 border-b border-slate-100">
-              <h3 className="fs-a-1 text-xs font-semibold text-slate-900">Critical Alerts</h3>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', fontSize: '16px', lineHeight: '16px' }}>
+            <div style={{ paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: 0 }}>Alerts</h3>
             </div>
-
-            <div className="p-3 space-y-2 alert-style-cnt-1">
-              {alerts.map((alert) => (
-                <div key={alert.id} className={`alert-style-1 ${cn('p-2.5 rounded-lg border',
-                  alert.type === 'low-stock' && 'bg-amber-50 border-amber-200',
-                  alert.type === 'overdue' && 'bg-red-50 border-red-200',
-                  alert.type === 'system' && 'bg-slate-50 border-slate-200'
-                )}`}>
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className={cn('w-3.5 h-3.5 mt-0.5 flex-shrink-0',
-                      alert.type === 'low-stock' && 'text-amber-500',
-                      alert.type === 'overdue' && 'text-red-500'
-                    )} />
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-semibold text-slate-900">{alert.title}</p>
-                      <p className="text-[10px] text-slate-600 mt-0.5 leading-tight">{alert.description}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {alertList.map((alert) => (
+                <div key={alert.id} style={{
+                  padding: '10px', borderRadius: '8px', border: '1px solid',
+                  background: alert.type === 'low-stock' ? '#fffbeb' : alert.type === 'overdue' ? '#fef2f2' : '#f8fafc',
+                  borderColor: alert.type === 'low-stock' ? '#fde68a' : alert.type === 'overdue' ? '#fecaca' : '#e2e8f0',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <AlertTriangle style={{ width: '14px', height: '14px', marginTop: '2px', flexShrink: 0, color: alert.type === 'low-stock' ? '#f59e0b' : alert.type === 'overdue' ? '#ef4444' : undefined }} />
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: '10px', fontWeight: 600, color: '#0f172a', margin: 0 }}>{alert.title}</p>
+                      <p style={{ fontSize: '10px', color: '#475569', marginTop: '2px', lineHeight: 1.3, margin: '2px 0 0 0' }}>{alert.description}</p>
                     </div>
                   </div>
                 </div>
               ))}
+              {alertList.length === 0 && !loading && <p style={{ fontSize: '12px', color: '#94a3b8' }}>No alerts</p>}
             </div>
-          </div>
-
-          <div className="ware-housing-cnt-1 fs-a-1 bg-slate-900 rounded-lg p-4 text-white">
-
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-[10px] text-slate-400">Warehouse</p>
-                <p className="text-xs font-semibold mt-0.5 truncate">Central Warehouse</p>
-              </div>
-              <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0 ml-2">
-                <Package className="w-4 h-4 text-slate-400" />
-              </div>
-            </div>
-
-          </div>
-
-          <div className="ware-housing-info-cnt-1 bg-white rounded-lg border border-slate-200 p-4">
-            <span className="text-[10px] font-medium text-slate-500 uppercase">Avg. Ticket</span>
-            <p className="text-xl font-bold text-slate-900 mt-1">$90.42 <span className="text-[10px] text-emerald-500 font-medium">↑ 4%</span></p>
           </div>
         </div>
-
       </div>
     </div>
   )

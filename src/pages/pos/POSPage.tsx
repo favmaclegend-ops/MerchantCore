@@ -1,24 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Minus, Plus, CreditCard, Smartphone, Wallet, History } from 'lucide-react'
-import { products } from '@/data/mockData'
-import { cn } from '@/lib/utils'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { api } from '@/lib/api'
+
+interface CartItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+}
 
 export function POSPage() {
-  const [cart, setCart] = useState<{ id: string; quantity: number }[]>([
-    { id: '1', quantity: 2 },
-    { id: '3', quantity: 1 },
-  ])
+  const bp = useBreakpoint()
+  const [products, setProducts] = useState<any[]>([])
+  const [cart, setCart] = useState<CartItem[]>([])
   const [category, setCategory] = useState('All Items')
+  const [loading, setLoading] = useState(true)
   const categories = ['All Items', 'Beverages', 'Snacks', 'Grains', 'Toiletries']
+
+  useEffect(() => {
+    api.getProducts().then(p => setProducts(p)).catch(() => {}).finally(() => setLoading(false))
+  }, [])
 
   const filteredProducts = category === 'All Items' ? products : products.filter(p => p.category === category || p.category.toLowerCase() === category.toLowerCase())
 
-  const cartItems = cart.map(item => {
-    const product = products.find(p => p.id === item.id)!
-    return { ...product, quantity: item.quantity }
-  })
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const tax = subtotal * 0.05
   const total = subtotal + tax
 
@@ -36,52 +42,75 @@ export function POSPage() {
     setCart(prev => {
       const existing = prev.find(item => item.id === id)
       if (existing) return prev.map(item => item.id === id ? { ...item, quantity: item.quantity + 1 } : item)
-      return [...prev, { id, quantity: 1 }]
+      const product = products.find(p => p.id === id)
+      if (!product) return prev
+      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1 }]
     })
   }
 
+  const handleCheckout = async () => {
+    if (cart.length === 0) return
+    try {
+      await api.checkout({ items: cart, total, payment_method: 'Cash' })
+      setCart([])
+    } catch (e) {
+      console.error('Checkout failed', e)
+    }
+  }
+
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>
+
   return (
-    <div className="pos-cnt-3 p-3 lg:p-4 space-y-3 lg:space-y-4">
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', padding: '12px' }}>
       <div>
-        <h1 className="text-lg font-bold text-slate-900">POS Terminal</h1>
+        <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>POS Terminal</h1>
       </div>
 
-      <div className="pos-btn-cnt-3 flex items-center gap-1.5 overflow-x-auto pb-1">
+      <div style={{ width: '100%', display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'thin' }}>
         {categories.map(cat => (
           <button
             key={cat}
             onClick={() => setCategory(cat)}
-            className={cn('px-3 py-1.5 text-xs font-medium rounded whitespace-nowrap flex-shrink-0 transition-colors',
-              category === cat ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-            )}
+            style={{
+              padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '16px',
+              whiteSpace: 'nowrap', flexShrink: 0, border: category === cat ? 'none' : '1px solid #e2e8f0',
+              color: category === cat ? '#fff' : '#475569',
+              background: category === cat ? '#0f172a' : '#fff',
+              cursor: 'pointer',
+            }}
           >
             {cat}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-3 lg:gap-4">
-        <div className="xl:col-span-3 grid grid-cols-2 xl:grid-cols-4 gap-3">
+      <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? '3fr 1fr' : '1fr', gap: bp.xl ? '16px' : '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px' }}>
           {filteredProducts.map(product => (
-            <div key={product.id} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-              <div className="h-24 bg-slate-100 flex items-center justify-center relative">
-                <span className="text-2xl font-bold text-slate-300">{product.name[0]}</span>
-                <span className={cn('absolute top-1.5 right-1.5 px-1.5 py-0.5 text-[10px] font-medium rounded',
-                  product.status === 'in-stock' && 'bg-emerald-50 text-emerald-700',
-                  product.status === 'low-stock' && 'bg-amber-50 text-amber-700',
-                  product.status === 'out-of-stock' && 'bg-red-50 text-red-700'
-                )}>
+            <div key={product.id} style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+              <div style={{ height: '96px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <span style={{ fontSize: '24px', fontWeight: 700, color: '#cbd5e1' }}>{product.name[0]}</span>
+                <span style={{
+                  position: 'absolute', top: '6px', right: '6px', padding: '2px 6px',
+                  fontSize: '10px', fontWeight: 500, borderRadius: '4px',
+                  background: product.status === 'in-stock' ? '#ecfdf5' : product.status === 'low-stock' ? '#fffbeb' : '#fef2f2',
+                  color: product.status === 'in-stock' ? '#047857' : product.status === 'low-stock' ? '#b45309' : '#b91c1c',
+                }}>
                   {product.status === 'in-stock' ? 'In Stock' : product.status === 'low-stock' ? 'Low' : 'Out'}
                 </span>
               </div>
-              <div className="p-2.5">
-                <p className="text-xs font-medium text-slate-900 truncate">{product.name}</p>
-                <p className="text-sm font-bold text-slate-900 mt-0.5">${product.price.toFixed(2)}</p>
+              <div style={{ padding: '10px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{product.name}</p>
+                <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>${product.price.toFixed(2)}</p>
               </div>
               <button
                 onClick={() => addToCart(product.id)}
-                className="w-full py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={product.status === 'out-of-stock'}
+                style={{
+                  width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
+                  color: '#fff', background: '#0f172a', border: 'none', cursor: product.status === 'out-of-stock' ? 'not-allowed' : 'pointer',
+                  opacity: product.status === 'out-of-stock' ? 0.5 : 1,
+                }}
               >
                 Add
               </button>
@@ -89,74 +118,82 @@ export function POSPage() {
           ))}
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 flex flex-col">
-          <div className="p-3 border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-900">Cart</span>
-              <span className="text-[10px] text-slate-500">#8921-X</span>
+        <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '12px', borderBottom: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>Cart</span>
+              <span style={{ fontSize: '10px', color: '#64748b' }}>Checkout</span>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-[200px] lg:max-h-[300px]">
-            {cartItems.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-6">Empty</p>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px', maxHeight: bp.lg ? '300px' : '200px' }}>
+            {cart.length === 0 ? (
+              <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '24px 0', margin: 0 }}>Empty</p>
             ) : (
-              cartItems.map(item => (
-                <div key={item.id} className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-slate-100 rounded flex items-center justify-center flex-shrink-0">
-                    <span className="text-[10px] font-bold text-slate-600">{item.name[0]}</span>
+              cart.map(item => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ width: '28px', height: '28px', background: '#f1f5f9', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#475569' }}>{item.name[0]}</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-medium text-slate-900 truncate">{item.name}</p>
-                    <p className="text-[10px] text-slate-500">${item.price.toFixed(2)} × {item.quantity}</p>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '10px', fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{item.name}</p>
+                    <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>${item.price.toFixed(2)} × {item.quantity}</p>
                   </div>
-                  <div className="flex items-center gap-0.5">
-                    <button onClick={() => updateQuantity(item.id, -1)} className="w-5 h-5 flex items-center justify-center rounded bg-slate-100 hover:bg-slate-200">
-                      <Minus className="w-3 h-3" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <button onClick={() => updateQuantity(item.id, -1)} style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}>
+                      <Minus style={{ width: '12px', height: '12px' }} />
                     </button>
-                    <span className="text-[10px] font-semibold w-4 text-center">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, 1)} className="w-5 h-5 flex items-center justify-center rounded bg-slate-100 hover:bg-slate-200">
-                      <Plus className="w-3 h-3" />
+                    <span style={{ fontSize: '10px', fontWeight: 600, width: '16px', textAlign: 'center' }}>{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.id, 1)} style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}>
+                      <Plus style={{ width: '12px', height: '12px' }} />
                     </button>
                   </div>
-                  <p className="text-xs font-bold text-slate-900">${(item.price * item.quantity).toFixed(2)}</p>
+                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', margin: 0 }}>${(item.price * item.quantity).toFixed(2)}</p>
                 </div>
               ))
             )}
           </div>
 
-          <div className="p-3 border-t border-slate-100 space-y-1">
-            <div className="flex justify-between text-[10px]">
-              <span className="text-slate-500">Subtotal</span>
-              <span className="text-slate-900">${subtotal.toFixed(2)}</span>
+          <div style={{ padding: '12px', borderTop: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+              <span style={{ color: '#64748b' }}>Subtotal</span>
+              <span style={{ color: '#0f172a' }}>${subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-[10px]">
-              <span className="text-slate-500">Tax (5%)</span>
-              <span className="text-slate-900">${tax.toFixed(2)}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
+              <span style={{ color: '#64748b' }}>Tax (5%)</span>
+              <span style={{ color: '#0f172a' }}>${tax.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-xs font-bold pt-1.5 border-t border-slate-100">
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, paddingTop: '6px', borderTop: '1px solid #f1f5f9' }}>
               <span>Total</span>
               <span>${total.toFixed(2)}</span>
             </div>
           </div>
 
-          <div className="p-3 grid grid-cols-2 gap-1.5">
-            <button className="flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium bg-slate-50 border border-slate-200 rounded hover:bg-slate-100">
-              <Wallet className="w-3 h-3" /> Cash
+          <div style={{ padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+            <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0', fontSize: '10px', fontWeight: 500, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>
+              <Wallet style={{ width: '12px', height: '12px' }} /> Cash
             </button>
-            <button className="flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium bg-slate-50 border border-slate-200 rounded hover:bg-slate-100">
-              <CreditCard className="w-3 h-3" /> Card
+            <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0', fontSize: '10px', fontWeight: 500, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>
+              <CreditCard style={{ width: '12px', height: '12px' }} /> Card
             </button>
-            <button className="flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium bg-slate-50 border border-slate-200 rounded hover:bg-slate-100">
-              <Smartphone className="w-3 h-3" /> Mobile
+            <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0', fontSize: '10px', fontWeight: 500, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>
+              <Smartphone style={{ width: '12px', height: '12px' }} /> Mobile
             </button>
-            <button className="flex items-center justify-center gap-1 py-1.5 text-[10px] font-medium bg-slate-50 border border-slate-200 rounded hover:bg-slate-100">
-              <History className="w-3 h-3" /> Log
+            <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0', fontSize: '10px', fontWeight: 500, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>
+              <History style={{ width: '12px', height: '12px' }} /> Log
             </button>
           </div>
 
-          <div className="px-3 pb-3">
-            <button className="w-full py-2 text-xs font-semibold text-white bg-slate-900 rounded hover:bg-slate-800 transition-colors">
+          <div style={{ padding: '0 12px 12px' }}>
+            <button
+              onClick={handleCheckout}
+              disabled={cart.length === 0}
+              style={{
+                width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
+                color: '#fff', background: cart.length === 0 ? '#94a3b8' : '#0f172a',
+                borderRadius: '4px', border: 'none', cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
+              }}
+            >
               Checkout
             </button>
           </div>

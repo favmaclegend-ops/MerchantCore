@@ -1,4 +1,6 @@
-import { Routes, Route } from 'react-router-dom'
+import { useContext } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { Authcontext } from '@/context/auth_context'
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
 import { DesktopHeader } from '@/components/layout/DesktopHeader'
 import { MobileNavbar } from '@/components/layout/MobileNavbar'
@@ -11,15 +13,25 @@ import { CustomersPage } from '@/pages/customers/CustomersPage';
 
 
 export default function Home() {
+    const { user, loading } = useContext(Authcontext)
+
+    if (loading) {
+        return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px' }}>Loading...</div>
+    }
+
+    if (!user) {
+        return <Navigate to="/" replace />
+    }
+
     return (
         <>
-            <div className="app-1 flex h-screen overflow-hidden bg-slate-50">
+            <div style={{ display: 'flex', width: '100%', height: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
                 <DesktopSidebar />
-                <div className="wrapper-1 flex-1 flex flex-col min-w-0 overflow-hidden">
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden', width: '100%' }}>
                     <DesktopHeader />
                     <MobileHeader />
 
-                    <div className="sub_wrapper2-1 flex-1 overflow-y-auto overflow-x-hidden pb-16 lg:pb-0">
+                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '4rem' }}>
                         <Routes>
                             <Route path="/dashboard" element={<DashboardPage />} />
                             <Route path="/inventory" element={<InventoryPage />} />

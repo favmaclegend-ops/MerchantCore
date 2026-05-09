@@ -1,13 +1,24 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { Navigate } from "react-router-dom";
 import LoginPage from "./login";
 import SigninPage from "./signin";
+import { Authcontext } from "@/context/auth_context";
 
 export default function DefaultPage() {
 
+    const { user, loading } = useContext(Authcontext)
     const [isPage, setPage] = useState<string>('login');
 
     const handlePage: Function = (page: string) => {
         setPage(page);
+    }
+
+    if (loading) {
+        return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px' }}>Loading...</div>
+    }
+
+    if (user) {
+        return <Navigate to="/home/dashboard" replace />
     }
 
     return (

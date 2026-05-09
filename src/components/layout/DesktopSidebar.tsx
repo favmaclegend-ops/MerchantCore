@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Settings, HelpCircle, Plus } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutGrid },
@@ -12,22 +12,25 @@ const navItems = [
 
 export function DesktopSidebar() {
   const location = useLocation()
+  const bp = useBreakpoint()
+
+  if (!bp.lg) return null
 
   return (
-    <aside className="hidden lg:flex flex-shrink-0 w-56 bg-white border-r border-slate-200 flex flex-col z-40">
-      <div className="p-4 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Package className="w-4 h-4 text-white" />
+    <aside style={{ flexShrink: 0, width: '224px', background: '#fff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', zIndex: 40 }}>
+      <div style={{ padding: '16px', borderBottom: '1px solid #f1f5f9' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '32px', height: '32px', background: '#0f172a', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Package style={{ width: '16px', height: '16px', color: '#fff' }} />
           </div>
-          <div className="min-w-0">
-            <h1 className="text-sm font-bold text-slate-900 truncate">MerchantCore</h1>
-            <p className="text-[10px] text-slate-500 font-medium">Business Pro</p>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>MerchantCore</h1>
+            <p style={{ fontSize: '10px', color: '#64748b', fontWeight: 500, margin: 0 }}>Business Pro</p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+      <nav style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = location.pathname === item.path
@@ -35,31 +38,32 @@ export function DesktopSidebar() {
             <Link
               key={item.path}
               to={item.path}
-              className={cn(
-                'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              )}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
+                borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none',
+                color: isActive ? '#fff' : '#475569',
+                background: isActive ? '#0f172a' : 'transparent',
+                marginBottom: '2px',
+              }}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{item.label}</span>
+              <Icon style={{ width: '16px', height: '16px', flexShrink: 0 }} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
-      <div className="p-3 border-t border-slate-100 space-y-1">
-        <button className="w-full bg-slate-900 text-white text-sm font-medium py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors">
-          <Plus className="w-4 h-4 flex-shrink-0" />
+      <div style={{ padding: '12px', borderTop: '1px solid #f1f5f9' }}>
+        <button style={{ width: '100%', background: '#0f172a', color: '#fff', fontSize: '14px', fontWeight: 500, padding: '8px 0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', cursor: 'pointer', marginBottom: '4px' }}>
+          <Plus style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           Quick Sale
         </button>
-        <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-          <Settings className="w-4 h-4 flex-shrink-0" />
+        <button style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', fontSize: '14px', color: '#475569', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '2px' }}>
+          <Settings style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           Settings
         </button>
-        <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-          <HelpCircle className="w-4 h-4 flex-shrink-0" />
+        <button style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', fontSize: '14px', color: '#475569', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+          <HelpCircle style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           Support
         </button>
       </div>

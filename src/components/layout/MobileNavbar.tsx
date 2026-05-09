@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Plus} from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Plus } from 'lucide-react'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const navItems = [
   { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
@@ -11,10 +11,13 @@ const navItems = [
 ]
 
 export function MobileNavbar() {
-  const location = useLocation();
+  const location = useLocation()
+  const bp = useBreakpoint()
+
+  if (bp.lg) return null
 
   return (
-    <nav className="m-nav-1 lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex items-center justify-around py-2 px-1 z-40">
+    <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', alignItems: 'center', justifyContent: 'space-around', padding: '8px 4px', zIndex: 40 }}>
       {navItems.map((item) => {
         const Icon = item.icon
         const isActive = location.pathname === item.path
@@ -22,20 +25,21 @@ export function MobileNavbar() {
           <Link
             key={item.path}
             to={item.path}
-            className={cn(
-              'flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium transition-colors min-w-[56px]',
-              isActive ? 'text-slate-900' : 'text-slate-400'
-            )}
-        
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+              padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,
+              textDecoration: 'none', minWidth: '56px',
+              color: isActive ? '#0f172a' : '#94a3b8',
+            }}
           >
-            <Icon className={cn('w-5 h-5', isActive && 'text-slate-900')} />
+            <Icon style={{ width: '20px', height: '20px', color: isActive ? '#0f172a' : undefined }} />
             <span>{item.label}</span>
           </Link>
         )
       })}
-      <div className="flex flex-col items-center gap-1 py-1 px-3 min-w-[56px]">
-        <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center -mt-4 shadow-lg">
-          <Plus className="w-5 h-5 text-white" />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '4px 12px', minWidth: '56px' }}>
+        <div style={{ width: '40px', height: '40px', background: '#0f172a', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '-16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)' }}>
+          <Plus style={{ width: '20px', height: '20px', color: '#fff' }} />
         </div>
       </div>
     </nav>
