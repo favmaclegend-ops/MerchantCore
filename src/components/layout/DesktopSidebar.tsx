@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Settings, HelpCircle, Plus } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
@@ -12,6 +12,7 @@ const navItems = [
 
 export function DesktopSidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
   const bp = useBreakpoint()
 
   if (!bp.lg) return null
@@ -54,7 +55,7 @@ export function DesktopSidebar() {
       </nav>
 
       <div style={{ padding: '12px', borderTop: '1px solid #f1f5f9' }}>
-        <button style={{ width: '100%', background: '#0f172a', color: '#fff', fontSize: '14px', fontWeight: 500, padding: '8px 0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', cursor: 'pointer', marginBottom: '4px' }}>
+        <button onClick={() => navigate('/home/pos')} style={{ width: '100%', background: '#0f172a', color: '#fff', fontSize: '14px', fontWeight: 500, padding: '8px 0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', cursor: 'pointer', marginBottom: '4px' }}>
           <Plus style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           Quick Sale
         </button>
