@@ -3,11 +3,11 @@ import { useLocation } from 'react-router-dom'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const pageConfig: Record<string, { title: string; subtitle?: string }> = {
-  '/': { title: 'Dashboard', subtitle: "Here's what's happening today" },
-  '/inventory': { title: 'Inventory', subtitle: 'Stock tracking & management' },
-  '/pos': { title: 'POS Terminal', subtitle: 'Point of sale' },
-  '/credit': { title: 'Credit Ledger', subtitle: 'Manage accounts & payments' },
-  '/customers': { title: 'Customers', subtitle: 'Directory & profiles' },
+  '/home/dashboard': { title: 'Dashboard', subtitle: "Here's what's happening today" },
+  '/home/inventory': { title: 'Inventory', subtitle: 'Stock tracking & management' },
+  '/home/pos': { title: 'POS Terminal', subtitle: 'Point of sale' },
+  '/home/credit': { title: 'Credit Ledger', subtitle: 'Manage accounts & payments' },
+  '/home/customers': { title: 'Customers', subtitle: 'Directory & profiles' },
 }
 
 export function MobileHeader() {

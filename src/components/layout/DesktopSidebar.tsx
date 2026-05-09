@@ -3,11 +3,11 @@ import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Settings, HelpCir
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutGrid },
-  { path: '/inventory', label: 'Inventory', icon: Package },
-  { path: '/credit', label: 'Credit Ledger', icon: CreditCard },
-  { path: '/pos', label: 'POS', icon: ShoppingCart },
-  { path: '/customers', label: 'Customers', icon: Users },
+  { path: '/home/dashboard', label: 'Dashboard', icon: LayoutGrid },
+  { path: '/home/inventory', label: 'Inventory', icon: Package },
+  { path: '/home/credit', label: 'Credit Ledger', icon: CreditCard },
+  { path: '/home/pos', label: 'POS', icon: ShoppingCart },
+  { path: '/home/customers', label: 'Customers', icon: Users },
 ]
 
 export function DesktopSidebar() {

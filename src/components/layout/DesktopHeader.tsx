@@ -5,11 +5,11 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 
 const pageConfig: Record<string, { title: string; search?: string }> = {
-  '/': { title: 'Dashboard' },
-  '/inventory': { title: 'Inventory Manager', search: 'Search inventory...' },
-  '/pos': { title: 'POS Terminal', search: 'Search products...' },
-  '/credit': { title: 'Credit Ledger', search: 'Search accounts...' },
-  '/customers': { title: 'Customer Directory', search: 'Search customers...' },
+  '/home/dashboard': { title: 'Dashboard' },
+  '/home/inventory': { title: 'Inventory Manager', search: 'Search inventory...' },
+  '/home/pos': { title: 'POS Terminal', search: 'Search products...' },
+  '/home/credit': { title: 'Credit Ledger', search: 'Search accounts...' },
+  '/home/customers': { title: 'Customer Directory', search: 'Search customers...' },
 }
 
 export function DesktopHeader() {
