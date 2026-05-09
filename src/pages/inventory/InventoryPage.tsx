@@ -7,11 +7,10 @@ import SearchInput from '@/components/layout/search_cmp'
 export function InventoryPage() {
   const bp = useBreakpoint()
   const [items, setItems] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
 
   useEffect(() => {
-    api.getProducts().then(p => setItems(p)).catch(() => {}).finally(() => setLoading(false))
+    api.getProducts().then(p => setItems(p)).catch(() => {})
   }, [])
 
   const filtered = filter === 'all' ? items : filter === 'low' ? items.filter(p => p.status === 'low-stock') : items.filter(p => p.status === 'out-of-stock')
