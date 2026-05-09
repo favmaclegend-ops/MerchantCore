@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowUpRight, AlertTriangle, DollarSign, Package, Eye } from 'lucide-react'
+import { ArrowUpRight, AlertTriangle, DollarSign, Package, Eye, TrendingUp, Users } from 'lucide-react'
 import DLineChart from '@/components/layout/chart'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
@@ -23,7 +23,9 @@ interface Alert {
 
 export function DashboardPage() {
   const bp = useBreakpoint()
-  const [stats, setStats] = useState({ totalRevenue: 0, monthlyRevenue: 0, totalOrders: 0, activeCustomers: 0, lowStockAlerts: 0, inventoryValue: 0 })
+  const [stats, setStats] = useState({ totalRevenue: 0, monthlyRevenue: 0, totalOrders: 0, activeCustomers: 0, lowStockAlerts: 0, inventoryValue: 0, creditOutstanding: 0, avgTicket: 0, totalProducts: 0 })
+  const [revenueMonths, setRevenueMonths] = useState<string[]>([])
+  const [revenueData, setRevenueData] = useState<number[]>([])
   const [txns, setTxns] = useState<Tx[]>([])
   const [alertList, setAlertList] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,10 +33,15 @@ export function DashboardPage() {
   useEffect(() => {
     Promise.all([
       api.getDashboardStats().catch(() => null),
+      api.getRevenueTrend().catch(() => null),
       api.getTransactions().catch(() => [] as Tx[]),
       api.getProducts().catch(() => []),
-    ]).then(([s, t, p]) => {
+    ]).then(([s, trend, t, p]) => {
       if (s) setStats(s)
+      if (trend) {
+        setRevenueMonths(trend.months.map(m => m.month))
+        setRevenueData(trend.months.map(m => m.revenue))
+      }
       if (t) setTxns(t)
       const alerts: Alert[] = []
       const lowItems = (p as any[]).filter(x => x.status === 'low-stock')
@@ -61,46 +68,56 @@ export function DashboardPage() {
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Revenue</span>
-            <button style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}><Eye style={{ width: '14px', height: '14px' }} /></button>
+            <DollarSign style={{ width: '14px', height: '14px', color: '#94a3b8' }} />
           </div>
           <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>${stats.totalRevenue.toLocaleString()}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
             <ArrowUpRight style={{ width: '14px', height: '14px', color: '#10b981', flexShrink: 0 }} />
-            <span style={{ fontSize: '10px', fontWeight: 500, color: '#059669' }}>Current</span>
+            <span style={{ fontSize: '10px', fontWeight: 500, color: '#059669' }}>${stats.monthlyRevenue.toLocaleString()} this month</span>
           </div>
         </div>
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Orders</span>
+            <TrendingUp style={{ width: '14px', height: '14px', color: '#94a3b8' }} />
           </div>
           <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{stats.totalOrders}</p>
-          <div style={{ marginTop: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
-              <span style={{ color: '#64748b' }}>{stats.activeCustomers} active customers</span>
-            </div>
+          <div style={{ marginTop: '4px', fontSize: '10px', color: '#64748b' }}>
+            <span>{stats.activeCustomers} active customers</span> <span style={{ color: '#94a3b8' }}>•</span> <span>${stats.avgTicket} avg ticket</span>
           </div>
         </div>
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
-          <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Inventory Value</span>
-          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginTop: '4px', margin: 0 }}>${stats.inventoryValue.toLocaleString()}</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Inventory</span>
+            <Package style={{ width: '14px', height: '14px', color: '#94a3b8' }} />
+          </div>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>${stats.inventoryValue.toLocaleString()}</p>
+          <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{stats.totalProducts} products</p>
         </div>
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
-          <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Low Stock Alerts</span>
-          <p style={{ fontSize: '20px', fontWeight: 700, color: '#d97706', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
-            {stats.lowStockAlerts} Items <AlertTriangle style={{ width: '14px', height: '14px', flexShrink: 0 }} />
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Credit Outstanding</span>
+            <AlertTriangle style={{ width: '14px', height: '14px', color: '#f59e0b' }} />
+          </div>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#d97706', margin: 0 }}>${stats.creditOutstanding.toLocaleString()}</p>
+          <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{stats.lowStockAlerts} low stock alerts</p>
         </div>
       </div>
 
       <div style={{ width: '100%', padding: '16px', background: '#fff', borderRadius: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h3 style={{ fontWeight: 700, fontSize: '16px', margin: 0 }}>Sales</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 0 3px rgb(227,222,222)', padding: '6px', borderRadius: '6px' }}>
-            <img src='https://img.icons8.com/?size=100&id=23&format=png&color=7a7a7a' width="20" height="20" alt='calender' />
-            <span style={{ fontSize: '14px' }}>Monthly</span>
+          <h3 style={{ fontWeight: 700, fontSize: '16px', margin: 0 }}>Revenue Trend</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 0 3px rgb(227,222,222)', padding: '6px', borderRadius: '6px', fontSize: '12px', color: '#64748b' }}>
+            Last 6 months
           </div>
         </div>
-        <DLineChart datas={[2900, 4500, 6709, 1000, 4980, 8370]} labels={['1st', '2nd', '3rd', '4th', '5th', '6th']}/>
+        {revenueData.length > 0 ? (
+          <DLineChart datas={revenueData} labels={revenueMonths} />
+        ) : (
+          <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '12px' }}>
+            No revenue data yet
+          </div>
+        )}
       </div>
 
       <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? '2fr 1fr' : '1fr', gap: '16px' }}>

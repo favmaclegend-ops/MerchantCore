@@ -49,6 +49,7 @@ export const api = {
   getTransactions: () => request<any[]>('/transactions'),
 
   getDashboardStats: () => request<any>('/dashboard/stats'),
+  getRevenueTrend: () => request<{ months: { month: string; revenue: number }[] }>('/dashboard/revenue-trend'),
 
   getCreditEntries: () => request<any[]>('/credit-entries'),
   updateCreditEntry: (id: string, data: any) => request<any>(`/credit-entries/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
