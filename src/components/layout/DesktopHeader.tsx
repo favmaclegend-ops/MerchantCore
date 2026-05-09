@@ -1,6 +1,6 @@
-import { useContext, useState } from 'react'
-import { Bell, User, Search } from 'lucide-react'
-import { useLocation } from 'react-router-dom'
+import { useContext, useState, useRef, useEffect } from 'react'
+import { Bell, User, Search, Settings, LogOut } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { NotificationContext } from '@/context/notification_context'
@@ -16,11 +16,22 @@ const pageConfig: Record<string, { title: string; search?: string }> = {
 
 export function DesktopHeader() {
   const location = useLocation()
+  const navigate = useNavigate()
   const bp = useBreakpoint()
-  const { user } = useContext(Authcontext)
+  const { user, logout } = useContext(Authcontext)
   const { unreadCount } = useContext(NotificationContext)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
   const config = pageConfig[location.pathname] ?? pageConfig['/']
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   if (!bp.lg) return null
 
@@ -47,14 +58,28 @@ export function DesktopHeader() {
           </button>
           {showNotifications && <NotificationDropdown onClose={() => setShowNotifications(false)} />}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #e2e8f0' }}>
-          <div style={{ width: '28px', height: '28px', background: '#e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <User style={{ width: '14px', height: '14px', color: '#475569' }} />
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a', lineHeight: 1.3, margin: 0 }}>{user?.full_name || 'User'}</p>
-            <p style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.3, margin: 0 }}>Admin</p>
-          </div>
+        <div ref={userMenuRef} style={{ position: 'relative' }}>
+          <button onClick={() => setShowUserMenu(p => !p)} style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #e2e8f0', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <div style={{ width: '28px', height: '28px', background: '#e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <User style={{ width: '14px', height: '14px', color: '#475569' }} />
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a', lineHeight: 1.3, margin: 0 }}>{user?.full_name || 'User'}</p>
+              <p style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.3, margin: 0 }}>Admin</p>
+            </div>
+          </button>
+          {showUserMenu && (
+            <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', width: '180px', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', overflow: 'hidden', zIndex: 9999 }}>
+              <button onClick={() => { navigate('/home/settings'); setShowUserMenu(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: '#0f172a', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}>
+                <Settings style={{ width: '14px', height: '14px' }} />
+                Settings
+              </button>
+              <button onClick={() => { logout() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <LogOut style={{ width: '14px', height: '14px' }} />
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

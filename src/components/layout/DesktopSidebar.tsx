@@ -59,7 +59,7 @@ export function DesktopSidebar() {
           <Plus style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           Quick Sale
         </button>
-        <button style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', fontSize: '14px', color: '#475569', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '2px' }}>
+        <button onClick={() => navigate('/home/settings')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', fontSize: '14px', color: location.pathname === '/home/settings' ? '#fff' : '#475569', background: location.pathname === '/home/settings' ? '#0f172a' : 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '2px' }}>
           <Settings style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           Settings
         </button>

@@ -9,7 +9,8 @@ import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { InventoryPage } from '@/pages/inventory/InventoryPage'
 import { POSPage } from '@/pages/pos/POSPage'
 import { CreditLedgerPage } from '@/pages/credit/CreditLedgerPage'
-import { CustomersPage } from '@/pages/customers/CustomersPage';
+import { CustomersPage } from '@/pages/customers/CustomersPage'
+import { SettingsPage } from '@/pages/settings/SettingsPage';
 
 
 export default function Home() {
@@ -38,6 +39,7 @@ export default function Home() {
                             <Route path="/pos" element={<POSPage />} />
                             <Route path="/credit" element={<CreditLedgerPage />} />
                             <Route path="/customers" element={<CustomersPage />} />
+                            <Route path="/settings" element={<SettingsPage />} />
                         </Routes>
                     </div>
 
