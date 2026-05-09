@@ -1,7 +1,7 @@
-import { useRef, useState } from "react"
+import { useContext, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import AlertDialog from "../../components/layout/alert_dialog";
-import { login } from "@/account/authentication/auth";
+import { Authcontext } from "@/context/auth_context";
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -34,6 +34,7 @@ const buttonStyle: React.CSSProperties = {
 
 export default function LoginPage() {
 
+    const { login: authLogin } = useContext(Authcontext)
     const email = useRef<HTMLInputElement>(null);
     const password = useRef<HTMLInputElement>(null);
     const form = useRef<HTMLFormElement>(null);
@@ -47,25 +48,19 @@ export default function LoginPage() {
 
         try {
             setIsLoading(true);
-            const { data, response } = await login({ email: email.current!.value, password: password.current!.value });
+            await authLogin(email.current!.value, password.current!.value);
             setIsLoading(false);
-
-            if (response.ok) {
-                setIsAlert('flex');
-                setAlert({ message: 'Login SuccessFull', type: 'success' });
-                setTimeout(() => {
-                        navigate('/home/dashboard', {replace: true});
-                }, 1500);
-                return;
-            }
-
             setIsAlert('flex');
-            console.log(data)
-            setAlert({ message: data.detail, type: 'invalid' });
-            return;
+            setAlert({ message: 'Login Successful', type: 'success' });
+            setTimeout(() => {
+                navigate('/home/dashboard', {replace: true});
+            }, 1500);
         }
-        catch (e) {
-            console.error(e);
+        catch (e: any) {
+            setIsLoading(false);
+            setIsAlert('flex');
+            const msg = e?.message || 'Login failed';
+            setAlert({ message: msg, type: 'invalid' });
         }
     }
 
