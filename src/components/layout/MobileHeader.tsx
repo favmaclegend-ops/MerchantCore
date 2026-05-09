@@ -1,6 +1,9 @@
+import { useContext, useState } from 'react'
 import { Bell, User } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { NotificationContext } from '@/context/notification_context'
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 
 const pageConfig: Record<string, { title: string; subtitle?: string }> = {
   '/home/dashboard': { title: 'Dashboard', subtitle: "Here's what's happening today" },
@@ -13,6 +16,8 @@ const pageConfig: Record<string, { title: string; subtitle?: string }> = {
 export function MobileHeader() {
   const location = useLocation()
   const bp = useBreakpoint()
+  const { unreadCount } = useContext(NotificationContext)
+  const [showNotifications, setShowNotifications] = useState(false)
   const config = pageConfig[location.pathname] ?? pageConfig['/']
 
   if (bp.lg) return null
@@ -24,10 +29,15 @@ export function MobileHeader() {
         {config.subtitle && <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0 0' }}>{config.subtitle}</p>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <button style={{ position: 'relative', padding: '8px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
-          <Bell style={{ width: '20px', height: '20px' }} />
-          <span style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%' }}></span>
-        </button>
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setShowNotifications(p => !p)} style={{ position: 'relative', padding: '8px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <Bell style={{ width: '20px', height: '20px' }} />
+            {unreadCount > 0 && (
+              <span style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%' }}></span>
+            )}
+          </button>
+          {showNotifications && <NotificationDropdown onClose={() => setShowNotifications(false)} />}
+        </div>
         <div style={{ width: '32px', height: '32px', background: '#e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <User style={{ width: '16px', height: '16px', color: '#475569' }} />
         </div>

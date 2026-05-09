@@ -56,4 +56,9 @@ export const api = {
 
   checkout: (data: { items: any[]; total: number; payment_method: string }) =>
     request<any>('/pos/checkout', { method: 'POST', body: JSON.stringify(data) }),
+
+  getNotifications: () => request<any[]>('/notifications'),
+  getUnreadNotificationCount: () => request<{ count: number }>('/notifications/unread-count'),
+  markNotificationRead: (id: string) => request<any>(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsRead: () => request<any>('/notifications/read-all', { method: 'PATCH' }),
 }

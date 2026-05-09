@@ -1,8 +1,10 @@
-import { useContext } from 'react'
+import { useContext, useState } from 'react'
 import { Bell, User, Search } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
+import { NotificationContext } from '@/context/notification_context'
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 
 const pageConfig: Record<string, { title: string; search?: string }> = {
   '/home/dashboard': { title: 'Dashboard' },
@@ -16,6 +18,8 @@ export function DesktopHeader() {
   const location = useLocation()
   const bp = useBreakpoint()
   const { user } = useContext(Authcontext)
+  const { unreadCount } = useContext(NotificationContext)
+  const [showNotifications, setShowNotifications] = useState(false)
   const config = pageConfig[location.pathname] ?? pageConfig['/']
 
   if (!bp.lg) return null
@@ -34,10 +38,15 @@ export function DesktopHeader() {
             />
           </div>
         )}
-        <button style={{ position: 'relative', padding: '8px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
-          <Bell style={{ width: '16px', height: '16px' }} />
-          <span style={{ position: 'absolute', top: '4px', right: '4px', width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%' }}></span>
-        </button>
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setShowNotifications(p => !p)} style={{ position: 'relative', padding: '8px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <Bell style={{ width: '16px', height: '16px' }} />
+            {unreadCount > 0 && (
+              <span style={{ position: 'absolute', top: '4px', right: '4px', width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%' }}></span>
+            )}
+          </button>
+          {showNotifications && <NotificationDropdown onClose={() => setShowNotifications(false)} />}
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid #e2e8f0' }}>
           <div style={{ width: '28px', height: '28px', background: '#e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <User style={{ width: '14px', height: '14px', color: '#475569' }} />
