@@ -12,6 +12,7 @@ const pageConfig: Record<string, { title: string; search?: string }> = {
   '/home/pos': { title: 'POS Terminal', search: 'Search products...' },
   '/home/credit': { title: 'Credit Ledger', search: 'Search accounts...' },
   '/home/customers': { title: 'Customer Directory', search: 'Search customers...' },
+  '/home/settings': { title: 'Settings' },
 }
 
 export function DesktopHeader() {
@@ -23,7 +24,7 @@ export function DesktopHeader() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
-  const config = pageConfig[location.pathname] ?? pageConfig['/']
+  const config = pageConfig[location.pathname] ?? { title: '' }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

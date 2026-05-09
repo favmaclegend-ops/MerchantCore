@@ -12,6 +12,7 @@ const pageConfig: Record<string, { title: string; subtitle?: string }> = {
   '/home/pos': { title: 'POS Terminal', subtitle: 'Point of sale' },
   '/home/credit': { title: 'Credit Ledger', subtitle: 'Manage accounts & payments' },
   '/home/customers': { title: 'Customers', subtitle: 'Directory & profiles' },
+  '/home/settings': { title: 'Settings', subtitle: 'Account & preferences' },
 }
 
 export function MobileHeader() {
@@ -23,7 +24,7 @@ export function MobileHeader() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
-  const config = pageConfig[location.pathname] ?? pageConfig['/']
+  const config = pageConfig[location.pathname] ?? { title: '' }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

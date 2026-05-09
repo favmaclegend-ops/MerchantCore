@@ -57,6 +57,18 @@ export function DashboardPage() {
     }).finally(() => setLoading(false))
   }, [])
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', width: '100%', padding: '0 8px' }}>
+        <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>Dashboard</h1>
+          <p style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', marginBottom: 0 }}>Loading your data...</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px', color: '#94a3b8', fontSize: '14px' }}>Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', width: '100%', padding: '0 8px' }}>
       <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
