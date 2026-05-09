@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Search, Mail, Edit, CreditCard, UserPlus } from 'lucide-react'
+import { Mail, Edit, CreditCard, UserPlus } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 

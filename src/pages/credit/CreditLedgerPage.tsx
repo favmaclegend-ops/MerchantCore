@@ -22,7 +22,6 @@ export function CreditLedgerPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
   const [showForm, setShowForm] = useState(false)
-  const [editingEntry, setEditingEntry] = useState<any | null>(null)
   const [showPayForm, setShowPayForm] = useState<any | null>(null)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)

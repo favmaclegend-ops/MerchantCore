@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, AlertTriangle, BarChart3, Eye, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 
