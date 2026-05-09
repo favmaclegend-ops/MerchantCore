@@ -20,6 +20,7 @@ export function CreditLedgerPage() {
   const bp = useBreakpoint()
   const [entries, setEntries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState('all')
   const [showForm, setShowForm] = useState(false)
   const [editingEntry, setEditingEntry] = useState<any | null>(null)
   const [showPayForm, setShowPayForm] = useState<any | null>(null)
@@ -77,9 +78,11 @@ export function CreditLedgerPage() {
     loadEntries()
   }
 
-  const totalOutstanding = entries.reduce((s, e) => s + (e.balance || 0), 0)
-  const overdueCount = entries.filter(e => e.status === 'overdue' || e.status === 'critical').length
-  const collectedMtd = entries.filter(e => e.last_payment_amount).reduce((s, e) => s + (e.last_payment_amount || 0), 0)
+  const filteredEntries = statusFilter === 'all' ? entries : entries.filter(e => e.status === statusFilter)
+
+  const totalOutstanding = filteredEntries.reduce((s, e) => s + (e.balance || 0), 0)
+  const overdueCount = filteredEntries.filter(e => e.status === 'overdue' || e.status === 'critical').length
+  const collectedMtd = filteredEntries.filter(e => e.last_payment_amount).reduce((s, e) => s + (e.last_payment_amount || 0), 0)
 
   const modalBackdrop: React.CSSProperties = {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex',
@@ -111,9 +114,15 @@ export function CreditLedgerPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderBottom: '1px solid #f1f5f9' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h3 style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', margin: 0 }}>Debtor Registry</h3>
-            <span style={{ fontSize: '10px', color: '#64748b', background: '#f1f5f9', padding: '2px 6px', borderRadius: '999px' }}>{entries.length}</span>
+            <span style={{ fontSize: '10px', color: '#64748b', background: '#f1f5f9', padding: '2px 6px', borderRadius: '999px' }}>{filteredEntries.length}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ fontSize: '10px', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 8px', background: '#fff', color: '#0f172a' }}>
+              <option value="all">Status: All</option>
+              <option value="active">Active</option>
+              <option value="overdue">Overdue</option>
+              <option value="critical">Critical</option>
+            </select>
             <button onClick={() => setShowForm(true)} style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 500, color: '#fff', background: '#0f172a', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
               + New Entry
             </button>
@@ -132,7 +141,7 @@ export function CreditLedgerPage() {
               </tr>
             </thead>
             <tbody>
-              {entries.map((entry: any) => (
+              {filteredEntries.map((entry: any) => (
                 <tr key={entry.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                   <td style={{ padding: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -168,8 +177,8 @@ export function CreditLedgerPage() {
                   </td>
                 </tr>
               ))}
-              {entries.length === 0 && !loading && (
-                <tr><td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '12px' }}>No credit entries yet</td></tr>
+              {filteredEntries.length === 0 && !loading && (
+                <tr><td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '12px' }}>{statusFilter === 'all' ? 'No credit entries yet' : 'No entries match this status'}</td></tr>
               )}
             </tbody>
           </table>

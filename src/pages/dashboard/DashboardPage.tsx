@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowUpRight, AlertTriangle, DollarSign, Package, TrendingUp } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import DLineChart from '@/components/layout/chart'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
@@ -22,6 +23,7 @@ interface Alert {
 }
 
 export function DashboardPage() {
+  const navigate = useNavigate()
   const bp = useBreakpoint()
   const [stats, setStats] = useState({ totalRevenue: 0, monthlyRevenue: 0, totalOrders: 0, activeCustomers: 0, lowStockAlerts: 0, inventoryValue: 0, creditOutstanding: 0, avgTicket: 0, totalProducts: 0 })
   const [revenueMonths, setRevenueMonths] = useState<string[]>([])
@@ -136,7 +138,7 @@ export function DashboardPage() {
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: 0 }}>Recent Transactions</h3>
-            <button style={{ fontSize: '10px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View All</button>
+            <button onClick={() => navigate('/home/pos')} style={{ fontSize: '10px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View All</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
             {txns.slice(0, 5).map((tx) => (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Minus, Plus, CreditCard, Smartphone, Wallet, History } from 'lucide-react'
+import { Minus, Plus, CreditCard, Smartphone, Wallet, History, CheckCircle } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 
@@ -15,14 +15,20 @@ export function POSPage() {
   const [products, setProducts] = useState<any[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [category, setCategory] = useState('All Items')
-  const [loading, setLoading] = useState(true)
-  const categories = ['All Items', 'Beverages', 'Snacks', 'Grains', 'Toiletries']
+  const [paymentMethod, setPaymentMethod] = useState('Cash')
+  const [showLog, setShowLog] = useState(false)
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [successMsg, setSuccessMsg] = useState('')
+  const [loadingProducts, setLoadingProducts] = useState(true)
+  const [checkingOut, setCheckingOut] = useState(false)
 
   useEffect(() => {
-    api.getProducts().then(p => setProducts(p)).catch(() => {}).finally(() => setLoading(false))
+    api.getProducts().then(p => setProducts(p)).catch(() => {}).finally(() => setLoadingProducts(false))
   }, [])
 
-  const filteredProducts = category === 'All Items' ? products : products.filter(p => p.category === category || p.category.toLowerCase() === category.toLowerCase())
+  const categories = ['All Items', ...new Set(products.map(p => p.category).filter(Boolean))]
+
+  const filteredProducts = category === 'All Items' ? products : products.filter(p => p.category === category)
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const tax = subtotal * 0.05
@@ -49,36 +55,58 @@ export function POSPage() {
   }
 
   const handleCheckout = async () => {
-    if (cart.length === 0) return
+    if (cart.length === 0 || checkingOut) return
+    setCheckingOut(true)
     try {
-      await api.checkout({ items: cart, total, payment_method: 'Cash' })
+      await api.checkout({ items: cart, total, payment_method: paymentMethod })
       setCart([])
+      setSuccessMsg(`Sale of $${total.toFixed(2)} completed!`)
+      setTimeout(() => setSuccessMsg(''), 3000)
     } catch (e) {
       console.error('Checkout failed', e)
+    } finally {
+      setCheckingOut(false)
     }
   }
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>
+  const openLog = async () => {
+    setShowLog(true)
+    api.getTransactions().then(t => setTransactions(t)).catch(() => {})
+  }
+
+  const paymentButtons = [
+    { label: 'Cash', icon: Wallet },
+    { label: 'Card', icon: CreditCard },
+    { label: 'Mobile', icon: Smartphone },
+  ]
+
+  if (loadingProducts) return <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>
 
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', padding: '12px' }}>
-      <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>POS Terminal</h1>
+        {successMsg && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: '#059669', background: '#ecfdf5', padding: '6px 12px', borderRadius: '8px' }}>
+            <CheckCircle style={{ width: '14px', height: '14px' }} />
+            {successMsg}
+          </div>
+        )}
       </div>
+
+      {successMsg && (
+        <div style={{ padding: '10px 14px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', fontSize: '12px', color: '#059669', fontWeight: 500 }}>
+          {successMsg}
+        </div>
+      )}
 
       <div style={{ width: '100%', display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'thin' }}>
         {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setCategory(cat)}
-            style={{
-              padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '16px',
-              whiteSpace: 'nowrap', flexShrink: 0, border: category === cat ? 'none' : '1px solid #e2e8f0',
-              color: category === cat ? '#fff' : '#475569',
-              background: category === cat ? '#0f172a' : '#fff',
-              cursor: 'pointer',
-            }}
-          >
+          <button key={cat} onClick={() => setCategory(cat)} style={{
+            padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '16px',
+            whiteSpace: 'nowrap', flexShrink: 0, border: category === cat ? 'none' : '1px solid #e2e8f0',
+            color: category === cat ? '#fff' : '#475569', background: category === cat ? '#0f172a' : '#fff', cursor: 'pointer',
+          }}>
             {cat}
           </button>
         ))}
@@ -103,30 +131,28 @@ export function POSPage() {
                 <p style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{product.name}</p>
                 <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>${product.price.toFixed(2)}</p>
               </div>
-              <button
-                onClick={() => addToCart(product.id)}
-                disabled={product.status === 'out-of-stock'}
-                style={{
-                  width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
-                  color: '#fff', background: '#0f172a', border: 'none', cursor: product.status === 'out-of-stock' ? 'not-allowed' : 'pointer',
-                  opacity: product.status === 'out-of-stock' ? 0.5 : 1,
-                }}
-              >
+              <button onClick={() => addToCart(product.id)} disabled={product.status === 'out-of-stock'} style={{
+                width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
+                color: '#fff', background: '#0f172a', border: 'none', cursor: product.status === 'out-of-stock' ? 'not-allowed' : 'pointer',
+                opacity: product.status === 'out-of-stock' ? 0.5 : 1,
+              }}>
                 Add
               </button>
             </div>
           ))}
+          {filteredProducts.length === 0 && (
+            <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: '#94a3b8', fontSize: '12px' }}>
+              No products in this category
+            </div>
+          )}
         </div>
 
         <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '12px', borderBottom: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>Cart</span>
-              <span style={{ fontSize: '10px', color: '#64748b' }}>Checkout</span>
-            </div>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>Cart ({cart.length})</span>
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '12px', maxHeight: bp.lg ? '300px' : '200px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px', maxHeight: bp.lg ? '240px' : '200px' }}>
             {cart.length === 0 ? (
               <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '24px 0', margin: 0 }}>Empty</p>
             ) : (
@@ -148,7 +174,7 @@ export function POSPage() {
                       <Plus style={{ width: '12px', height: '12px' }} />
                     </button>
                   </div>
-                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', margin: 0 }}>${(item.price * item.quantity).toFixed(2)}</p>
+                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', margin: 0, minWidth: '48px', textAlign: 'right' }}>${(item.price * item.quantity).toFixed(2)}</p>
                 </div>
               ))
             )}
@@ -169,36 +195,61 @@ export function POSPage() {
             </div>
           </div>
 
-          <div style={{ padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
-            <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0', fontSize: '10px', fontWeight: 500, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>
-              <Wallet style={{ width: '12px', height: '12px' }} /> Cash
-            </button>
-            <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0', fontSize: '10px', fontWeight: 500, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>
-              <CreditCard style={{ width: '12px', height: '12px' }} /> Card
-            </button>
-            <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0', fontSize: '10px', fontWeight: 500, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>
-              <Smartphone style={{ width: '12px', height: '12px' }} /> Mobile
-            </button>
-            <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0', fontSize: '10px', fontWeight: 500, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer' }}>
+          <div style={{ padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+            {paymentButtons.map(pb => {
+              const Icon = pb.icon
+              const isActive = paymentMethod === pb.label
+              return (
+                <button key={pb.label} onClick={() => setPaymentMethod(pb.label)} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0',
+                  fontSize: '10px', fontWeight: 500,
+                  background: isActive ? '#0f172a' : '#f8fafc',
+                  color: isActive ? '#fff' : '#475569',
+                  border: isActive ? 'none' : '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer',
+                }}>
+                  <Icon style={{ width: '12px', height: '12px' }} /> {pb.label}
+                </button>
+              )
+            })}
+            <button onClick={openLog} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '6px 0',
+              fontSize: '10px', fontWeight: 500, background: '#f8fafc', border: '1px solid #e2e8f0',
+              borderRadius: '4px', cursor: 'pointer', color: '#475569',
+            }}>
               <History style={{ width: '12px', height: '12px' }} /> Log
             </button>
           </div>
 
           <div style={{ padding: '0 12px 12px' }}>
-            <button
-              onClick={handleCheckout}
-              disabled={cart.length === 0}
-              style={{
-                width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
-                color: '#fff', background: cart.length === 0 ? '#94a3b8' : '#0f172a',
-                borderRadius: '4px', border: 'none', cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Checkout
+            <button onClick={handleCheckout} disabled={cart.length === 0 || checkingOut} style={{
+              width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
+              color: '#fff', background: cart.length === 0 ? '#94a3b8' : '#0f172a',
+              borderRadius: '4px', border: 'none', cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: checkingOut ? 0.6 : 1,
+            }}>
+              {checkingOut ? 'Processing...' : `Checkout $${total.toFixed(2)}`}
             </button>
           </div>
         </div>
       </div>
+
+      {showLog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }} onClick={() => setShowLog(false)}>
+          <div style={{ background: '#fff', borderRadius: '12px', padding: '24px', width: '100%', maxWidth: '500px', maxHeight: '80vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: 0 }}>Recent Transactions</h3>
+            {transactions.length === 0 && <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>No transactions yet</p>}
+            {transactions.slice(0, 20).map((tx: any) => (
+              <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9', fontSize: '12px' }}>
+                <div>
+                  <p style={{ fontWeight: 500, color: '#0f172a', margin: 0 }}>{tx.type} — ${tx.amount?.toFixed(2)}</p>
+                  <p style={{ fontSize: '10px', color: '#64748b', margin: '2px 0 0 0' }}>{tx.customer_name || 'POS Sale'} • {tx.created_at ? new Date(tx.created_at).toLocaleString() : ''}</p>
+                </div>
+                <span style={{ fontWeight: 600, color: tx.status === 'completed' ? '#059669' : '#d97706', textTransform: 'uppercase' }}>{tx.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
