@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowUpRight, AlertTriangle, DollarSign, Package, Eye, TrendingUp, Users } from 'lucide-react'
+import { ArrowUpRight, AlertTriangle, DollarSign, Package, TrendingUp } from 'lucide-react'
 import DLineChart from '@/components/layout/chart'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
