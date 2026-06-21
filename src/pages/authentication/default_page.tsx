@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { Navigate } from "react-router-dom";
 import LoginPage from "./login";
-import SigninPage from "./signin";
+ import SigninPage from "./signin";
 import { Authcontext } from "@/context/auth_context";
 
 export default function DefaultPage() {

@@ -21,6 +21,8 @@ export function POSPage() {
   const [successMsg, setSuccessMsg] = useState('')
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [checkingOut, setCheckingOut] = useState(false)
+  const [isCart, setCartView] = useState<boolean>(false)
+
 
   useEffect(() => {
     api.getProducts().then(p => setProducts(p)).catch(() => {}).finally(() => setLoadingProducts(false))
@@ -80,12 +82,21 @@ export function POSPage() {
     { label: 'Mobile', icon: Smartphone },
   ]
 
-  if (loadingProducts) return <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>
+  const removeCartItem = (id: string) => {
+    setCart(prev => prev.filter(x => x.id !== id))
+  }
 
+  if (loadingProducts) return <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>
+  
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', padding: '12px' }}>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', padding: '12px', flex: '1', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>POS Terminal</h1>
+        <button onClick={() => setCartView(true)} style={{marginInlineStart: 'auto', background: isCart ? 'black': 'none', color: isCart ? 'white' : 'black', display: 'flex', cursor: 'pointer', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem', padding: '.2rem 1rem', borderRadius: '4rem', border: '1px solid #e2e8f0'}}>
+          <img src={`https://img.icons8.com/?size=100&id=9671&format=png&color=${isCart ? 'ffffff' : ' 880000'}`} width={'20'} height={'20'}/>
+
+          <span>Cart</span>
+        </button>
         {successMsg && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: '#059669', background: '#ecfdf5', padding: '6px 12px', borderRadius: '8px' }}>
             <CheckCircle style={{ width: '14px', height: '14px' }} />
@@ -102,20 +113,25 @@ export function POSPage() {
 
       <div style={{ width: '100%', display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'thin' }}>
         {categories.map(cat => (
-          <button key={cat} onClick={() => setCategory(cat)} style={{
+          <button key={cat} onClick={() => {setCategory(cat); setCartView(false)}} style={{
             padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '16px',
             whiteSpace: 'nowrap', flexShrink: 0, border: category === cat ? 'none' : '1px solid #e2e8f0',
-            color: category === cat ? '#fff' : '#475569', background: category === cat ? '#0f172a' : '#fff', cursor: 'pointer',
+            color: !isCart && category === cat ? '#fff' : '#475569', background: !isCart && category === cat ? '#0f172a' : '#fff', cursor: 'pointer',
           }}>
             {cat}
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? '3fr 1fr' : '1fr', gap: bp.xl ? '16px' : '12px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px' }}>
+      {/**The container that holds the cart and the products===================================================== */}
+      <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? '3fr 1fr' : '1fr', gridAutoRows: '1fr', flex: '1', gap: bp.xl ? '16px' : '12px' }}>
+        
+        {/**The container that holds the product items in a grid format */}
+        <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px', gridAutoRows: 'max-content' }}>
+         
+         {/**The filter product ======================================================== */}
           {filteredProducts.map(product => (
-            <div key={product.id} style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+            <div key={product.id} style={{ padding: '.5rem', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', height: 'auto'}}>
               <div style={{ height: '96px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                 <span style={{ fontSize: '24px', fontWeight: 700, color: '#cbd5e1' }}>{product.name[0]}</span>
                 <span style={{
@@ -135,6 +151,7 @@ export function POSPage() {
                 width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
                 color: '#fff', background: '#0f172a', border: 'none', cursor: product.status === 'out-of-stock' ? 'not-allowed' : 'pointer',
                 opacity: product.status === 'out-of-stock' ? 0.5 : 1,
+                borderRadius: '.5rem'
               }}>
                 Add
               </button>
@@ -147,6 +164,11 @@ export function POSPage() {
           )}
         </div>
 
+
+        {/**CART=========================================================================================== */}
+       { 
+        isCart &&
+        <>
         <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '12px', borderBottom: '1px solid #f1f5f9' }}>
             <span style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>Cart ({cart.length})</span>
@@ -156,6 +178,7 @@ export function POSPage() {
             {cart.length === 0 ? (
               <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '24px 0', margin: 0 }}>Empty</p>
             ) : (
+
               cart.map(item => (
                 <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <div style={{ width: '28px', height: '28px', background: '#f1f5f9', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -175,6 +198,9 @@ export function POSPage() {
                     </button>
                   </div>
                   <p style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', margin: 0, minWidth: '48px', textAlign: 'right' }}>${(item.price * item.quantity).toFixed(2)}</p>
+                  <button style={{padding: '.4rem', borderRadius: '1rem', cursor: 'pointer', border: 'none'}} onClick={() => removeCartItem(item.id)}>
+                    <img src={'https://img.icons8.com/?size=100&id=11705&format=png&color=ff0000'} width={'20'} height={'20'} />
+                  </button>
                 </div>
               ))
             )}
@@ -231,6 +257,10 @@ export function POSPage() {
             </button>
           </div>
         </div>
+        </>
+        }
+        {/**CART ENDING=========================================================================================== */}
+
       </div>
 
       {showLog && (
