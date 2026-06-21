@@ -17,7 +17,7 @@ A modern, responsive React dashboard application for merchant management. Built 
 | Framework | React 19 |
 | Language | TypeScript 6 |
 | Build Tool | Vite 8 |
-| Styling | Tailwind CSS v4 |
+| Styling | Tailwind CSS v4 & React CSS|
 | Routing | React Router v7 |
 | Icons | Lucide React |
 | Linting | ESLint + typescript-eslint |
