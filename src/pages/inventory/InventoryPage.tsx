@@ -139,7 +139,7 @@ export function InventoryPage() {
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
           {filtered.map((product: any) => (
             <div key={product.id} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: 'var(--bg-surface)', display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', borderRadius: '10px', flexShrink: 0 }}>
+              <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '10px', flexShrink: 0 }}>
                 <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-muted)' }}>{product.name.substring(0, 1)}</span>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
