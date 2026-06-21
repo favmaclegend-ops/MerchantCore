@@ -88,7 +88,7 @@ export function InventoryPage() {
           <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Inventory</h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <button onClick={openAdd} style={{ display: 'flex', padding: '6px 12px', fontSize: '12px', fontWeight: 500, color: 'var(--bg-surface)', background: 'var(--bg-nav-active)', borderRadius: '8px', border: 'none', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+          <button onClick={openAdd} style={{ display: 'flex', padding: '6px 12px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary-b)', background: 'var(--bg-nav-active)', borderRadius: '8px', border: 'none', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
             <Plus style={{ width: '14px', height: '14px' }} />
             Add Item
           </button>

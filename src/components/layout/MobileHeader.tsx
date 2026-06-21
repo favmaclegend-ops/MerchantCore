@@ -45,7 +45,8 @@ export function MobileHeader() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ position: 'relative' }}>
-          <button onClick={() => setShowNotifications(p => !p)} style={{ position: 'relative', padding: '8px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>\n            <Bell style={{ width: '20px', height: '20px' }} />
+          <button onClick={() => setShowNotifications(p => !p)} style={{ position: 'relative', padding: '8px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <Bell style={{ width: '20px', height: '20px' }} />
             {unreadCount > 0 && (
               <span style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%' }}></span>
             )}
@@ -58,10 +59,11 @@ export function MobileHeader() {
           </button>
           {showUserMenu && (
             <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', width: '180px', background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', overflow: 'hidden', zIndex: 9999 }}>
-              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--bg-tertiary)' }}>\n                <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{user?.full_name || 'User'}</p>
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--bg-tertiary)' }}><p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{user?.full_name || 'User'}</p>
                 <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{user?.email || ''}</p>
               </div>
-              <button onClick={() => { navigate('/home/settings'); setShowUserMenu(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: 'var(--text-primary)', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid var(--bg-tertiary)' }}>\n                <Settings style={{ width: '14px', height: '14px' }} />
+              <button onClick={() => { navigate('/home/settings'); setShowUserMenu(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: 'var(--text-primary)', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid var(--bg-tertiary)' }}>
+                <Settings style={{ width: '14px', height: '14px' }} />
                 Settings
               </button>
               <button onClick={() => { logout() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>

@@ -17,7 +17,7 @@ export default function Alert({message = 'Success', type = 'success'}: iAlert) {
             <dialog style={styles.dialog}>
                 <div style={styles.div}>
                     <img src={typeIc[type as keyof typeof typeIc]} width={'30'} height={'30'}/>
-                    <p style={{fontSize: '.9rem', lineHeight: '.9rem'}}>{message}</p>
+                    <p style={{fontSize: '.9rem', lineHeight: '.9rem', color: 'var(--text-secondary-b)'}}>{message}</p>
                 </div>
             </dialog>
         </>
@@ -30,7 +30,7 @@ const styles: {[key: string]: React.CSSProperties} = {
         
         borderRadius: '2rem',
         background: 'var(--bg-surface)',
-        boxShadow: '0 .2rem 1rem .5rem #f2f2f2',
+        boxShadow: 'var(--shadow-card)',
         display: 'flex',
         border: 'none',
         alignSelf: 'center',
