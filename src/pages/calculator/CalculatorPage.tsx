@@ -262,7 +262,7 @@ function BusinessCalculator() {
     }
   }
 
-  const typeLabels: { value: CalcType; label: string; icon: React.ReactNode }[] = [
+  const typeLabels: { value: typeof calcType; label: string; icon: React.ReactNode }[] = [
     { value: 'margin', label: 'Margin', icon: <Percent style={{ width: '14px', height: '14px' }} /> },
     { value: 'markup', label: 'Markup', icon: <TrendingUp style={{ width: '14px', height: '14px' }} /> },
     { value: 'tax', label: 'Tax', icon: <Percent style={{ width: '14px', height: '14px' }} /> },

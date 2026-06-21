@@ -16,7 +16,7 @@ export default function Alert({message = 'Success', type = 'success'}: iAlert) {
         <>
             <dialog style={styles.dialog}>
                 <div style={styles.div}>
-                    <img src={typeIc[type]} width={'30'} height={'30'}/>
+                    <img src={typeIc[type as keyof typeof typeIc]} width={'30'} height={'30'}/>
                     <p style={{fontSize: '.9rem', lineHeight: '.9rem'}}>{message}</p>
                 </div>
             </dialog>
