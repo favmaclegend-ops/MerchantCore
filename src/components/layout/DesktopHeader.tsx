@@ -12,6 +12,7 @@ const pageConfig: Record<string, { title: string; search?: string }> = {
   '/home/pos': { title: 'POS Terminal', search: 'Search products...' },
   '/home/credit': { title: 'Credit Ledger', search: 'Search accounts...' },
   '/home/customers': { title: 'Customer Directory', search: 'Search customers...' },
+  '/home/calculator': { title: 'Calculator' },
   '/home/settings': { title: 'Settings' },
 }
 

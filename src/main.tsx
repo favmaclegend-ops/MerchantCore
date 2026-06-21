@@ -5,14 +5,17 @@ import App from './App';
 import './index.css';
 import AuthProvider from './context/auth_provider';
 import NotificationProvider from './context/notification_provider';
+import CurrencyProvider from './context/currency_provider';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <NotificationProvider>
-          <App />
-        </NotificationProvider>
+        <CurrencyProvider>
+          <NotificationProvider>
+            <App />
+          </NotificationProvider>
+        </CurrencyProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,

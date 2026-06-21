@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import { Mail, Edit, CreditCard, UserPlus } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
+import { CurrencyContext } from '@/context/currency_context'
 
 const tierStyle = (tier: string): React.CSSProperties => {
   switch (tier) {
@@ -20,6 +21,7 @@ const inputStyle: React.CSSProperties = {
 
 export function CustomersPage() {
   const bp = useBreakpoint()
+  const { format } = useContext(CurrencyContext)
   const [customers, setCustomers] = useState<any[]>([])
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -143,7 +145,7 @@ export function CustomersPage() {
                       <p style={{ fontSize: '10px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{customer.email}</p>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <p style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', margin: 0 }}>NLE{customer.total_spent?.toLocaleString() || '0'}</p>
+                      <p style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', margin: 0 }}>{format(customer.total_spent || 0)}</p>
                     </div>
                   </button>
                 )
@@ -193,11 +195,11 @@ export function CustomersPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid #f1f5f9' }}>
                 <div style={{ padding: '16px', borderRight: '1px solid #f1f5f9' }}>
                   <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Total Spent</span>
-                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>NLE{selectedCustomer.total_spent?.toLocaleString() || '0'}</p>
+                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>{format(selectedCustomer.total_spent || 0)}</p>
                 </div>
                 <div style={{ padding: '16px', borderRight: '1px solid #f1f5f9' }}>
                   <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Credit Limit</span>
-                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>NLE{selectedCustomer.credit_limit?.toLocaleString() || '0'}</p>
+                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>{format(selectedCustomer.credit_limit || 0)}</p>
                 </div>
                 <div style={{ padding: '16px' }}>
                   <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Last Purchase</span>

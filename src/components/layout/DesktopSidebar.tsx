@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Settings, HelpCircle, Plus } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { path: '/home/credit', label: 'Credit Ledger', icon: CreditCard },
   { path: '/home/pos', label: 'POS', icon: ShoppingCart },
   { path: '/home/customers', label: 'Customers', icon: Users },
+  { path: '/home/calculator', label: 'Calculator', icon: Calculator },
 ]
 
 export function DesktopSidebar() {

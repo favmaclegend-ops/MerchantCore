@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useContext } from 'react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
+import { CurrencyContext } from '@/context/currency_context'
 
 const statusStyle = (status: string) => {
   switch (status) {
@@ -18,6 +19,7 @@ const inputStyle: React.CSSProperties = {
 
 export function CreditLedgerPage() {
   const bp = useBreakpoint()
+  const { format } = useContext(CurrencyContext)
   const [entries, setEntries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -97,7 +99,7 @@ export function CreditLedgerPage() {
       <div style={{ display: 'grid', gridTemplateColumns: bp.sm ? 'repeat(3, 1fr)' : '1fr', gap: '12px' }}>
         <div style={{ background: '#0f172a', borderRadius: '8px', padding: '16px', color: '#fff' }}>
           <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Total Outstanding</span>
-          <p style={{ fontSize: '20px', fontWeight: 700, marginTop: '4px', margin: '4px 0 0 0' }}>${totalOutstanding.toLocaleString()}</p>
+          <p style={{ fontSize: '20px', fontWeight: 700, marginTop: '4px', margin: '4px 0 0 0' }}>{format(totalOutstanding)}</p>
         </div>
         <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px' }}>
           <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Overdue Accounts</span>
@@ -105,7 +107,7 @@ export function CreditLedgerPage() {
         </div>
         <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', padding: '16px' }}>
           <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Collected</span>
-          <p style={{ fontSize: '20px', fontWeight: 700, color: '#059669', marginTop: '4px', margin: '4px 0 0 0' }}>${collectedMtd.toLocaleString()}</p>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#059669', marginTop: '4px', margin: '4px 0 0 0' }}>{format(collectedMtd)}</p>
         </div>
       </div>
 
@@ -153,10 +155,10 @@ export function CreditLedgerPage() {
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap' }}>${entry.balance?.toLocaleString() || '0'}</td>
+                  <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap' }}>{format(entry.balance || 0)}</td>
                   <td style={{ padding: '12px' }}>
                     <p style={{ fontSize: '10px', color: '#0f172a', whiteSpace: 'nowrap', margin: 0 }}>{entry.last_payment}</p>
-                    {entry.last_payment_amount && <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>${entry.last_payment_amount} PARTIAL</p>}
+                    {entry.last_payment_amount && <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{format(entry.last_payment_amount)} PARTIAL</p>}
                   </td>
                   <td style={{ padding: '12px' }}>
                     <span style={{ padding: '2px 6px', fontSize: '10px', fontWeight: 500, borderRadius: '999px', whiteSpace: 'nowrap', ...statusStyle(entry.status) }}>
@@ -212,7 +214,7 @@ export function CreditLedgerPage() {
         <div style={modalBackdrop} onClick={() => setShowPayForm(null)}>
           <div style={modalCard} onClick={e => e.stopPropagation()}>
             <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: 0 }}>Record Payment</h3>
-            <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{showPayForm.customer_name} — Current balance: <strong>${showPayForm.balance?.toLocaleString() || '0'}</strong></p>
+            <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>{showPayForm.customer_name} — Current balance: <strong>{format(showPayForm.balance || 0)}</strong></p>
             <div>
               <label style={{ fontSize: '12px', fontWeight: 500, color: '#334155', marginBottom: '4px', display: 'block' }}>Payment Amount</label>
               <input value={payAmount} onChange={e => setPayAmount(e.target.value)} style={inputStyle} placeholder="0.00" type="number" min="0" step="0.01" />

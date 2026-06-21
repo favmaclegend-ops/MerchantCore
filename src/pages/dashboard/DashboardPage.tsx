@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import { ArrowUpRight, AlertTriangle, DollarSign, Package, TrendingUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import DLineChart from '@/components/layout/chart'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
+import { CurrencyContext } from '@/context/currency_context'
 
 interface Tx {
   id: string
@@ -25,6 +26,7 @@ interface Alert {
 export function DashboardPage() {
   const navigate = useNavigate()
   const bp = useBreakpoint()
+  const { format } = useContext(CurrencyContext)
   const [stats, setStats] = useState({ totalRevenue: 0, monthlyRevenue: 0, totalOrders: 0, activeCustomers: 0, lowStockAlerts: 0, inventoryValue: 0, creditOutstanding: 0, avgTicket: 0, totalProducts: 0 })
   const [revenueMonths, setRevenueMonths] = useState<string[]>([])
   const [revenueData, setRevenueData] = useState<number[]>([])
@@ -84,10 +86,10 @@ export function DashboardPage() {
             <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Revenue</span>
             <DollarSign style={{ width: '14px', height: '14px', color: '#94a3b8' }} />
           </div>
-          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>NLE{stats.totalRevenue.toLocaleString()}</p>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{format(stats.totalRevenue)}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
             <ArrowUpRight style={{ width: '14px', height: '14px', color: '#10b981', flexShrink: 0 }} />
-            <span style={{ fontSize: '10px', fontWeight: 500, color: '#059669' }}>NLE{stats.monthlyRevenue.toLocaleString()} this month</span>
+            <span style={{ fontSize: '10px', fontWeight: 500, color: '#059669' }}>{format(stats.monthlyRevenue)} this month</span>
           </div>
         </div>
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
@@ -97,7 +99,7 @@ export function DashboardPage() {
           </div>
           <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{stats.totalOrders}</p>
           <div style={{ marginTop: '4px', fontSize: '10px', color: '#64748b' }}>
-            <span>{stats.activeCustomers} active customers</span> <span style={{ color: '#94a3b8' }}>•</span> <span>${stats.avgTicket} avg ticket</span>
+            <span>{stats.activeCustomers} active customers</span> <span style={{ color: '#94a3b8' }}>•</span> <span>{format(stats.avgTicket)} avg ticket</span>
           </div>
         </div>
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
@@ -105,7 +107,7 @@ export function DashboardPage() {
             <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Inventory</span>
             <Package style={{ width: '14px', height: '14px', color: '#94a3b8' }} />
           </div>
-          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>NLE{stats.inventoryValue.toLocaleString()}</p>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{format(stats.inventoryValue)}</p>
           <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{stats.totalProducts} products</p>
         </div>
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
@@ -113,7 +115,7 @@ export function DashboardPage() {
             <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Credit Outstanding</span>
             <AlertTriangle style={{ width: '14px', height: '14px', color: '#f59e0b' }} />
           </div>
-          <p style={{ fontSize: '20px', fontWeight: 700, color: '#d97706', margin: 0 }}>NLE{stats.creditOutstanding.toLocaleString()}</p>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#d97706', margin: 0 }}>{format(stats.creditOutstanding)}</p>
           <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{stats.lowStockAlerts} low stock alerts</p>
         </div>
       </div>
@@ -158,7 +160,7 @@ export function DashboardPage() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '8px' }}>
-                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', margin: 0 }}>NLE{tx.amount.toLocaleString()}</p>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', margin: 0 }}>{format(tx.amount)}</p>
                   <p style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', color: tx.status === 'completed' ? '#059669' : '#2563eb', margin: 0 }}>{tx.status}</p>
                 </div>
               </div>
