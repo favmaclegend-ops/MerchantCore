@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Minus, Plus, CreditCard, Smartphone, Wallet, History, CheckCircle } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
+import Alert from '@/components/alert/alert'
 
 interface CartItem {
   id: string
@@ -86,9 +87,20 @@ export function POSPage() {
     setCart(prev => prev.filter(x => x.id !== id))
   }
 
+  const [isAlert, setAlert] = useState<{isAlert: boolean, message: string, type: string}>({isAlert: false, message: '', type: ''})
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setAlert({isAlert: false, message: '', type: ''})
+    }, 1000)
+
+    return () => clearTimeout(id)
+  }, [isAlert])
+
   if (loadingProducts) return <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>
   
   return (
+    <>
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', padding: '12px', flex: '1', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>POS Terminal</h1>
@@ -149,7 +161,7 @@ export function POSPage() {
                 <p style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{product.name}</p>
                 <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>${product.price.toFixed(2)}</p>
               </div>
-              <button onClick={() => addToCart(product.id)} disabled={product.status === 'out-of-stock'} style={{
+              <button onClick={() => {addToCart(product.id); setAlert({isAlert: true, message: `Product ${product.name} is Added to cart`, type: 'success'})}} disabled={product.status === 'out-of-stock'} style={{
                 width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
                 color: '#fff', background: '#0f172a', border: 'none', cursor: product.status === 'out-of-stock' ? 'not-allowed' : 'pointer',
                 opacity: product.status === 'out-of-stock' ? 0.5 : 1,
@@ -283,5 +295,11 @@ export function POSPage() {
         </div>
       )}
     </div>
+
+      {
+        isAlert.isAlert &&
+        <Alert message={isAlert.message} type={isAlert.type}/>
+      }
+    </>
   )
 }

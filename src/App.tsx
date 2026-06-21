@@ -3,12 +3,12 @@ import DefaultPage from './pages/authentication/default_page';
 import VerifyEmailPage from './pages/authentication/VerifyEmailPage';
 import Home from './pages/home/home';
 
-
 export default function App() {
 
   
   return (
-
+    <>
+    
     <Routes>
       <Route path='/' element={<DefaultPage />}/>
       <Route path='/verify-email' element={
@@ -18,5 +18,6 @@ export default function App() {
       }/>
       <Route path='/home/*' element={<Home />} />
     </Routes>
+    </>
   )
 }
