@@ -127,7 +127,9 @@ export function POSPage() {
       <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? '3fr 1fr' : '1fr', gridAutoRows: '1fr', flex: '1', gap: bp.xl ? '16px' : '12px' }}>
         
         {/**The container that holds the product items in a grid format */}
-        <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px', gridAutoRows: 'max-content' }}>
+        {
+          !isCart &&
+          <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px', gridAutoRows: 'max-content' }}>
          
          {/**The filter product ======================================================== */}
           {filteredProducts.map(product => (
@@ -162,7 +164,7 @@ export function POSPage() {
               No products in this category
             </div>
           )}
-        </div>
+        </div>}
 
 
         {/**CART=========================================================================================== */}
