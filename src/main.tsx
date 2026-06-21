@@ -6,16 +6,19 @@ import './index.css';
 import AuthProvider from './context/auth_provider';
 import NotificationProvider from './context/notification_provider';
 import CurrencyProvider from './context/currency_provider';
+import ThemeProvider from './context/theme_provider';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <CurrencyProvider>
-          <NotificationProvider>
-            <App />
-          </NotificationProvider>
-        </CurrencyProvider>
+        <ThemeProvider>
+          <CurrencyProvider>
+            <NotificationProvider>
+              <App />
+            </NotificationProvider>
+          </CurrencyProvider>
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,

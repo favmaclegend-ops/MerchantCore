@@ -29,7 +29,7 @@ const styles: {[key: string]: React.CSSProperties} = {
         maxWidth: '500px',
         
         borderRadius: '2rem',
-        background: '#fff',
+        background: 'var(--bg-surface)',
         boxShadow: '0 .2rem 1rem .5rem #f2f2f2',
         display: 'flex',
         border: 'none',

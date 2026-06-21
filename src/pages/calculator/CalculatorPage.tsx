@@ -12,8 +12,8 @@ type CalcTab = 'basic' | 'business' | 'currency'
 const btnStyle = (active: boolean): React.CSSProperties => ({
   flex: 1, padding: '10px 0', fontSize: '11px', fontWeight: 600, border: 'none',
   borderRadius: '8px', cursor: 'pointer',
-  color: active ? '#fff' : '#475569',
-  background: active ? '#0f172a' : '#f1f5f9',
+  color: active ? 'var(--bg-surface)' : 'var(--text-secondary)',
+  background: active ? 'var(--bg-nav-active)' : 'var(--bg-tertiary)',
 })
 
 export function CalculatorPage() {
@@ -23,8 +23,8 @@ export function CalculatorPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', padding: '0 8px' }}>
       <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>Calculator</h1>
-        <p style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', marginBottom: 0 }}>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--bg-surface)', margin: 0 }}>Calculator</h1>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
           {tab === 'basic' ? 'Standard arithmetic operations' : tab === 'business' ? 'Profit, markup & business tools' : 'Real-time currency conversion'}
         </p>
       </div>
@@ -126,7 +126,7 @@ function BasicCalculator() {
   const btn = (label: string, onClick: () => void, style?: React.CSSProperties) => (
     <button onClick={onClick} style={{
       padding: '14px 0', fontSize: '16px', fontWeight: 600, border: 'none',
-      borderRadius: '8px', cursor: 'pointer', background: '#f1f5f9', color: '#0f172a',
+      borderRadius: '8px', cursor: 'pointer', background: 'var(--bg-tertiary)', color: 'var(--text-primary)',
       ...style,
     }}>
       {label}
@@ -134,39 +134,39 @@ function BasicCalculator() {
   )
 
   return (
-    <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', boxShadow: 'var(--shadow-card)' }}>
       <div style={{
-        background: '#f8fafc', borderRadius: '8px', padding: '12px 16px', marginBottom: '12px',
-        textAlign: 'right', fontSize: '28px', fontWeight: 700, color: '#0f172a', minHeight: '48px',
+        background: 'var(--bg-secondary)', borderRadius: '8px', padding: '12px 16px', marginBottom: '12px',
+        textAlign: 'right', fontSize: '28px', fontWeight: 700, color: 'var(--text-primary)', minHeight: '48px',
         overflow: 'hidden', textOverflow: 'ellipsis',
         fontFamily: 'monospace',
       }}>
         {display}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-        {btn('C', clear, { background: '#fef2f2', color: '#dc2626' })}
-        {btn('±', () => setDisplay(String(parseFloat(display) * -1)), { background: '#f1f5f9' })}
-        {btn('%', () => setDisplay(String(parseFloat(display) / 100)), { background: '#f1f5f9' })}
-        {btn('÷', () => performOp('/'), { background: '#0f172a', color: '#fff' })}
+        {btn('C', clear, { background: 'var(--bg-danger)', color: '#dc2626' })}
+        {btn('±', () => setDisplay(String(parseFloat(display) * -1)), { background: 'var(--bg-tertiary)' })}
+        {btn('%', () => setDisplay(String(parseFloat(display) / 100)), { background: 'var(--bg-tertiary)' })}
+        {btn('÷', () => performOp('/'), { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
 
         {btn('7', () => inputDigit('7'))}
         {btn('8', () => inputDigit('8'))}
         {btn('9', () => inputDigit('9'))}
-        {btn('×', () => performOp('*'), { background: '#0f172a', color: '#fff' })}
+        {btn('×', () => performOp('*'), { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
 
         {btn('4', () => inputDigit('4'))}
         {btn('5', () => inputDigit('5'))}
         {btn('6', () => inputDigit('6'))}
-        {btn('-', () => performOp('-'), { background: '#0f172a', color: '#fff' })}
+        {btn('-', () => performOp('-'), { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
 
         {btn('1', () => inputDigit('1'))}
         {btn('2', () => inputDigit('2'))}
         {btn('3', () => inputDigit('3'))}
-        {btn('+', () => performOp('+'), { background: '#0f172a', color: '#fff' })}
+        {btn('+', () => performOp('+'), { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
 
         {btn('0', () => inputDigit('0'), { gridColumn: 'span 2' })}
         {btn('.', inputDecimal)}
-        {btn('=', evaluate, { background: '#0f172a', color: '#fff' })}
+        {btn('=', evaluate, { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
       </div>
     </div>
   )
@@ -272,15 +272,15 @@ function BusinessCalculator() {
   ]
 
   return (
-    <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', boxShadow: 'var(--shadow-card)' }}>
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
         {typeLabels.map(t => (
           <button key={t.value} onClick={() => { setCalcType(t.value); setResult(null); setValues({}) }}
             style={{
               display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 10px', fontSize: '11px',
               fontWeight: 600, borderRadius: '6px', border: 'none', cursor: 'pointer',
-              color: calcType === t.value ? '#fff' : '#475569',
-              background: calcType === t.value ? '#0f172a' : '#f1f5f9',
+              color: calcType === t.value ? 'var(--bg-surface)' : 'var(--text-secondary)',
+              background: calcType === t.value ? 'var(--bg-nav-active)' : 'var(--bg-tertiary)',
             }}>
             {t.icon} {t.label}
           </button>
@@ -290,15 +290,15 @@ function BusinessCalculator() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
         {(forms[calcType] || []).map(f => (
           <div key={f.key}>
-            <label style={{ fontSize: '11px', fontWeight: 500, color: '#475569', marginBottom: '4px', display: 'block' }}>{f.label}</label>
+            <label style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>{f.label}</label>
             <input
               type="number" step="any" min="0"
               value={values[f.key] || ''}
               onChange={e => setValues(p => ({ ...p, [f.key]: e.target.value }))}
               placeholder={f.placeholder}
               style={{
-                width: '100%', height: '38px', padding: '0 12px', border: '1px solid #cbd5e1',
-                borderRadius: '8px', fontSize: '13px', outline: 'none', background: '#fff', color: '#0f172a',
+                width: '100%', height: '38px', padding: '0 12px', border: '1px solid var(--border-input)',
+                borderRadius: '8px', fontSize: '13px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)',
                 boxSizing: 'border-box',
               }}
             />
@@ -308,15 +308,15 @@ function BusinessCalculator() {
 
       <button onClick={handleCalc} style={{
         width: '100%', padding: '10px 0', fontSize: '13px', fontWeight: 600,
-        color: '#fff', background: '#0f172a', border: 'none', borderRadius: '8px', cursor: 'pointer',
+        color: 'var(--bg-surface)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '8px', cursor: 'pointer',
       }}>
         Calculate
       </button>
 
       {result !== null && (
         <div style={{
-          marginTop: '12px', padding: '12px', borderRadius: '8px', background: '#f0fdf4',
-          border: '1px solid #bbf7d0', fontSize: '13px', fontWeight: 600, color: '#166534',
+          marginTop: '12px', padding: '12px', borderRadius: '8px', background: 'var(--bg-success)',
+          border: '1px solid var(--border-success)', fontSize: '13px', fontWeight: 600, color: '#166534',
           textAlign: 'center', lineHeight: 1.5,
         }}>
           {result}
@@ -342,31 +342,31 @@ function CurrencyConverter() {
   }
 
   return (
-    <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '16px', boxShadow: '1px 6px 3px rgba(128,128,128,0.287)' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', boxShadow: 'var(--shadow-card)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div>
-          <label style={{ fontSize: '11px', fontWeight: 500, color: '#475569', marginBottom: '4px', display: 'block' }}>Amount</label>
+          <label style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Amount</label>
           <input
             type="number" step="any" min="0"
             value={amount}
             onChange={e => setAmount(e.target.value)}
             placeholder="1.00"
             style={{
-              width: '100%', height: '44px', padding: '0 12px', border: '1px solid #cbd5e1',
+              width: '100%', height: '44px', padding: '0 12px', border: '1px solid var(--border-input)',
               borderRadius: '8px', fontSize: '16px', fontWeight: 600, outline: 'none',
-              background: '#fff', color: '#0f172a', boxSizing: 'border-box', fontFamily: 'monospace',
+              background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box', fontFamily: 'monospace',
             }}
           />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '8px', alignItems: 'end' }}>
           <div>
-            <label style={{ fontSize: '11px', fontWeight: 500, color: '#475569', marginBottom: '4px', display: 'block' }}>From</label>
+            <label style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>From</label>
             <select value={from} onChange={e => setFrom(e.target.value)}
               style={{
-                width: '100%', height: '44px', padding: '0 8px', border: '1px solid #cbd5e1',
+                width: '100%', height: '44px', padding: '0 8px', border: '1px solid var(--border-input)',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 600, outline: 'none',
-                background: '#fff', color: '#0f172a', cursor: 'pointer',
+                background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer',
               }}>
               {currencies.map(c => (
                 <option key={c.code} value={c.code}>{c.symbol} - {c.name}</option>
@@ -375,20 +375,20 @@ function CurrencyConverter() {
           </div>
 
           <button onClick={swap} style={{
-            padding: '8px', borderRadius: '50%', border: '1px solid #e2e8f0',
-            background: '#f8fafc', cursor: 'pointer', display: 'flex', alignItems: 'center',
+            padding: '8px', borderRadius: '50%', border: '1px solid var(--border-default)',
+            background: 'var(--bg-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center',
             justifyContent: 'center', marginBottom: '0',
           }}>
-            <RefreshCw style={{ width: '16px', height: '16px', color: '#475569' }} />
+            <RefreshCw style={{ width: '16px', height: '16px', color: 'var(--text-secondary)' }} />
           </button>
 
           <div>
-            <label style={{ fontSize: '11px', fontWeight: 500, color: '#475569', marginBottom: '4px', display: 'block' }}>To</label>
+            <label style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>To</label>
             <select value={to} onChange={e => setTo(e.target.value)}
               style={{
-                width: '100%', height: '44px', padding: '0 8px', border: '1px solid #cbd5e1',
+                width: '100%', height: '44px', padding: '0 8px', border: '1px solid var(--border-input)',
                 borderRadius: '8px', fontSize: '13px', fontWeight: 600, outline: 'none',
-                background: '#fff', color: '#0f172a', cursor: 'pointer',
+                background: 'var(--bg-surface)', color: 'var(--text-primary)', cursor: 'pointer',
               }}>
               {currencies.map(c => (
                 <option key={c.code} value={c.code}>{c.symbol} - {c.name}</option>
@@ -398,16 +398,16 @@ function CurrencyConverter() {
         </div>
 
         <div style={{
-          marginTop: '8px', padding: '16px', borderRadius: '8px', background: '#f8fafc',
-          border: '1px solid #e2e8f0', textAlign: 'center',
+          marginTop: '8px', padding: '16px', borderRadius: '8px', background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-default)', textAlign: 'center',
         }}>
-          <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
             {formatCurrency(numAmount, from)} =
           </p>
-          <p style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, fontFamily: 'monospace' }}>
+          <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: 'monospace' }}>
             {formatCurrency(result, to)}
           </p>
-          <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px', margin: '4px 0 0 0' }}>
+          <p style={{ fontSize: '11px', color: 'var(--text-placeholder)', marginTop: '4px', margin: '4px 0 0 0' }}>
             1 {fromInfo.symbol} = {formatCurrency(convert(1, from, to), to)}  |  1 {toInfo.symbol} = {formatCurrency(convert(1, to, from), from)}
           </p>
         </div>

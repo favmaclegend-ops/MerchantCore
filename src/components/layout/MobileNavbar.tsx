@@ -18,7 +18,7 @@ export function MobileNavbar() {
   if (bp.lg) return null
 
   return (
-    <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', alignItems: 'center', justifyContent: 'space-around', padding: '8px 4px', zIndex: 40 }}>
+    <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg-surface)', borderTop: '1px solid var(--border-default)', alignItems: 'center', justifyContent: 'space-around', padding: '8px 4px', zIndex: 40 }}>
       {navItems.map((item) => {
         const Icon = item.icon
         const isActive = location.pathname === item.path
@@ -30,10 +30,10 @@ export function MobileNavbar() {
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
               padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,
               textDecoration: 'none', minWidth: '56px',
-              color: isActive ? '#0f172a' : '#94a3b8',
+              color: isActive ? 'var(--text-primary)' : 'var(--text-placeholder)',
             }}
           >
-            <Icon style={{ width: '20px', height: '20px', color: isActive ? '#0f172a' : undefined }} />
+            <Icon style={{ width: '20px', height: '20px', color: isActive ? 'var(--text-primary)' : undefined }} />
             <span>{item.label}</span>
           </Link>
         )

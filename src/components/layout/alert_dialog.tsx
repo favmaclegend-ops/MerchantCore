@@ -43,13 +43,13 @@ export default function AlertDialog({ alert, display, setdisplay }: AlertProps) 
             borderRadius: '32px',
             position: 'fixed',
             top: '16px',
-            background: '#e4e4e4',
+            background: 'var(--bg-surface)',
             alignItems: 'center',
             gap: '16px',
             zIndex: 9999,
         }}>
             <img src={alertType[alert.type as keyof alertIc]} style={{ width: '30px', height: '30px' }} />
-            <p style={{ color: '#575757', margin: 0, fontSize: '14px' }}>{alert.message}</p>
+            <p style={{ color: 'var(--text-primary)', margin: 0, fontSize: '14px' }}>{alert.message}</p>
         </div>
     )
 };
