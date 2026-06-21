@@ -5,7 +5,7 @@ export interface CurrencyInfo {
 }
 
 export const currencies: CurrencyInfo[] = [
-  { code: 'NLE', symbol: 'NLE', name: 'MerchantCore Credit' },
+  { code: 'NLE', symbol: 'NLE', name: 'Sierra Leonean Leone (New Leones)' },
   { code: 'USD', symbol: '$', name: 'US Dollar' },
   { code: 'EUR', symbol: '€', name: 'Euro' },
   { code: 'GBP', symbol: '£', name: 'British Pound' },
@@ -24,7 +24,7 @@ export function getCurrencyInfo(code: string): CurrencyInfo {
 }
 
 export const conversionRates: Record<string, number> = {
-  NLE: 1.5,
+  NLE: 22.50,
   USD: 1,
   EUR: 0.92,
   GBP: 0.79,
