@@ -104,7 +104,7 @@ export function InventoryPage() {
         </div>
         <div style={{ width: '100%', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', background: '#fff', boxShadow: '0 6px 3px rgba(128,128,128,0.287)' }}>
           <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Value</span>
-          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>${(totalValue / 1000).toFixed(1)}k</p>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>NLE{(totalValue / 1000).toFixed(1)}k</p>
         </div>
         <div style={{ width: '100%', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', background: '#fff', boxShadow: '0 6px 3px rgba(128,128,128,0.287)' }}>
           <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase' }}>Out of Stock</span>
@@ -158,7 +158,7 @@ export function InventoryPage() {
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <p style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>${Number(product.price).toFixed(2)}</p>
+                <p style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>NLE{Number(product.price).toFixed(2)}</p>
               </div>
               <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                 <button onClick={() => openEdit(product)} style={{ padding: '6px', color: '#64748b', background: '#f1f5f9', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>

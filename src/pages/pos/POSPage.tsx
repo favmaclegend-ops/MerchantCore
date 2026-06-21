@@ -63,7 +63,7 @@ export function POSPage() {
     try {
       await api.checkout({ items: cart, total, payment_method: paymentMethod })
       setCart([])
-      setSuccessMsg(`Sale of $${total.toFixed(2)} completed!`)
+      setSuccessMsg(`Sale of NLE${total.toFixed(2)} completed!`)
       setTimeout(() => setSuccessMsg(''), 3000)
     } catch (e) {
       console.error('Checkout failed', e)
@@ -159,7 +159,7 @@ export function POSPage() {
               </div>
               <div style={{ padding: '10px' }}>
                 <p style={{ fontSize: '12px', fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{product.name}</p>
-                <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>${product.price.toFixed(2)}</p>
+                <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>NLE{product.price.toFixed(2)}</p>
               </div>
               <button onClick={() => {addToCart(product.id); setAlert({isAlert: true, message: `Product ${product.name} is Added to cart`, type: 'success'})}} disabled={product.status === 'out-of-stock'} style={{
                 width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
@@ -200,7 +200,7 @@ export function POSPage() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: '10px', fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{item.name}</p>
-                    <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>${item.price.toFixed(2)} × {item.quantity}</p>
+                    <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>NLE{item.price.toFixed(2)} × {item.quantity}</p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                     <button onClick={() => updateQuantity(item.id, -1)} style={{ width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}>
@@ -211,7 +211,7 @@ export function POSPage() {
                       <Plus style={{ width: '12px', height: '12px' }} />
                     </button>
                   </div>
-                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', margin: 0, minWidth: '48px', textAlign: 'right' }}>${(item.price * item.quantity).toFixed(2)}</p>
+                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', margin: 0, minWidth: '48px', textAlign: 'right' }}>NLE{(item.price * item.quantity).toFixed(2)}</p>
                   <button style={{padding: '.4rem', borderRadius: '1rem', cursor: 'pointer', border: 'none'}} onClick={() => removeCartItem(item.id)}>
                     <img src={'https://img.icons8.com/?size=100&id=11705&format=png&color=ff0000'} width={'20'} height={'20'} />
                   </button>
@@ -223,15 +223,15 @@ export function POSPage() {
           <div style={{ padding: '12px', borderTop: '1px solid #f1f5f9' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
               <span style={{ color: '#64748b' }}>Subtotal</span>
-              <span style={{ color: '#0f172a' }}>${subtotal.toFixed(2)}</span>
+              <span style={{ color: '#0f172a' }}>NLE{subtotal.toFixed(2)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '4px' }}>
               <span style={{ color: '#64748b' }}>Tax (5%)</span>
-              <span style={{ color: '#0f172a' }}>${tax.toFixed(2)}</span>
+              <span style={{ color: '#0f172a' }}>NLE{tax.toFixed(2)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, paddingTop: '6px', borderTop: '1px solid #f1f5f9' }}>
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>NLE{total.toFixed(2)}</span>
             </div>
           </div>
 
@@ -267,7 +267,7 @@ export function POSPage() {
               borderRadius: '4px', border: 'none', cursor: cart.length === 0 ? 'not-allowed' : 'pointer',
               opacity: checkingOut ? 0.6 : 1,
             }}>
-              {checkingOut ? 'Processing...' : `Checkout $${total.toFixed(2)}`}
+              {checkingOut ? 'Processing...' : `Checkout NLE${total.toFixed(2)}`}
             </button>
           </div>
         </div>
@@ -285,7 +285,7 @@ export function POSPage() {
             {transactions.slice(0, 20).map((tx: any) => (
               <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9', fontSize: '12px' }}>
                 <div>
-                  <p style={{ fontWeight: 500, color: '#0f172a', margin: 0 }}>{tx.type} — ${tx.amount?.toFixed(2)}</p>
+                  <p style={{ fontWeight: 500, color: '#0f172a', margin: 0 }}>{tx.type} — NLE{tx.amount?.toFixed(2)}</p>
                   <p style={{ fontSize: '10px', color: '#64748b', margin: '2px 0 0 0' }}>{tx.customer_name || 'POS Sale'} • {tx.created_at ? new Date(tx.created_at).toLocaleString() : ''}</p>
                 </div>
                 <span style={{ fontWeight: 600, color: tx.status === 'completed' ? '#059669' : '#d97706', textTransform: 'uppercase' }}>{tx.status}</span>

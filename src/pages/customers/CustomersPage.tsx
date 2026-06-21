@@ -143,7 +143,7 @@ export function CustomersPage() {
                       <p style={{ fontSize: '10px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{customer.email}</p>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <p style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', margin: 0 }}>${customer.total_spent?.toLocaleString() || '0'}</p>
+                      <p style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', margin: 0 }}>NLE{customer.total_spent?.toLocaleString() || '0'}</p>
                     </div>
                   </button>
                 )
@@ -193,11 +193,11 @@ export function CustomersPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid #f1f5f9' }}>
                 <div style={{ padding: '16px', borderRight: '1px solid #f1f5f9' }}>
                   <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Total Spent</span>
-                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>${selectedCustomer.total_spent?.toLocaleString() || '0'}</p>
+                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>NLE{selectedCustomer.total_spent?.toLocaleString() || '0'}</p>
                 </div>
                 <div style={{ padding: '16px', borderRight: '1px solid #f1f5f9' }}>
                   <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Credit Limit</span>
-                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>${selectedCustomer.credit_limit?.toLocaleString() || '0'}</p>
+                  <p style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginTop: '2px', margin: '2px 0 0 0' }}>NLE{selectedCustomer.credit_limit?.toLocaleString() || '0'}</p>
                 </div>
                 <div style={{ padding: '16px' }}>
                   <span style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase' }}>Last Purchase</span>
