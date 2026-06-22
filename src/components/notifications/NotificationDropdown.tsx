@@ -6,7 +6,7 @@ const typeConfig: Record<string, { icon: typeof DollarSign; color: string }> = {
   new_sale: { icon: DollarSign, color: '#059669' },
   low_stock: { icon: AlertTriangle, color: '#f59e0b' },
   credit_payment: { icon: CreditCard, color: '#2563eb' },
-  system: { icon: Bell, color: '#64748b' },
+  system: { icon: Bell, color: 'var(--text-muted)' },
 }
 
 interface Props {
@@ -35,9 +35,9 @@ export function NotificationDropdown({ onClose }: Props) {
         marginTop: '4px',
         width: '360px',
         maxHeight: '480px',
-        background: '#fff',
+        background: 'var(--bg-surface)',
         borderRadius: '12px',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--border-default)',
         boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
         overflow: 'hidden',
         display: 'flex',
@@ -45,8 +45,8 @@ export function NotificationDropdown({ onClose }: Props) {
         zIndex: 9999,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
-        <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Notifications</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border-default)' }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>Notifications</span>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button
             onClick={markAllAsRead}
@@ -54,7 +54,7 @@ export function NotificationDropdown({ onClose }: Props) {
           >
             Mark all read
           </button>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#94a3b8' }}>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-placeholder)' }}>
             <X style={{ width: '14px', height: '14px' }} />
           </button>
         </div>
@@ -62,11 +62,11 @@ export function NotificationDropdown({ onClose }: Props) {
 
       <div style={{ overflowY: 'auto', flex: 1 }}>
         {loading && (
-          <div style={{ padding: '24px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>Loading...</div>
+          <div style={{ padding: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--text-placeholder)' }}>Loading...</div>
         )}
         {!loading && notifications.length === 0 && (
-          <div style={{ padding: '32px 16px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
-            <Bell style={{ width: '24px', height: '24px', margin: '0 auto 8px', color: '#cbd5e1' }} />
+          <div style={{ padding: '32px 16px', textAlign: 'center', fontSize: '12px', color: 'var(--text-placeholder)' }}>
+            <Bell style={{ width: '24px', height: '24px', margin: '0 auto 8px', color: 'var(--border-input)' }} />
             <p style={{ margin: 0 }}>No notifications yet</p>
           </div>
         )}
@@ -90,8 +90,8 @@ function NotificationItem({ notification: n, onMarkRead }: { notification: Notif
         gap: '10px',
         padding: '12px 16px',
         cursor: 'pointer',
-        borderBottom: '1px solid #f1f5f9',
-        background: n.is_read ? '#fff' : '#f0f9ff',
+        borderBottom: '1px solid var(--bg-tertiary)',
+        background: n.is_read ? 'var(--bg-surface)' : '#f0f9ff',
         transition: 'background 0.15s',
       }}
     >
@@ -99,9 +99,9 @@ function NotificationItem({ notification: n, onMarkRead }: { notification: Notif
         <Icon style={{ width: '16px', height: '16px', color: cfg.color }} />
       </div>
       <div style={{ minWidth: 0, flex: 1 }}>
-        <p style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', margin: 0 }}>{n.title}</p>
-        <p style={{ fontSize: '11px', color: '#475569', marginTop: '2px', lineHeight: 1.3, margin: '2px 0 0 0' }}>{n.message}</p>
-        <p style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', margin: '4px 0 0 0' }}>
+        <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{n.title}</p>
+        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: 1.3, margin: '2px 0 0 0' }}>{n.message}</p>
+        <p style={{ fontSize: '10px', color: 'var(--text-placeholder)', marginTop: '4px', margin: '4px 0 0 0' }}>
           {new Date(n.created_at).toLocaleString()}
         </p>
       </div>

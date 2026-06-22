@@ -11,13 +11,14 @@ import { POSPage } from '@/pages/pos/POSPage'
 import { CreditLedgerPage } from '@/pages/credit/CreditLedgerPage'
 import { CustomersPage } from '@/pages/customers/CustomersPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage';
+import { CalculatorPage } from '@/pages/calculator/CalculatorPage'
 
 
 export default function Home() {
     const { user, loading } = useContext(Authcontext)
 
     if (loading) {
-        return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px' }}>Loading...</div>
+        return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
     }
 
     if (!user) {
@@ -26,7 +27,7 @@ export default function Home() {
 
     return (
         <>
-            <div style={{ display: 'flex', width: '100%', height: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
+            <div style={{ display: 'flex', width: '100%', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
                 <DesktopSidebar />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden', width: '100%' }}>
                     <DesktopHeader />
@@ -39,6 +40,7 @@ export default function Home() {
                             <Route path="/pos" element={<POSPage />} />
                             <Route path="/credit" element={<CreditLedgerPage />} />
                             <Route path="/customers" element={<CustomersPage />} />
+                            <Route path="/calculator" element={<CalculatorPage />} />
                             <Route path="/settings" element={<SettingsPage />} />
                         </Routes>
                     </div>
