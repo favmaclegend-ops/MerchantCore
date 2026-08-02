@@ -131,7 +131,23 @@ Per-organisation finance mock, scoped by org id:
   changing an invoice or tax instantly moves the balance sheet.
 - Bump `FINANCE_VERSION` to force every org's finance data to reseed.
 
-### 3.3 API layer — `src/lib/api.ts` → `api.org.*`
+### 3.3 Mock data layer — `src/data/orgCommerce.ts` (Inventory / POS / Customers / Credit)
+Per-organisation commerce mock, scoped by org id (storage key `merchant_org_commerce_{orgId}`
+holding `{ version, state }`). The seed is **deliberately consistent** with the Finance mock and
+the org dashboard:
+
+- **48 products** whose total stock value is exactly **58,200** (matches the finance "Inventory"
+  asset and the dashboard `inventoryValue`), with **3 low-stock** and **1 out-of-stock** items
+  (matches the dashboard low-stock alert count).
+- **Credit balances sum to 10,025** — the same unpaid invoices as the finance accounts
+  receivable (Adom Fresh Foods 4,850 + Naana's Kitchen 3,200 + Efua Bakery 1,975).
+- POS transactions mirror the finance ledger references.
+- Products are **mutatable** (`createOrgProduct`, `updateOrgProduct`, `deleteOrgProduct`) and
+  `status` is always recomputed from `stock` (threshold 20). A POS `checkoutOrg` records a
+  transaction **and decrements stock**.
+- Bump `COMMERCE_VERSION` to force every org's commerce data to reseed.
+
+### 3.4 API layer — `src/lib/api.ts` → `api.org.*`
 The app calls the API through the `api` object, exactly like a real endpoint. Each function
 adds a small artificial `delay(...)` to mimic network latency and returns the same shapes the
 real backend should return.
@@ -147,8 +163,21 @@ real backend should return.
 | `api.org.finance.getState()` | `loadFinanceState(orgId)` | `GET /api/v1/organisations/{org_id}/finance` |
 | `api.org.finance.createInvoice(input)` | `createInvoice(orgId, input)` | `POST /api/v1/organisations/{org_id}/invoices` |
 | `api.org.finance.setInvoiceStatus(id, status)` | `setInvoiceStatus(orgId, id, status)` | `PATCH /api/v1/organisations/{org_id}/invoices/{id}` |
+| `api.org.getProducts()` | `getOrgProducts(orgId)` | `GET /api/v1/organisations/{org_id}/products` |
+| `api.org.createProduct(data)` | `createOrgProduct(orgId, data)` | `POST /api/v1/organisations/{org_id}/products` |
+| `api.org.updateProduct(id, patch)` | `updateOrgProduct(orgId, id, patch)` | `PATCH /api/v1/organisations/{org_id}/products/{id}` |
+| `api.org.deleteProduct(id)` | `deleteOrgProduct(orgId, id)` | `DELETE /api/v1/organisations/{org_id}/products/{id}` |
+| `api.org.getCustomers()` | `getOrgCustomers(orgId)` | `GET /api/v1/organisations/{org_id}/customers` |
+| `api.org.createCustomer(data)` | `createOrgCustomer(orgId, data)` | `POST /api/v1/organisations/{org_id}/customers` |
+| `api.org.updateCustomer(id, patch)` | `updateOrgCustomer(orgId, id, patch)` | `PATCH /api/v1/organisations/{org_id}/customers/{id}` |
+| `api.org.deleteCustomer(id)` | `deleteOrgCustomer(orgId, id)` | `DELETE /api/v1/organisations/{org_id}/customers/{id}` |
+| `api.org.getCreditEntries()` | `getOrgCreditEntries(orgId)` | `GET /api/v1/organisations/{org_id}/credit-entries` |
+| `api.org.createCreditEntry(data)` | `createOrgCreditEntry(orgId, data)` | `POST /api/v1/organisations/{org_id}/credit-entries` |
+| `api.org.updateCreditEntry(id, patch)` | `updateOrgCreditEntry(orgId, id, patch)` | `PATCH /api/v1/organisations/{org_id}/credit-entries/{id}` |
+| `api.org.getTransactions()` | `getOrgPosTransactions(orgId)` | `GET /api/v1/organisations/{org_id}/transactions` |
+| `api.org.checkout(data)` | `checkoutOrg(orgId, data)` | `POST /api/v1/organisations/{org_id}/pos/checkout` |
 
-### 3.4 Auth context — `src/context/auth_provider.tsx` / `auth_context.tsx`
+### 3.5 Auth context — `src/context/auth_provider.tsx` / `auth_context.tsx`
 The existing `AuthContext` now carries both auth modes:
 
 ```ts
@@ -176,10 +205,11 @@ interface AuthContextType {
 |------|--------|
 | `src/data/organisations.ts` | **New.** Mock org data, session, member CRUD. |
 | `src/data/finance.ts` | **New.** Mock finance state (ledger/invoices/taxes), per-org storage, invoice CRUD, `buildBalanceSheet`. |
+| `src/data/orgCommerce.ts` | **New.** Mock commerce state (products/customers/credit/POS transactions), per-org storage, product/customer/credit/checkout CRUD. |
 | `src/pages/authentication/OrganisationAuth.tsx` | **New.** Org Login + Register UI (segmented control). |
 | `src/pages/authentication/default_page.tsx` | Added the "Log in as an organisation" toggle + back link. |
 | `src/context/auth_context.tsx`, `src/context/auth_provider.tsx` | Added `orgUser`, `orgName`, `orgLogin`, logout handling. |
-| `src/lib/api.ts` | Added the `org.*` and `org.finance.*` API namespaces (mock-backed). |
+| `src/lib/api.ts` | Added the `org.*` API namespace (users, finance, commerce) — all mock-backed. |
 | `src/pages/home/home.tsx` | Allow org users; guard `/home/users` and `/home/finance` for admins only; full-screen "Account disabled" lockout for `orgUser.disabled`. |
 | `src/components/layout/DesktopSidebar.tsx`, `MobileNavbar.tsx` | Hide the **Users** and **Finance** nav items for staff/non-org. |
 | `src/components/layout/DesktopHeader.tsx`, `MobileHeader.tsx` | Show org member name/role/email. |
@@ -188,6 +218,10 @@ interface AuthContextType {
 | `src/pages/users/data.ts` | `Member` = `OrgMember`; credential generator (`generateCredential`), `toMember`, `roleLabel`. |
 | `src/pages/users/MemberForm.tsx` | Username/Password/Job Title fields; auto-generates credentials for new members. |
 | `src/pages/users/MemberTable.tsx` | "Disable user"/"Enable user", "Block login", "Block dashboard data", status badges, super-admin guard. |
+| `src/pages/inventory/InventoryPage.tsx` | Uses `api.org.*` for org users (add/edit/delete inventory against localStorage). |
+| `src/pages/pos/POSPage.tsx` | Uses `api.org.*` for org users (products, checkout, transaction log; skips `refreshDashboardCache`). |
+| `src/pages/customers/CustomersPage.tsx` | Uses `api.org.*` for org users (directory + add-to-credit). |
+| `src/pages/credit/CreditLedgerPage.tsx` | Uses `api.org.*` for org users (debtor registry, payments, status changes). |
 | `src/pages/dashboard/DashboardPage.tsx` | Shows the blocked-data message for `orgUser.dataBlocked`. |
 
 ---
@@ -213,6 +247,10 @@ When the backend implements organisations, do this:
 7. Invoice status transitions are `draft → sent → paid`, `overdue` (auto when past due), and
    `void`. `paid` moves the invoice out of outstanding/receivables; `void` excludes it from
    totals.
+8. Inventory / Customers / Credit / POS data is **per-organisation** (mock key
+   `merchant_org_commerce_{orgId}`). Server-side, every commerce endpoint must be scoped by
+   `org_id`. Products return `status` computed from `stock` (threshold 20); a POS checkout must
+   record a transaction and decrement stock atomically.
 
 ### Suggested payloads
 
@@ -260,8 +298,9 @@ When the backend implements organisations, do this:
 - **No data leaks between auth modes.** `orgLogin` clears `token` and `dashboard_cache`;
   `logout` clears them too; normal `login` clears any leftover org session. The two modes are
   strictly exclusive.
-- The stock Inventory / POS / Customers / Credit pages still target the real server, so an org
-  member sees empty/default states there (their requests are rejected by the no-token guard,
-  never real server data) until the backend moves product/transaction data into org workspaces.
+- The Inventory / POS / Customers / Credit pages now serve **mock localStorage data for org
+  accounts** (`api.org.*` → `src/data/orgCommerce.ts`), so everything an organisation touches
+  is fully self-contained in the browser and never reaches the server. Normal logins keep using
+  the real backend.
 - Existing lint conventions are respected (`react-hooks/set-state-in-effect` is avoided, no new
   `any` types added).

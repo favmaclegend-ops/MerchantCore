@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from 'react'
 import { Mail, Edit, CreditCard, UserPlus } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
+import { Authcontext } from '@/context'
 import { CurrencyContext } from '@/context/currency_context'
 
 const tierStyle = (tier: string): React.CSSProperties => {
@@ -22,6 +23,8 @@ const inputStyle: React.CSSProperties = {
 export function CustomersPage() {
   const bp = useBreakpoint()
   const { format } = useContext(CurrencyContext)
+  const { orgUser } = useContext(Authcontext)
+  const customersApi = orgUser ? api.org : api
   const [customers, setCustomers] = useState<any[]>([])
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -31,13 +34,13 @@ export function CustomersPage() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', company: '', credit_limit: '' })
 
   useEffect(() => {
-    api.getCustomers().then(c => {
+    customersApi.getCustomers().then(c => {
       setCustomers(c)
       if (c.length && !selectedCustomer) setSelectedCustomer(c[0])
     }).catch(() => {}).finally(() => setLoading(false))
-  }, [])
+  }, [customersApi])
 
-  const loadCustomers = () => api.getCustomers().then(c => {
+  const loadCustomers = () => customersApi.getCustomers().then(c => {
     setCustomers(c)
     if (c.length && !selectedCustomer) setSelectedCustomer(c[0])
   }).catch(() => {})
@@ -75,9 +78,9 @@ export function CustomersPage() {
       credit_limit: parseFloat(formData.credit_limit) || 0,
     }
     if (editCustomer) {
-      await api.updateCustomer(editCustomer.id, payload)
+      await customersApi.updateCustomer(editCustomer.id, payload)
     } else {
-      await api.createCustomer(payload)
+      await customersApi.createCustomer(payload)
     }
     setShowForm(false)
     loadCustomers()
@@ -85,7 +88,7 @@ export function CustomersPage() {
 
   const handleAddToCredit = async () => {
     if (!selectedCustomer) return
-    await api.createCreditEntry({
+    await customersApi.createCreditEntry({
       customer_id: selectedCustomer.id,
       customer_name: selectedCustomer.name,
       customer_code: selectedCustomer.id.substring(0, 8),

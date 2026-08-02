@@ -3,6 +3,7 @@ import { Minus, Plus, CreditCard, Smartphone, Wallet, History, CheckCircle } fro
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { refreshDashboardCache } from '@/lib/dashboardCache'
+import { Authcontext } from '@/context'
 import Alert from '@/components/alert/alert'
 import { CurrencyContext } from '@/context/currency_context'
 
@@ -37,6 +38,8 @@ function normalizeProducts(products: Product[]): Product[] {
 export function POSPage() {
   const bp = useBreakpoint()
   const { format } = useContext(CurrencyContext)
+  const { orgUser } = useContext(Authcontext)
+  const posApi = orgUser ? api.org : api
   const [products, setProducts] = useState<any[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [category, setCategory] = useState('All Items')
@@ -50,10 +53,10 @@ export function POSPage() {
 
 
   useEffect(() => {
-    api.getProducts().then(p => setProducts(normalizeProducts(p))).catch(() => {}).finally(() => setLoadingProducts(false))
-  }, [])
+    posApi.getProducts().then(p => setProducts(normalizeProducts(p))).catch(() => {}).finally(() => setLoadingProducts(false))
+  }, [posApi])
 
-  const loadProducts = () => api.getProducts().then(p => setProducts(normalizeProducts(p))).catch(() => {})
+  const loadProducts = () => posApi.getProducts().then(p => setProducts(normalizeProducts(p))).catch(() => {})
 
   const categories = ['All Items', ...new Set(products.map(p => p.category).filter(Boolean))]
 
@@ -87,10 +90,10 @@ export function POSPage() {
     if (cart.length === 0 || checkingOut) return
     setCheckingOut(true)
     try {
-      await api.checkout({ items: cart, total, payment_method: paymentMethod })
+      await posApi.checkout({ items: cart, total, payment_method: paymentMethod })
       setCart([])
         setSuccessMsg(`Sale of ${format(total)} completed!`)
-      refreshDashboardCache()
+      if (!orgUser) refreshDashboardCache()
       loadProducts()
       setTimeout(() => setSuccessMsg(''), 3000)
     } catch (e) {
@@ -102,7 +105,7 @@ export function POSPage() {
 
   const openLog = async () => {
     setShowLog(true)
-    api.getTransactions().then(t => setTransactions(t)).catch(() => {})
+    posApi.getTransactions().then(t => setTransactions(t)).catch(() => {})
   }
 
   const paymentButtons = [

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useContext } from 'react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
+import { Authcontext } from '@/context'
+import type { OrgCreditStatus } from '@/data/orgCommerce'
 import { CurrencyContext } from '@/context/currency_context'
 
 const statusStyle = (status: string) => {
@@ -20,6 +22,8 @@ const inputStyle: React.CSSProperties = {
 export function CreditLedgerPage() {
   const bp = useBreakpoint()
   const { format } = useContext(CurrencyContext)
+  const { orgUser } = useContext(Authcontext)
+  const creditApi = orgUser ? api.org : api
   const [entries, setEntries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -32,8 +36,8 @@ export function CreditLedgerPage() {
   const [payAmount, setPayAmount] = useState('')
 
   useEffect(() => {
-    api.getCreditEntries().then(e => setEntries(e)).catch(() => {}).finally(() => setLoading(false))
-  }, [])
+    creditApi.getCreditEntries().then(e => setEntries(e)).catch(() => {}).finally(() => setLoading(false))
+  }, [creditApi])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -43,11 +47,11 @@ export function CreditLedgerPage() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const loadEntries = () => api.getCreditEntries().then(e => setEntries(e)).catch(() => {})
+  const loadEntries = () => creditApi.getCreditEntries().then(e => setEntries(e)).catch(() => {})
 
   const handleCreate = async () => {
     if (!formData.customer_name || !formData.balance) return
-    await api.createCreditEntry({
+    await creditApi.createCreditEntry({
       customer_id: crypto.randomUUID(),
       customer_name: formData.customer_name,
       customer_code: formData.customer_code || undefined,
@@ -62,7 +66,7 @@ export function CreditLedgerPage() {
     const amount = parseFloat(payAmount)
     if (!amount || amount <= 0) return
     const newBalance = Math.max(0, (entry.balance || 0) - amount)
-    await api.updateCreditEntry(entry.id, {
+    await creditApi.updateCreditEntry(entry.id, {
       balance: newBalance,
       last_payment: new Date().toLocaleDateString(),
       last_payment_amount: amount,
@@ -73,8 +77,8 @@ export function CreditLedgerPage() {
     loadEntries()
   }
 
-  const handleUpdateStatus = async (entry: any, status: string) => {
-    await api.updateCreditEntry(entry.id, { status })
+  const handleUpdateStatus = async (entry: any, status: OrgCreditStatus) => {
+    await creditApi.updateCreditEntry(entry.id, { status })
     setOpenMenu(null)
     loadEntries()
   }

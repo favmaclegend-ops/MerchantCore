@@ -149,4 +149,64 @@ describe('api.org (mock-backed organisation workspace)', () => {
     const paid = await api.org.finance.setInvoiceStatus(created.id, 'paid')
     expect(paid.status).toBe('paid')
   })
+
+  it('serves commerce (inventory) for the active organisation', async () => {
+    const session = await registerAndSession()
+    setOrgSession(session)
+
+    const products = await api.org.getProducts()
+    expect(products).toHaveLength(48)
+    expect(products.reduce((sum, p) => sum + p.price * p.stock, 0)).toBe(58200)
+
+    const created = await api.org.createProduct({ name: 'Test Item', sku: 'TST-001', price: 10, stock: 5, category: 'Testing' })
+    expect(created.id).toBe('PRD-049')
+
+    const updated = await api.org.updateProduct(created.id, { stock: 0 })
+    expect(updated.status).toBe('out-of-stock')
+
+    await api.org.deleteProduct(created.id)
+    const after = await api.org.getProducts()
+    expect(after.find(p => p.id === created.id)).toBeUndefined()
+  })
+
+  it('serves customers and credit for the active organisation', async () => {
+    const session = await registerAndSession()
+    setOrgSession(session)
+
+    const customers = await api.org.getCustomers()
+    expect(customers).toHaveLength(5)
+
+    const customer = await api.org.createCustomer({ name: 'Ama', email: 'ama@example.com', credit_limit: 1000 })
+    expect(customer.tier).toBe('bronze')
+
+    const updatedCustomer = await api.org.updateCustomer(customer.id, { credit_limit: 5000 })
+    expect(updatedCustomer.credit_limit).toBe(5000)
+
+    const credit = await api.org.getCreditEntries()
+    expect(credit.reduce((sum, e) => sum + e.balance, 0)).toBe(10025)
+
+    const entry = await api.org.updateCreditEntry('CRD-001', { balance: 0 })
+    expect(entry.balance).toBe(0)
+  })
+
+  it('handles a POS checkout for the active organisation', async () => {
+    const session = await registerAndSession()
+    setOrgSession(session)
+
+    const before = (await api.org.getProducts()).find(p => p.id === 'PRD-007')?.stock
+
+    const txn = await api.org.checkout({
+      items: [{ id: 'PRD-007', name: 'Bama Rice 5kg', price: 60, quantity: 3 }],
+      total: 189,
+      payment_method: 'Card',
+    })
+    expect(txn.type).toBe('sale')
+    expect(txn.amount).toBe(189)
+
+    const after = await api.org.getProducts()
+    expect(after.find(p => p.id === 'PRD-007')?.stock).toBe((before ?? 0) - 3)
+
+    const log = await api.org.getTransactions()
+    expect(log[0].id).toBe(txn.id)
+  })
 })

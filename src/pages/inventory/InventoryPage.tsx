@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from 'react'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
+import { Authcontext } from '@/context'
 import { CurrencyContext } from '@/context/currency_context'
 
 const inputStyle: React.CSSProperties = {
@@ -34,6 +35,8 @@ function normalizeProducts(products: Product[]): Product[] {
 export function InventoryPage() {
   const bp = useBreakpoint()
   const { format, currency } = useContext(CurrencyContext)
+  const { orgUser } = useContext(Authcontext)
+  const productsApi = orgUser ? api.org : api
   const [items, setItems] = useState<any[]>([])
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
   const [search, setSearch] = useState('')
@@ -42,10 +45,10 @@ export function InventoryPage() {
   const [formData, setFormData] = useState({ name: '', sku: '', price: '', stock: '', category: '' })
 
   useEffect(() => {
-    api.getProducts().then(p => setItems(normalizeProducts(p))).catch(() => {})
-  }, [])
+    productsApi.getProducts().then(p => setItems(normalizeProducts(p))).catch(() => {})
+  }, [productsApi])
 
-  const loadItems = () => api.getProducts().then(p => setItems(normalizeProducts(p))).catch(() => {})
+  const loadItems = () => productsApi.getProducts().then(p => setItems(normalizeProducts(p))).catch(() => {})
 
   const filtered = items.filter(p => {
     if (filter === 'low' && p.status !== 'low-stock') return false
@@ -81,9 +84,9 @@ export function InventoryPage() {
       status: stockStatus(parseInt(formData.stock) || 0),
     }
     if (editItem) {
-      await api.updateProduct(editItem.id, payload)
+      await productsApi.updateProduct(editItem.id, payload)
     } else {
-      await api.createProduct(payload)
+      await productsApi.createProduct(payload)
     }
     setShowForm(false)
     loadItems()
@@ -91,7 +94,7 @@ export function InventoryPage() {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this product?')) return
-    await api.deleteProduct(id)
+    await productsApi.deleteProduct(id)
     loadItems()
   }
 

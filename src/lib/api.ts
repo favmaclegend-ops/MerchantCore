@@ -15,6 +15,8 @@ import {
   type Invoice,
   type InvoiceInput,
 } from '@/data/finance'
+import * as orgCommerce from '@/data/orgCommerce'
+import type { CheckoutInput, OrgCreditEntry, OrgCreditInput, OrgCustomerInput, OrgProductInput } from '@/data/orgCommerce'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
 console.log(API_BASE) // debugging
@@ -146,7 +148,72 @@ export const api = {
         return setInvoiceStatus(org.id, invoiceId, status)
       },
     },
+
+    // Commerce (Inventory / POS / Customers / Credit) — mock-backed. These mirror the
+    // normal server API shapes so pages can call `api.org.*` for org accounts and
+    // `api.*` for normal accounts interchangeably.
+    getProducts: async () => {
+      await delay(200)
+      return orgCommerce.getOrgProducts(requireOrgId())
+    },
+    createProduct: async (data: OrgProductInput) => {
+      await delay(200)
+      return orgCommerce.createOrgProduct(requireOrgId(), data)
+    },
+    updateProduct: async (id: string, data: Partial<OrgProductInput>) => {
+      await delay(200)
+      return orgCommerce.updateOrgProduct(requireOrgId(), id, data)
+    },
+    deleteProduct: async (id: string) => {
+      await delay(200)
+      orgCommerce.deleteOrgProduct(requireOrgId(), id)
+    },
+
+    getCustomers: async () => {
+      await delay(200)
+      return orgCommerce.getOrgCustomers(requireOrgId())
+    },
+    createCustomer: async (data: OrgCustomerInput) => {
+      await delay(200)
+      return orgCommerce.createOrgCustomer(requireOrgId(), data)
+    },
+    updateCustomer: async (id: string, data: Partial<OrgCustomerInput>) => {
+      await delay(200)
+      return orgCommerce.updateOrgCustomer(requireOrgId(), id, data)
+    },
+    deleteCustomer: async (id: string) => {
+      await delay(200)
+      orgCommerce.deleteOrgCustomer(requireOrgId(), id)
+    },
+
+    getCreditEntries: async () => {
+      await delay(200)
+      return orgCommerce.getOrgCreditEntries(requireOrgId())
+    },
+    createCreditEntry: async (data: OrgCreditInput) => {
+      await delay(200)
+      return orgCommerce.createOrgCreditEntry(requireOrgId(), data)
+    },
+    updateCreditEntry: async (id: string, data: Partial<OrgCreditEntry>) => {
+      await delay(200)
+      return orgCommerce.updateOrgCreditEntry(requireOrgId(), id, data)
+    },
+
+    getTransactions: async () => {
+      await delay(200)
+      return orgCommerce.getOrgPosTransactions(requireOrgId())
+    },
+    checkout: async (data: CheckoutInput) => {
+      await delay(250)
+      return orgCommerce.checkoutOrg(requireOrgId(), data)
+    },
   },
+}
+
+function requireOrgId(): string {
+  const org = getSessionOrganisation()
+  if (!org) throw new Error('No active organisation session')
+  return org.id
 }
 
 function delay(ms: number) {
