@@ -28,6 +28,8 @@ export function generateOrgDashboard(): Omit<DashboardCache, 'timestamp'> {
   const revenueData = [9800, 10800, 11200, 12450, 13700, 12700]
   const revenue = revenueData.reduce((sum, v) => sum + v, 0)
 
+  // Mock data for Dashboard statistics
+  /**Mock data for dashboard statistics */
   const stats: DashboardStats = {
     totalRevenue: revenue,
     monthlyRevenue: revenueData[revenueData.length - 1],
@@ -40,6 +42,7 @@ export function generateOrgDashboard(): Omit<DashboardCache, 'timestamp'> {
     totalProducts: 48,
   }
 
+  // Mock data for Recent Transaction
   const txns: Tx[] = [
     { id: 'POS-0914', type: 'sale', customer_name: 'Walk-in', amount: 12480, status: 'completed', items: '52 items', date: daysAgo(2) },
     { id: 'POS-0913', type: 'sale', customer_name: 'Adom Fresh Foods', amount: 4850, status: 'completed', items: '3 items', date: daysAgo(2) },
@@ -51,6 +54,7 @@ export function generateOrgDashboard(): Omit<DashboardCache, 'timestamp'> {
     { id: 'POS-0889', type: 'sale', customer_name: 'Walk-in', amount: 13100, status: 'completed', items: '55 items', date: daysAgo(28) },
   ]
 
+  // mock data for recent alert
   const alertList: DashboardAlert[] = [
     { id: 'org-low-stock', type: 'low-stock', title: 'Low Stock Alert', description: '3 items are running low on stock. Restock suggested.' },
     { id: 'org-overdue', type: 'overdue', title: 'Overdue Invoice', description: "INV-2026-0102 from Naana's Kitchen is overdue." },

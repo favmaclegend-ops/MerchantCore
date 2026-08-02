@@ -1,0 +1,152 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { api } from '@/lib/api'
+import { setOrgSession, type OrgRegisterInput, type OrgSession } from '@/data/organisations'
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
+
+const registerInput: OrgRegisterInput = {
+  orgName: 'Kofi Stores',
+  businessEmail: 'hello@kofistores.example',
+  superAdminName: 'Kofi Mensah',
+  superAdminUsername: 'kofi',
+  superAdminEmail: 'kofi@kofistores.example',
+  password: 'Pass@123',
+  phone: '+233 555 010 9999',
+}
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    statusText: 'OK',
+    json: () => Promise.resolve(body),
+  } as Response
+}
+
+async function registerAndSession(): Promise<OrgSession> {
+  const org = await api.org.register(registerInput)
+  return { orgId: org.id, orgName: org.name, member: org.members[0] }
+}
+
+describe('api server guard (real server is normal-login only)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('rejects every non-public endpoint without a token, before calling fetch', async () => {
+    const fetchMock = vi.mocked(fetch)
+    await expect(api.getProfile()).rejects.toThrow(
+      'Not authenticated. The live server is only available to normal (personal) logins.',
+    )
+    await expect(api.getProducts()).rejects.toThrow('Not authenticated')
+    await expect(api.getDashboardStats()).rejects.toThrow('Not authenticated')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('allows public auth endpoints without a token', async () => {
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(jsonResponse({ access_token: 'abc', token_type: 'bearer' }))
+    const result = await api.login('a@b.example', 'pw')
+    expect(result.access_token).toBe('abc')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls[0][0]).toBe(`${API_BASE}/auth/login`)
+    expect(fetchMock.mock.calls[0][1]?.method).toBe('POST')
+  })
+
+  it('attaches the bearer token for authenticated requests', async () => {
+    localStorage.setItem('token', 'tok-123')
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(jsonResponse({ id: 'u1' }))
+    await api.getProfile()
+    const [, options] = fetchMock.mock.calls[0]
+    expect(options?.headers).toMatchObject({ Authorization: 'Bearer tok-123' })
+  })
+
+  it('throws the server detail for failed responses', async () => {
+    localStorage.setItem('token', 'tok')
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(jsonResponse({ detail: 'Email already registered' }, 400))
+    await expect(
+      api.register({ email: 'a@b.example', username: 'a', full_name: 'A', password: 'x' }),
+    ).rejects.toThrow('Email already registered')
+  })
+
+  it('returns undefined for 204 responses', async () => {
+    localStorage.setItem('token', 'tok')
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(jsonResponse(null, 204))
+    await expect(api.deleteProduct('p1')).resolves.toBeUndefined()
+  })
+})
+
+describe('api.org (mock-backed organisation workspace)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('registers and logs into a new organisation', async () => {
+    const org = await api.org.register(registerInput)
+    expect(org.id).toBe('ORG-002')
+
+    const result = await api.org.login('Kofi Stores', 'kofi@kofistores.example', 'Pass@123')
+    expect(result.member.role).toBe('super-admin')
+  })
+
+  it('rejects org logins for disabled members', async () => {
+    const session = await registerAndSession()
+    setOrgSession(session)
+    await api.org.updateUser(session.member.id, { disabled: true })
+    await expect(api.org.login('Kofi Stores', 'kofi@kofistores.example', 'Pass@123')).rejects.toThrow('disabled')
+  })
+
+  it('requires an active session for org endpoints', async () => {
+    await expect(api.org.getUsers()).rejects.toThrow('No active organisation session')
+    await expect(api.org.finance.getState()).rejects.toThrow('No active organisation session')
+  })
+
+  it('manages members of the active organisation', async () => {
+    const session = await registerAndSession()
+    setOrgSession(session)
+
+    const users = await api.org.getUsers()
+    expect(users).toHaveLength(1)
+
+    const added = await api.org.addUser({
+      name: 'Ama', email: 'ama@kofistores.example', username: 'ama', password: 'StaffPass@123',
+      phone: '', role: 'staff', jobTitle: 'Cashier', isActive: true, dataBlocked: false, disabled: false,
+    })
+    expect(added.id).toBe('STF-001')
+
+    const updated = await api.org.updateUser(added.id, { jobTitle: 'Supervisor' })
+    expect(updated.jobTitle).toBe('Supervisor')
+
+    await api.org.deleteUser(added.id)
+    const after = await api.org.getUsers()
+    expect(after.find(u => u.id === added.id)).toBeUndefined()
+  })
+
+  it('serves finance state for the active organisation', async () => {
+    const session = await registerAndSession()
+    setOrgSession(session)
+
+    const state = await api.org.finance.getState()
+    expect(state.invoices).toHaveLength(5)
+    expect(state.ledger).toHaveLength(18)
+
+    const created = await api.org.finance.createInvoice({
+      customer: 'New Client',
+      dueAt: '2030-01-01',
+      items: [{ description: 'Service', qty: 2, unitPrice: 25.5 }],
+    })
+    expect(created.amount).toBe(51)
+    expect(created.status).toBe('draft')
+
+    const paid = await api.org.finance.setInvoiceStatus(created.id, 'paid')
+    expect(paid.status).toBe('paid')
+  })
+})
