@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { NotificationContext } from '@/context/notification_context'
+import { OrgNotificationContext } from '@/context/org_notification_context'
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 
 const pageConfig: Record<string, { title: string; subtitle?: string }> = {
@@ -13,6 +14,7 @@ const pageConfig: Record<string, { title: string; subtitle?: string }> = {
   '/home/credit': { title: 'Credit Ledger', subtitle: 'Manage accounts & payments' },
   '/home/customers': { title: 'Customers', subtitle: 'Directory & profiles' },
   '/home/calculator': { title: 'Calculator', subtitle: 'Business tools & currency' },
+  '/home/notifications': { title: 'Notifications', subtitle: 'Alerts & activity feed' },
   '/home/settings': { title: 'Settings', subtitle: 'Account & preferences' },
   '/home/users': {title: 'Users', subtitle: 'Administarator Control'}
 }
@@ -22,7 +24,9 @@ export function MobileHeader() {
   const navigate = useNavigate()
   const bp = useBreakpoint()
   const { user, orgUser, logout } = useContext(Authcontext)
-  const { unreadCount } = useContext(NotificationContext)
+  const { unreadCount: personalUnread } = useContext(NotificationContext)
+  const { unreadCount: orgUnread } = useContext(OrgNotificationContext)
+  const unreadCount = orgUser ? orgUnread : personalUnread
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)

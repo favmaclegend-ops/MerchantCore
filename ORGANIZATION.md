@@ -67,6 +67,19 @@ straight into the HRM **Time & Attendance** view. The page also shows the member
 their personal performance indicators. Admins/HRM managers see the same indicators for every
 employee on the HRM page.
 
+### Notifications & Alerts
+Every org member (including **Staff**) sees a **bell icon** in the header with an **unread badge**
+and a **Notifications** page (`/home/notifications`). The feed is org-wide and **transparent**:
+any transaction performed by any employee is emitted as an alert visible to everyone, with the
+actor, their role, the amount and a reference:
+- **Alerts** (`is_alert: true`) — POS **sale** checkout, **credit** payment, **invoice** paid or
+  voided, **payroll** run.
+- **Notifications** (`is_alert: false`) — invoice **created**, employee **check-in**, system
+  messages.
+Each member's read state is tracked per-member (`read_by`), so everyone has their own unread
+count. Only the **Super Admin** can delete notifications; the Super Admin can switch on a
+settings toggle that grants **Admins** delete access as well (other managers/staff never delete).
+
 ### Blocking rules
 - **Disable** (`disabled: true`) → **full lockout.** The member cannot log in and, if they had an
   active session, they are signed out / shown the *"Account disabled"* screen. They have **no
@@ -127,6 +140,15 @@ collide with real server users**:
    Invoices / Tax & Compliance / Balance Sheet). Create an invoice and watch the Balance Sheet's
    **Accounts Receivable** and the Overview's **Outstanding** update in real time. Mark it paid
    and they drop again.
+10. As any org member (incl. staff): click the **bell** in the header → the **Notifications**
+    dropdown shows the latest alerts. Open **Notifications** (`/home/notifications`) → filter
+    All / Alerts / Notifications, **Mark all read**. Make a POS sale or check in, then watch a
+    new alert appear for everyone. Only the **Super Admin** sees the **delete** buttons; on the
+    page the Super Admin can toggle *"Admins can delete notifications"* to grant Admins the same.
+
+> **Reset notifications demo data**: clear the `merchant_org_notifications_{orgId}` keys from
+> `localStorage` (or bump `NOTIF_VERSION` in `src/data/orgNotifications.ts` — all orgs reseed
+> on next load).
 
 > **Reset finance demo data**: clear the `merchant_org_finance_{orgId}` keys from `localStorage`
 > (or bump `FINANCE_VERSION` in `src/data/finance.ts` — all orgs reseed on next load).
@@ -290,6 +312,17 @@ real backend should return.
 | `api.org.attendance.getRecords()` | `getOrgAttendance(orgId)` | `GET /api/v1/organisations/{org_id}/attendance` |
 | `api.org.attendance.getSummary()` | `getOrgAttendanceSummary(orgId)` | `GET /api/v1/organisations/{org_id}/attendance/summary` |
 | `api.org.attendance.checkIn()` | `checkInOrg(orgId, employeeId)` (auto-provisions the employee if missing) | `POST /api/v1/organisations/{org_id}/attendance/check-in` |
+| `api.org.notifications.getFeed()` | `getOrgNotifications(orgId)` (session-scoped) | `GET /api/v1/organisations/{org_id}/notifications` |
+| `api.org.notifications.markRead(id)` | `markOrgNotificationRead(orgId, id)` (adds the session member to `read_by`) | `POST /api/v1/organisations/{org_id}/notifications/{id}/read` |
+| `api.org.notifications.markAllRead()` | `markAllOrgNotificationsRead(orgId)` (adds the session member to every `read_by`) | `POST /api/v1/organisations/{org_id}/notifications/read-all` |
+| `api.org.notifications.deleteNotification(id)` | `deleteOrgNotification(orgId, id)` (permission-gated) | `DELETE /api/v1/organisations/{org_id}/notifications/{id}` |
+| `api.org.notifications.clearAll()` | `clearOrgNotifications(orgId)` (permission-gated) | `DELETE /api/v1/organisations/{org_id}/notifications` |
+| `api.org.notifications.setSettings(patch)` | `setOrgNotificationSettings(orgId, patch)` (super admin only) | `PATCH /api/v1/organisations/{org_id}/notifications/settings` |
+
+**Emission hooks** (transactional): the `checkout`, `updateCreditEntry` (when a payment is
+recorded), `finance.createInvoice`, `setInvoiceStatus` (paid/voided), `hrm.runPayroll` and
+`attendance.checkIn` API functions also push a matching notification via
+`addOrgNotification` — so the feed stays in sync with real activity with no UI code changes.
 
 ### 3.7 Auth context — `src/context/auth_provider.tsx` / `auth_context.tsx`
 The existing `AuthContext` now carries both auth modes:
@@ -332,6 +365,10 @@ interface AuthContextType {
 | `src/pages/finance/FinancePage.tsx` | **New.** Finance & Accounting (Overview, General Ledger, Invoices, Tax & Compliance, Balance Sheet) for super-admin/admin/finance-manager. |
 | `src/pages/hrm/HRMPage.tsx` | **New.** Human Resources (Overview, Employees, Payroll, Time & Attendance, Performance, Benefits) for super-admin/admin/hrm-manager; attendance roster + per-employee summary. |
 | `src/pages/attendance/AttendancePage.tsx` | **New.** Self check-in ("Present") + personal attendance rate, hours and latest review — available to every org member. |
+| `src/data/orgNotifications.ts` | **New.** Mock notifications/alerts state (kinds, severity, per-member `read_by`, settings), per-org storage, `addOrgNotification` (actor from session), mark-read/delete/clear/settings fns, `canDeleteOrgNotifications`. |
+| `src/context/org_notification_context.tsx`, `src/context/org_notification_provider.tsx` | **New.** Org notification context + provider (30s poll, unread count, canDelete, settings). |
+| `src/pages/notifications/NotificationsPage.tsx` | **New.** Notifications & Alerts page (stats, All/Alerts/Notifications filters, mark-all-read, delete/clear gated by permission, Super-Admin settings toggle). |
+| `src/components/notifications/NotificationDropdown.tsx` | Org-aware bell dropdown (unread badge, per-kind icons, delete button when allowed, "View all notifications"). |
 | `src/pages/users/UsersPage.tsx` | Fetch members from `api.org.getUsers()`; role-based tabs & actions; Admins tab manages Admin / HRM Manager / Finance Manager; credential reveal modal. |
 | `src/pages/users/data.ts` | `Member` = `OrgMember`; credential generator (`generateCredential`), `toMember`, `roleLabel`, `ADMIN_ROLES`. |
 | `src/pages/users/MemberForm.tsx` | Username/Password/Job Title fields + Role selector (Admin / HRM Manager / Finance Manager); auto-generates credentials. |
@@ -379,10 +416,18 @@ When the backend implements organisations, do this:
    HRM endpoint must be scoped by `org_id`. Payroll runs must never be created twice for the same
    period/employee; employee `retire`/`terminate` transitions are explicit lifecycle actions.
 10. Attendance / self check-in: `checkIn` must be scoped to the session member, map the member to
-    an HRM employee (by email) — provisioning one if missing — and be **idempotent per day**
-    (a second check-in the same day returns the existing record). Attendance endpoints are
-    open to **all** org members for their own data, and to HRM-permission holders for the full
-    roster/summary.
+     an HRM employee (by email) — provisioning one if missing — and be **idempotent per day**
+     (a second check-in the same day returns the existing record). Attendance endpoints are
+     open to **all** org members for their own data, and to HRM-permission holders for the full
+     roster/summary.
+11. Notifications are **per-organisation** (mock key `merchant_org_notifications_{orgId}`) and
+    readable by **every** org member. Read state is **per member** (`read_by: member_id[]`) —
+    the server must add the session member's id to `read_by`, never mark read for the whole org.
+    `DELETE` is restricted to the super admin (plus admins when the org's
+    `allow_admin_delete` settings flag is on); `settings` is super-admin only.
+12. Transaction endpoints (`checkout`, credit payment, invoice create/paid/void, payroll run,
+    check-in) should emit a notification server-side with the same kind/title/amount/actor
+    shape the mock uses, so the feed requires no client changes.
 
 ### Suggested payloads
 
@@ -455,6 +500,27 @@ When the backend implements organisations, do this:
   latest_review_score: number | null,
   latest_review_rating: 'exceeds' | 'meets' | 'below' | null,
 }]
+
+// GET /organisations/{org_id}/notifications  ->  { notifications: OrgNotification[], settings }
+// POST /organisations/{org_id}/notifications/{id}/read
+// POST /organisations/{org_id}/notifications/read-all
+// DELETE /organisations/{org_id}/notifications/{id}          (super admin / granted admins)
+// DELETE /organisations/{org_id}/notifications               (super admin / granted admins)
+// PATCH /organisations/{org_id}/notifications/settings       (super admin only)
+//   { allow_admin_delete?: boolean }
+
+// GET /organisations/{org_id}/notifications  ->  feed item shape
+{
+  id, kind: 'sale' | 'credit' | 'invoice' | 'payroll' | 'low_stock' | 'check_in' | 'system',
+  severity: 'info' | 'success' | 'warning' | 'danger',
+  is_alert: boolean,                 // transaction kinds => true
+  title, message,
+  amount: number | null,             // e.g. sale total / credit payment / payroll gross
+  ref: string | null,                // transaction/invoice/payroll reference
+  actor_name, actor_role,            // 'System' / 'Platform' for seeded system items
+  read_by: string[],                 // member ids; the session member is added on read
+  created_at: string,                // ISO
+}
 ```
 
 ---
@@ -485,5 +551,10 @@ When the backend implements organisations, do this:
   available to **every org member**, including staff. The session member is matched to an HRM
   employee by email and auto-provisioned on first check-in if needed, so the record always shows
   up in the HRM attendance view.
+- **Notifications & Alerts** (`api.org.notifications.*` → `src/data/orgNotifications.ts`) is
+  available to **every org member**. The feed is unshift-newest-first, read state is per-member
+  (`read_by`), and delete is gated by `canDeleteOrgNotifications` (super-admin always; admin
+  only when the super admin flips `allow_admin_delete`; others never). Transaction hooks in
+  `api.ts` keep the feed in sync automatically.
 - Existing lint conventions are respected (`react-hooks/set-state-in-effect` is avoided, no new
   `any` types added); the eslint problem count is unchanged from the pre-feature baseline.

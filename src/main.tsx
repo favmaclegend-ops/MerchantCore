@@ -5,6 +5,7 @@ import App from './App';
 import './index.css';
 import AuthProvider from './context/auth_provider';
 import NotificationProvider from './context/notification_provider';
+import OrgNotificationProvider from './context/org_notification_provider';
 import CurrencyProvider from './context/currency_provider';
 import ThemeProvider from './context/theme_provider';
 
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <ThemeProvider>
           <CurrencyProvider>
             <NotificationProvider>
-              <App />
+              <OrgNotificationProvider>
+                <App />
+              </OrgNotificationProvider>
             </NotificationProvider>
           </CurrencyProvider>
         </ThemeProvider>

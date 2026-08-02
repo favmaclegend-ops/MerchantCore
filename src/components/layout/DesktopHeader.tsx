@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { NotificationContext } from '@/context/notification_context'
+import { OrgNotificationContext } from '@/context/org_notification_context'
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 
 const pageConfig: Record<string, { title: string; search?: string }> = {
@@ -13,6 +14,7 @@ const pageConfig: Record<string, { title: string; search?: string }> = {
   '/home/credit': { title: 'Credit Ledger', search: 'Search accounts...' },
   '/home/customers': { title: 'Customer Directory', search: 'Search customers...' },
   '/home/calculator': { title: 'Calculator' },
+  '/home/notifications': { title: 'Notifications & Alerts' },
   '/home/users': {title: 'Users' },
   '/home/settings': { title: 'Settings' },
 }
@@ -22,7 +24,9 @@ export function DesktopHeader() {
   const navigate = useNavigate()
   const bp = useBreakpoint()
   const { user, orgUser, logout } = useContext(Authcontext)
-  const { unreadCount } = useContext(NotificationContext)
+  const { unreadCount: personalUnread } = useContext(NotificationContext)
+  const { unreadCount: orgUnread } = useContext(OrgNotificationContext)
+  const unreadCount = orgUser ? orgUnread : personalUnread
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)

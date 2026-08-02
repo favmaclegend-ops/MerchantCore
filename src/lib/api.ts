@@ -20,6 +20,7 @@ import * as orgCommerce from '@/data/orgCommerce'
 import type { CheckoutInput, OrgCreditEntry, OrgCreditInput, OrgCustomerInput, OrgProductInput } from '@/data/orgCommerce'
 import * as orgHRM from '@/data/orgHRM'
 import type { OrgBenefitInput, OrgEmployeeInput, OrgPayrollStatus, OrgReviewInput, OrgTimeInput } from '@/data/orgHRM'
+import * as orgNotifications from '@/data/orgNotifications'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
 console.log(API_BASE) // debugging
@@ -142,13 +143,41 @@ export const api = {
         await delay(250)
         const org = getSessionOrganisation()
         if (!org) throw new Error('No active organisation session')
-        return createInvoice(org.id, input)
+        const invoice = createInvoice(org.id, input)
+        orgNotifications.addOrgNotification(org.id, {
+          kind: 'invoice',
+          title: 'Invoice created',
+          message: `Invoice ${invoice.number} drafted for ${invoice.customer}`,
+          amount: invoice.amount,
+          ref: invoice.id,
+          is_alert: false,
+        })
+        return invoice
       },
       setInvoiceStatus: async (invoiceId: string, status: Invoice['status']) => {
         await delay(200)
         const org = getSessionOrganisation()
         if (!org) throw new Error('No active organisation session')
-        return setInvoiceStatus(org.id, invoiceId, status)
+        const invoice = setInvoiceStatus(org.id, invoiceId, status)
+        if (invoice.status === 'paid') {
+          orgNotifications.addOrgNotification(org.id, {
+            kind: 'invoice',
+            title: 'Invoice paid',
+            message: `Invoice ${invoice.number} for ${invoice.customer} was marked as paid`,
+            amount: invoice.amount,
+            ref: invoice.id,
+          })
+        } else if (invoice.status === 'void') {
+          orgNotifications.addOrgNotification(org.id, {
+            kind: 'invoice',
+            title: 'Invoice voided',
+            message: `Invoice ${invoice.number} for ${invoice.customer} was voided`,
+            amount: invoice.amount,
+            ref: invoice.id,
+            is_alert: false,
+          })
+        }
+        return invoice
       },
     },
 
@@ -199,7 +228,19 @@ export const api = {
     },
     updateCreditEntry: async (id: string, data: Partial<OrgCreditEntry>) => {
       await delay(200)
-      return orgCommerce.updateOrgCreditEntry(requireOrgId(), id, data)
+      const orgId = requireOrgId()
+      const entry = orgCommerce.updateOrgCreditEntry(orgId, id, data)
+      const payment = data.last_payment_amount
+      if (payment && payment > 0) {
+        orgNotifications.addOrgNotification(orgId, {
+          kind: 'credit',
+          title: 'Credit payment received',
+          message: `${entry.customer_name} paid towards their credit balance`,
+          amount: payment,
+          ref: entry.id,
+        })
+      }
+      return entry
     },
 
     getTransactions: async () => {
@@ -208,7 +249,16 @@ export const api = {
     },
     checkout: async (data: CheckoutInput) => {
       await delay(250)
-      return orgCommerce.checkoutOrg(requireOrgId(), data)
+      const orgId = requireOrgId()
+      const txn = orgCommerce.checkoutOrg(orgId, data)
+      orgNotifications.addOrgNotification(orgId, {
+        kind: 'sale',
+        title: 'New sale completed',
+        message: `${data.payment_method} payment · ${txn.items}`,
+        amount: txn.amount,
+        ref: txn.id,
+      })
+      return txn
     },
 
     // HRM (Human Resources) — admin-only, mock-backed, scoped to the active org session.
@@ -259,7 +309,18 @@ export const api = {
       },
       runPayroll: async (period: string) => {
         await delay(250)
-        return orgHRM.runOrgPayroll(requireOrgId(), period)
+        const orgId = requireOrgId()
+        const runs = orgHRM.runOrgPayroll(orgId, period)
+        if (runs.length) {
+          orgNotifications.addOrgNotification(orgId, {
+            kind: 'payroll',
+            title: 'Payroll processed',
+            message: `${period} payroll · ${runs.length} employees`,
+            amount: runs.reduce((sum, r) => sum + r.gross, 0),
+            ref: period,
+          })
+        }
+        return runs
       },
       setPayrollStatus: async (id: string, status: OrgPayrollStatus) => {
         await delay(200)
@@ -335,7 +396,66 @@ export const api = {
             status: 'probation',
           })
         }
-        return orgHRM.checkInOrg(orgId, employee.id)
+        const record = orgHRM.checkInOrg(orgId, employee.id)
+        orgNotifications.addOrgNotification(orgId, {
+          kind: 'check_in',
+          title: 'Employee check-in',
+          message: `${employee.name} checked in at ${record.check_in}`,
+          ref: record.id,
+        })
+        return record
+      },
+    },
+
+    // Notifications & Alerts — the transparency feed. Every member sees every transaction
+    // any employee performs. Deletion is restricted to the Super Admin, or to normal Admins
+    // once the Super Admin grants `allow_admin_delete` in the settings.
+    notifications: {
+      getFeed: async () => {
+        await delay(200)
+        return orgNotifications.getOrgNotificationsState(requireOrgId())
+      },
+      markRead: async (notificationId: string) => {
+        await delay(120)
+        const session = getOrgSession()
+        if (!session) throw new Error('No active organisation session')
+        orgNotifications.markOrgNotificationRead(session.orgId, notificationId, session.member.id)
+      },
+      markAllRead: async () => {
+        await delay(150)
+        const session = getOrgSession()
+        if (!session) throw new Error('No active organisation session')
+        orgNotifications.markAllOrgNotificationsRead(session.orgId, session.member.id)
+      },
+      deleteNotification: async (notificationId: string) => {
+        await delay(150)
+        const session = getOrgSession()
+        if (!session) throw new Error('No active organisation session')
+        const { settings } = orgNotifications.loadOrgNotificationsState(session.orgId)
+        if (!orgNotifications.canDeleteOrgNotifications(session.member.role, settings)) {
+          throw new Error('Not authorised to delete notifications')
+        }
+        orgNotifications.deleteOrgNotification(session.orgId, notificationId)
+      },
+      clearAll: async () => {
+        await delay(150)
+        const session = getOrgSession()
+        if (!session) throw new Error('No active organisation session')
+        const { settings } = orgNotifications.loadOrgNotificationsState(session.orgId)
+        if (!orgNotifications.canDeleteOrgNotifications(session.member.role, settings)) {
+          throw new Error('Not authorised to delete notifications')
+        }
+        orgNotifications.clearOrgNotifications(session.orgId)
+      },
+      setSettings: async (patch: Partial<orgNotifications.OrgNotificationSettings>) => {
+        await delay(150)
+        const session = getOrgSession()
+        if (!session) throw new Error('No active organisation session')
+        if (session.member.role !== 'super-admin') {
+          throw new Error('Only the super admin can manage notification settings')
+        }
+        orgNotifications.setOrgNotificationSettings(session.orgId, patch)
+        return orgNotifications.loadOrgNotificationsState(session.orgId).settings
       },
     },
   },

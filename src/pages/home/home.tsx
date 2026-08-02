@@ -20,6 +20,7 @@ const FinancePage = lazy(() => import('@/pages/finance/FinancePage').then(m => (
 const HRMPage = lazy(() => import('@/pages/hrm/HRMPage').then(m => ({ default: m.HRMPage })))
 const Users = lazy(() => import('@/pages/users/UsersPage').then(m => ({ default: m.Users })))
 const AttendancePage = lazy(() => import('@/pages/attendance/AttendancePage').then(m => ({ default: m.AttendancePage })))
+const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })))
 
 export default function Home() {
     const location = useLocation();
@@ -77,6 +78,7 @@ export default function Home() {
                                 <Route path="/finance" element={canManageFinance(orgUser) ? <FinancePage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/hrm" element={canManageHRM(orgUser) ? <HRMPage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/attendance" element={orgUser ? <AttendancePage /> : <Navigate to="/dashboard" replace />} />
+                                <Route path="/notifications" element={orgUser ? <NotificationsPage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/users" element={canManageUsers(orgUser) ? <Users /> : <Navigate to="/dashboard" replace />} />
                             </Routes>

@@ -29,6 +29,7 @@ permission (Super Admin / Admin / Finance Manager) · `[dev]` mock-backed until 
 | Finance & Accounting | `src/pages/finance/FinancePage.tsx`, `src/data/finance.ts` |
 | HRM (Human Resources) | `src/pages/hrm/HRMPage.tsx`, `src/data/orgHRM.ts` |
 | Attendance / self check-in ("My Attendance") | `src/pages/attendance/AttendancePage.tsx`, `src/data/orgHRM.ts` |
+| Notifications & Alerts | `src/pages/notifications/NotificationsPage.tsx`, `src/data/orgNotifications.ts` |
 
 ## 3. Core Business Features (personal + org)
 
@@ -85,11 +86,29 @@ performance indicators: **attendance rate**, days present, hours + overtime logg
 - Staff see **their own** data; Super Admin / Admin / HRM Manager see **every** employee's on
   the HRM page.
 
+## 5c. Notifications & Alerts — `[org]` `[all members]` `[dev]`
+
+`src/pages/notifications/NotificationsPage.tsx` · `src/data/orgNotifications.ts`
+
+Org-wide, transparent feed of every transaction performed by any employee — visible to **all**
+members via the header **bell** (unread badge + dropdown) and the **Notifications** page
+(`/home/notifications`).
+
+- **Alerts** (`is_alert`): POS **sale** checkout, **credit** payment, **invoice** paid/voided,
+  **payroll** run. **Notifications**: invoice **created**, employee **check-in**, system.
+- Each row shows the kind icon, actor + role, relative time, amount and reference; newest first.
+- Read state is **per member** (`read_by`), so each member has their own unread count.
+- **Mark all read**; delete/clear gated by `canDeleteOrgNotifications` (Super Admin always;
+  Admins when the Super Admin enables the **"Admins can delete notifications"** setting).
+- The feed auto-syncs via the API-layer emission hooks (checkout / credit / finance / payroll /
+  check-in) — no UI changes needed for new activity.
+
 ## 6. Platform-wide
 
 | Feature | Where |
 |---------|-------|
-| Notifications (unread count, mark read) | `src/context/notification_*`, `src/lib/api.ts` |
+| Notifications (personal: unread count, mark read) | `src/context/notification_*`, `src/lib/api.ts` |
+| Org Notifications & Alerts (bell dropdown, page) | `src/context/org_notification_*`, `src/components/notifications/NotificationDropdown.tsx` |
 | Currency formatting | `src/context/currency_context.tsx` |
 | Dark/light theming via CSS variables | `src/context/theme_*` |
 | Responsive layout (desktop sidebar + mobile bottom nav) | `src/components/layout/` |
