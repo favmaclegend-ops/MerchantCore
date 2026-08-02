@@ -11,21 +11,29 @@
 ## 1. What this feature is
 
 An **Organisation** is a business workspace (paid tier, in development). A person registers an
-organisation and becomes its **Super Admin**. The Super Admin can add **Admins** and **Staff**.
-Every member logs in with the **organisation name + their credentials**.
+organisation and becomes its **Super Admin**. The Super Admin can add **Admins**, **managers**
+(HRM / Finance) and **Staff**. Every member logs in with the **organisation name + their
+credentials**.
 
-There are three roles with a clear hierarchy:
+There are five roles with a clear hierarchy:
 
-| Role         | Access |
+| Role | Access |
 |--------------|--------|
-| **Super Admin** | Full control. Manages admins and staff, can block/delete anyone except themselves. |
-| **Admin**       | Below the Super Admin. Manages **staff only**; the Admin tab is hidden for them; they cannot manage other admins. |
-| **Staff**       | Logs in to work the POS/inventory/etc. Cannot access the Users or Finance pages. Admins can **disable** them, **block their login** and **block their dashboard data preview**. |
-| **Personal login (non-org)** | **No organisation features.** The Users and Finance pages are completely hidden/redirected for any non-org login — only organisation admins (Super Admin / Admin) can access them. |
+| **Super Admin** | Full control. Manages every member and can block/delete anyone except themselves. |
+| **Admin** | Below the Super Admin. Manages staff and managers (Admin + HRM Manager + Finance Manager tabs), can access **both** Finance and HRM, and can block/disable anyone except the Super Admin. |
+| **HRM Manager** | **HRM only.** Can view/manage the HRM page but **not** Finance, Users or other manager modules. |
+| **Finance Manager** | **Finance only.** Can view/manage the Finance page but **not** HRM, Users or other manager modules. |
+| **Staff** | Logs in to work the POS/inventory/etc. Cannot access the Users, Finance or HRM pages. Admins can **disable** them, **block their login** and **block their dashboard data preview**. |
+| **Personal login (non-org)** | **No organisation features.** The Users, Finance and HRM pages are completely hidden/redirected for any non-org login — only organisation admins/managers with the matching permission can access them. |
+
+Every org member (including **Staff**) has their own **Attendance** page (`/home/attendance`)
+for self check-in and their personal performance indicators — see *Self check-in & performance*
+below.
 
 ### Finance & Accounting
-An **admin-only** area for organisation members. Staff never see the Finance nav item and get
-redirected if they try to reach `/home/finance`. It tracks cash flow and financial health with:
+An area for organisation members with the **Finance** permission (**Super Admin / Admin /
+Finance Manager**). Others never see the Finance nav item and get redirected if they try to
+reach `/home/finance`. It tracks cash flow and financial health with:
 - **General Ledger** — every income/expense/asset/liability entry (mock-seeded).
 - **Automated invoicing** — admins create invoices; one-click *Mark as sent / paid / void*.
 - **Tax compliance tools** — obligations with rate, taxable base, payable/paid/balance, due dates.
@@ -33,19 +41,31 @@ redirected if they try to reach `/home/finance`. It tracks cash flow and financi
   state (receivables and tax payable update automatically when an invoice or tax changes).
 
 ### Human Resources (HRM)
-An **admin-only** area for organisation members that manages the **entire employee lifecycle
-from hiring to retirement**. Staff never see the HRM nav item and get redirected if they try to
-reach `/home/hrm`. It covers:
+An area for organisation members with the **HRM** permission (**Super Admin / Admin / HRM
+Manager**) that manages the **entire employee lifecycle from hiring to retirement**. Others never
+see the HRM nav item and get redirected if they try to reach `/home/hrm`. It covers:
 - **Employees** — hire, promote (probation → active), put on leave, **terminate or retire**;
   full records (department, job title, employment type, hire date, salary, benefits).
-- **Payroll processing** — admins run payroll per period (gross, 10% tax, net) and mark runs
+- **Payroll processing** — run payroll per period (gross, 10% tax, net) and mark runs
   paid. Retired/terminated employees are automatically excluded from runs.
-- **Time tracking** — log daily hours + overtime per employee.
+- **Time & Attendance** — log daily hours + overtime; a **today roster** shows who checked in
+  (Present · time / Pending); an **attendance & performance summary** per employee shows
+  scheduled/present/absent days, attendance rate, hours, overtime and latest review.
 - **Performance reviews** — score 1–5 with an auto-derived rating (`exceeds` / `meets` /
   `below`); mark reviews complete.
 - **Benefits administration** — benefit plans (health, retirement, transport, insurance,
   training…) with cost per employee; enrollment counts are derived from employee enrolments
   so the monthly benefits cost stays accurate.
+
+### Self check-in & performance (My Attendance)
+Every org member has an **Attendance** nav item / route (`/home/attendance`). Staff "register
+themselves" when they come to work by pressing **Present** — the check-in writes a
+**date + check-in time** attendance record keyed to their HRM employee profile (matched by
+email; if the member has no employee record yet, one is auto-provisioned). That record flows
+straight into the HRM **Time & Attendance** view. The page also shows the member's own
+**attendance rate**, **days present**, **hours/overtime logged** and **latest review score** —
+their personal performance indicators. Admins/HRM managers see the same indicators for every
+employee on the HRM page.
 
 ### Blocking rules
 - **Disable** (`disabled: true`) → **full lockout.** The member cannot log in and, if they had an
@@ -69,6 +89,8 @@ collide with real server users**:
 |---------------|-------------|-------------------------------------|----------------|
 | Daniel Kofi   | Super Admin | `daniel.kofi@sunrise.example` / `dkofi` | `DemoPass@123` |
 | Sarah Mensah  | Admin       | `sarah.mensah@sunrise.example` / `smensah` | `DemoPass@123` |
+| Efua Mensah   | HRM Manager | `efua.mensah@sunrise.example` / `efua` | `DemoPass@123` |
+| Kwame Asante  | Finance Manager | `kwame.asante@sunrise.example` / `kwame` | `DemoPass@123` |
 | Grace Addo    | Staff       | `grace.addo@sunrise.example` / `grace` | `StaffPass@123` |
 | Michael Owusu | Staff       | `michael.owusu@sunrise.example` / `michael` | `StaffPass@123` |
 | Rita Boateng  | Staff       | `rita.boateng@sunrise.example` / `rita` | `StaffPass@123` *(already data-blocked for demo)* |
@@ -81,22 +103,30 @@ collide with real server users**:
 **Flow to try:**
 1. On the auth page (`/`), click **"Log in as an organisation"**.
 2. Sign in with `Sunrise Mart` + one of the credentials above.
-3. As **Super Admin**: `Users` nav item → add Admins/Staff. When you add a member, a modal
-   shows the generated **username + password** — share those credentials with them.
+3. As **Super Admin**: `Users` nav item → add **Team members** (pick Admin, HRM Manager or
+   Finance Manager) and **Staff**. When you add a member, a modal shows the generated
+   **username + password** — share those credentials with them.
 4. **Disable** a staff member (Disable user) → they can no longer access anything on the
    platform. Or block a staff member's **login** (Block login) or **dashboard data** (Block
    dashboard data).
 5. Log out, log back in as that staff member. Disabled and blocked-login users are rejected;
    data-blocked users see the blocked dashboard message. A disabled user who still has an
    active session is signed out automatically (session re-validation on load).
-6. As an **Admin** (Kwame), the Users page only shows the **Staff** tab.
-7. As Super Admin or Admin: `Finance` nav item → try the tabs (Overview / General Ledger /
+6. Log back in as **Efua Mensah** (HRM Manager) → sees the **HRM** nav item and page but not
+   **Finance** or **Users**. Log in as **Kwame Asante** (Finance Manager) → sees **Finance** but
+   not **HRM** or **Users**. As an **Admin** (Sarah), the Users page shows **both** tabs and can
+   manage staff *and* managers.
+7. As Super Admin / Admin / HRM Manager: `HRM` nav item → manage the employee lifecycle (Add
+   employee → hire on probation → promote, retire or terminate), run payroll for the current
+   month and mark runs paid, log hours, add performance reviews, manage benefit plans, and watch
+   the **Time & Attendance** tab's today roster + attendance & performance summary.
+8. As any org member (incl. staff): `Attendance` nav item → press **Present** to check in for
+   today. The record appears in the HRM "Today's attendance" roster. The page shows your own
+   attendance rate, days present, hours and latest review score.
+9. As Super Admin or Admin: `Finance` nav item → try the tabs (Overview / General Ledger /
    Invoices / Tax & Compliance / Balance Sheet). Create an invoice and watch the Balance Sheet's
    **Accounts Receivable** and the Overview's **Outstanding** update in real time. Mark it paid
    and they drop again.
-8. As Super Admin or Admin: `HRM` nav item → manage the employee lifecycle (Add employee → hire
-   on probation → promote, retire or terminate), run payroll for the current month and mark runs
-   paid, log hours for time tracking, add performance reviews, and manage benefit plans.
 
 > **Reset finance demo data**: clear the `merchant_org_finance_{orgId}` keys from `localStorage`
 > (or bump `FINANCE_VERSION` in `src/data/finance.ts` — all orgs reseed on next load).
@@ -171,7 +201,7 @@ the org dashboard:
 ### 3.4 Mock data layer — `src/data/orgHRM.ts` (Human Resources)
 Per-organisation HRM mock, scoped by org id (storage key `merchant_org_hrm_{orgId}` holding
 `{ version, state }`). It models the full employee lifecycle and everything stays cross-consistent:
-`OrgHrmState = { employees, benefits, payrollRuns, timeEntries, reviews }`.
+`OrgHrmState = { employees, benefits, payrollRuns, timeEntries, reviews, attendance }`.
 
 - **13 seeded employees** spanning every lifecycle status: 9 active, 1 probation, 1 on-leave,
   1 retired, 1 terminated.
@@ -183,9 +213,31 @@ Per-organisation HRM mock, scoped by org id (storage key `merchant_org_hrm_{orgI
   enrollment changes. Deleting a benefit un-enrolls every employee.
 - **Review rating is derived from the score** (≥ 4.5 `exceeds`, ≥ 3.5 `meets`, else `below`);
   completing a review stamps `reviewed_at`.
+- **Attendance / self check-in** — `attendance` seeds ~21 working days of `present`/`absent`
+  records (deterministic, weekends excluded) so attendance rates start around 90%.
+  `checkInOrg(orgId, employeeId)` records **today** as `present` with a check-in time and is
+  **idempotent** (same day returns the existing record). `getOrgAttendanceSummary` derives, per
+  active/probation employee: scheduled/present/absent days, attendance rate, hours + overtime
+  (from `timeEntries`) and the latest review score/rating — these are the performance indicators
+  shown on the HRM page and the staff "My Attendance" page.
 - Bump `HRM_VERSION` to force every org's HRM data to reseed.
 
-### 3.5 API layer — `src/lib/api.ts` → `api.org.*`
+### 3.5 Module-level permissions — `src/lib/orgAccess.ts`
+Centralises the role → module mapping so routes, nav items and page bodies all agree:
+
+| Role | Finance | HRM | Users | Attendance (self) |
+|------|:-------:|:---:|:-----:|:------------------:|
+| super-admin | ✅ | ✅ | ✅ | ✅ |
+| admin | ✅ | ✅ | ✅ | ✅ |
+| hrm-manager | — | ✅ | — | ✅ |
+| finance-manager | ✅ | — | — | ✅ |
+| staff | — | — | — | ✅ |
+| non-org (personal) | — | — | — | — |
+
+Exports: `canManageFinance`, `canManageHRM`, `canManageUsers`, `canAccess(orgUser, perm)`,
+`isOrgMember`.
+
+### 3.6 API layer — `src/lib/api.ts` → `api.org.*`
 The app calls the API through the `api` object, exactly like a real endpoint. Each function
 adds a small artificial `delay(...)` to mimic network latency and returns the same shapes the
 real backend should return.
@@ -232,8 +284,14 @@ real backend should return.
 | `api.org.hrm.getReviews()` | `getOrgReviews(orgId)` | `GET /api/v1/organisations/{org_id}/reviews` |
 | `api.org.hrm.createReview(data)` | `createOrgReview(orgId, data)` | `POST /api/v1/organisations/{org_id}/reviews` |
 | `api.org.hrm.updateReview(id, patch)` | `updateOrgReview(orgId, id, patch)` | `PATCH /api/v1/organisations/{org_id}/reviews/{id}` |
+| `api.org.hrm.getAttendance()` | `getOrgAttendance(orgId)` | `GET /api/v1/organisations/{org_id}/attendance` |
+| `api.org.hrm.getSummary()` | `getOrgAttendanceSummary(orgId)` | `GET /api/v1/organisations/{org_id}/attendance/summary` |
+| `api.org.attendance.self()` | HRM employee matched to the session member by email | `GET /api/v1/organisations/{org_id}/attendance/self` |
+| `api.org.attendance.getRecords()` | `getOrgAttendance(orgId)` | `GET /api/v1/organisations/{org_id}/attendance` |
+| `api.org.attendance.getSummary()` | `getOrgAttendanceSummary(orgId)` | `GET /api/v1/organisations/{org_id}/attendance/summary` |
+| `api.org.attendance.checkIn()` | `checkInOrg(orgId, employeeId)` (auto-provisions the employee if missing) | `POST /api/v1/organisations/{org_id}/attendance/check-in` |
 
-### 3.6 Auth context — `src/context/auth_provider.tsx` / `auth_context.tsx`
+### 3.7 Auth context — `src/context/auth_provider.tsx` / `auth_context.tsx`
 The existing `AuthContext` now carries both auth modes:
 
 ```ts
@@ -259,28 +317,31 @@ interface AuthContextType {
 
 | File | Change |
 |------|--------|
-| `src/data/organisations.ts` | **New.** Mock org data, session, member CRUD. |
+| `src/data/organisations.ts` | **New.** Mock org data, session, member CRUD; `OrgRole` includes `hrm-manager` / `finance-manager`; seeds Efua Mensah (HRM Manager) + Kwame Asante (Finance Manager). |
 | `src/data/finance.ts` | **New.** Mock finance state (ledger/invoices/taxes), per-org storage, invoice CRUD, `buildBalanceSheet`. |
 | `src/data/orgCommerce.ts` | **New.** Mock commerce state (products/customers/credit/POS transactions), per-org storage, product/customer/credit/checkout CRUD. |
-| `src/data/orgHRM.ts` | **New.** Mock HRM state (employees/benefits/payroll/time/reviews), per-org storage, employee lifecycle, payroll runs, derived benefit enrollment & review ratings. |
+| `src/data/orgHRM.ts` | **New.** Mock HRM state (employees/benefits/payroll/time/reviews/**attendance**), per-org storage, employee lifecycle, payroll runs, derived benefit enrollment & review ratings, `checkInOrg` + `getOrgAttendanceSummary`. |
+| `src/lib/orgAccess.ts` | **New.** Module-level permissions (`canManageFinance` / `canManageHRM` / `canManageUsers` / `canAccess`). |
 | `src/pages/authentication/OrganisationAuth.tsx` | **New.** Org Login + Register UI (segmented control). |
 | `src/pages/authentication/default_page.tsx` | Added the "Log in as an organisation" toggle + back link. |
 | `src/context/auth_context.tsx`, `src/context/auth_provider.tsx` | Added `orgUser`, `orgName`, `orgLogin`, logout handling. |
-| `src/lib/api.ts` | Added the `org.*` API namespace (users, finance, commerce, **hrm**) — all mock-backed. |
-| `src/pages/home/home.tsx` | Allow org users; guard `/home/users`, `/home/finance` and `/home/hrm` for admins only; full-screen "Account disabled" lockout for `orgUser.disabled`. |
-| `src/components/layout/DesktopSidebar.tsx`, `MobileNavbar.tsx` | Hide the **Users**, **Finance** and **HRM** nav items for staff/non-org. |
+| `src/lib/api.ts` | Added the `org.*` API namespace (users, finance, commerce, **hrm**, **attendance**) — all mock-backed. |
+| `src/pages/home/home.tsx` | Allow org users; guard `/home/users`, `/home/finance` and `/home/hrm` via `orgAccess` helpers; new `/home/attendance` self-service route; full-screen "Account disabled" lockout for `orgUser.disabled`. |
+| `src/components/layout/DesktopSidebar.tsx`, `MobileNavbar.tsx` | Filter nav items by module permission (`orgAccess`); **Finance** visible to finance-managers, **HRM** to hrm-managers, plus an **Attendance** item for every org member. |
 | `src/components/layout/DesktopHeader.tsx`, `MobileHeader.tsx` | Show org member name/role/email. |
-| `src/pages/finance/FinancePage.tsx` | **New.** Admin-only Finance & Accounting (Overview, General Ledger, Invoices, Tax & Compliance, Balance Sheet). |
-| `src/pages/hrm/HRMPage.tsx` | **New.** Admin-only Human Resources (Overview, Employees, Payroll, Time & Attendance, Performance, Benefits). |
-| `src/pages/users/UsersPage.tsx` | Fetch members from `api.org.getUsers()`; role-based tabs & actions; credential reveal modal. |
-| `src/pages/users/data.ts` | `Member` = `OrgMember`; credential generator (`generateCredential`), `toMember`, `roleLabel`. |
-| `src/pages/users/MemberForm.tsx` | Username/Password/Job Title fields; auto-generates credentials for new members. |
+| `src/pages/finance/FinancePage.tsx` | **New.** Finance & Accounting (Overview, General Ledger, Invoices, Tax & Compliance, Balance Sheet) for super-admin/admin/finance-manager. |
+| `src/pages/hrm/HRMPage.tsx` | **New.** Human Resources (Overview, Employees, Payroll, Time & Attendance, Performance, Benefits) for super-admin/admin/hrm-manager; attendance roster + per-employee summary. |
+| `src/pages/attendance/AttendancePage.tsx` | **New.** Self check-in ("Present") + personal attendance rate, hours and latest review — available to every org member. |
+| `src/pages/users/UsersPage.tsx` | Fetch members from `api.org.getUsers()`; role-based tabs & actions; Admins tab manages Admin / HRM Manager / Finance Manager; credential reveal modal. |
+| `src/pages/users/data.ts` | `Member` = `OrgMember`; credential generator (`generateCredential`), `toMember`, `roleLabel`, `ADMIN_ROLES`. |
+| `src/pages/users/MemberForm.tsx` | Username/Password/Job Title fields + Role selector (Admin / HRM Manager / Finance Manager); auto-generates credentials. |
 | `src/pages/users/MemberTable.tsx` | "Disable user"/"Enable user", "Block login", "Block dashboard data", status badges, super-admin guard. |
 | `src/pages/inventory/InventoryPage.tsx` | Uses `api.org.*` for org users (add/edit/delete inventory against localStorage). |
 | `src/pages/pos/POSPage.tsx` | Uses `api.org.*` for org users (products, checkout, transaction log; skips `refreshDashboardCache`). |
 | `src/pages/customers/CustomersPage.tsx` | Uses `api.org.*` for org users (directory + add-to-credit). |
 | `src/pages/credit/CreditLedgerPage.tsx` | Uses `api.org.*` for org users (debtor registry, payments, status changes). |
 | `src/pages/dashboard/DashboardPage.tsx` | Shows the blocked-data message for `orgUser.dataBlocked`. |
+| `tests/orgAccess.test.ts`, `tests/orgHRM.test.ts`, `tests/api.test.ts`, `tests/organisations.test.ts`, `tests/usersData.test.ts` | Coverage for the new roles, permissions, check-in/attendance and updated seed. |
 
 ---
 
@@ -298,10 +359,14 @@ When the backend implements organisations, do this:
 4. **Passwords** must never be returned by the backend. When the API returns members, drop the
    `password` field; the credential reveal modal should instead read the response of
    `addUser`/`updateUser` only (server returns the generated credential once, e.g. at creation).
-5. Roles stay as strings: `super-admin`, `admin`, `staff`. The frontend derives all permission
-   decisions from `orgUser.role` (see `UsersPage`, `FinancePage`, `home.tsx`, `DesktopSidebar`).
+5. Roles stay as strings: `super-admin`, `admin`, `hrm-manager`, `finance-manager`, `staff`. The
+   frontend derives all permission decisions from `orgUser.role` via `src/lib/orgAccess.ts` (see
+   `home.tsx`, `DesktopSidebar`, `MobileNavbar`, `UsersPage`, `FinancePage`, `HRMPage`). The
+   backend must enforce the same isolation: only members with the matching role may access each
+   module's endpoints.
 6. Finance data is **per-organisation** (mock key `merchant_org_finance_{orgId}`). Server-side,
-   every finance endpoint must be scoped by `org_id` and only admins of that org may access it.
+   every finance endpoint must be scoped by `org_id` and only members with the **Finance**
+   permission (super-admin / admin / finance-manager) may access it.
 7. Invoice status transitions are `draft → sent → paid`, `overdue` (auto when past due), and
    `void`. `paid` moves the invoice out of outstanding/receivables; `void` excludes it from
    totals.
@@ -309,10 +374,15 @@ When the backend implements organisations, do this:
    `merchant_org_commerce_{orgId}`). Server-side, every commerce endpoint must be scoped by
    `org_id`. Products return `status` computed from `stock` (threshold 20); a POS checkout must
    record a transaction and decrement stock atomically.
-9. HRM data is **per-organisation** (mock key `merchant_org_hrm_{orgId}`) and **admin-only**.
-   Server-side, every HRM endpoint must be scoped by `org_id` and only admins of that org may
-   access it. Payroll runs must never be created twice for the same period/employee; employee
-   `retire`/`terminate` transitions are explicit lifecycle actions.
+9. HRM data is **per-organisation** (mock key `merchant_org_hrm_{orgId}`) and only accessible to
+   members with the **HRM** permission (super-admin / admin / hrm-manager). Server-side, every
+   HRM endpoint must be scoped by `org_id`. Payroll runs must never be created twice for the same
+   period/employee; employee `retire`/`terminate` transitions are explicit lifecycle actions.
+10. Attendance / self check-in: `checkIn` must be scoped to the session member, map the member to
+    an HRM employee (by email) — provisioning one if missing — and be **idempotent per day**
+    (a second check-in the same day returns the existing record). Attendance endpoints are
+    open to **all** org members for their own data, and to HRM-permission holders for the full
+    roster/summary.
 
 ### Suggested payloads
 
@@ -357,6 +427,7 @@ When the backend implements organisations, do this:
   payrollRuns: [{ id, period, employee_id, employee_name, gross, tax, net, status: 'pending' | 'paid', processed_at }],
   timeEntries: [{ id, employee_id, employee_name, date, hours, overtime_hours }],
   reviews: [{ id, employee_id, employee_name, period, score, rating, notes, status: 'pending' | 'completed', reviewed_at }],
+  attendance: [{ id, employee_id, employee_name, date, check_in: 'HH:MM', status: 'present' | 'absent' }],
 }
 
 // POST /organisations/{org_id}/employees
@@ -370,6 +441,20 @@ When the backend implements organisations, do this:
 
 // PATCH /organisations/{org_id}/payroll/{id}
 { status: 'pending' | 'paid' }
+
+// POST /organisations/{org_id}/attendance/check-in  ->  OrgAttendanceRecord
+{ }   // server maps the session member -> HRM employee (by email, provisioning if missing);
+     // returns { id, employee_id, employee_name, date, check_in: 'HH:MM', status: 'present' }
+
+// GET /organisations/{org_id}/attendance/summary  ->  OrgAttendanceSummary[]
+[{
+  employee_id, employee_name,
+  scheduled_days, present_days, absent_days,
+  attendance_rate: number,      // 0-100, present / scheduled
+  total_hours, overtime_hours,
+  latest_review_score: number | null,
+  latest_review_rating: 'exceeds' | 'meets' | 'below' | null,
+}]
 ```
 
 ---
@@ -391,9 +476,14 @@ When the backend implements organisations, do this:
   accounts** (`api.org.*` → `src/data/orgCommerce.ts`), so everything an organisation touches
   is fully self-contained in the browser and never reaches the server. Normal logins keep using
   the real backend.
-- The **HRM page is admin-only and 100% mock** (`api.org.hrm.*` → `src/data/orgHRM.ts`). Staff
-  and non-org logins are redirected away from `/home/hrm` and never see the nav item. Its
-  numbers are internally consistent (monthly payroll = active + probation + on-leave salaries;
-  benefits cost = Σ cost × derived enrollment).
+- The **HRM page is permission-gated (super-admin / admin / hrm-manager) and 100% mock**
+  (`api.org.hrm.*` → `src/data/orgHRM.ts`). Finance-managers, staff and non-org logins are
+  redirected away from `/home/hrm` and never see the nav item. Its numbers are internally
+  consistent (monthly payroll = active + probation + on-leave salaries; benefits cost =
+  Σ cost × derived enrollment).
+- **Self check-in ("My Attendance")** (`api.org.attendance.*` → `src/data/orgHRM.ts`) is
+  available to **every org member**, including staff. The session member is matched to an HRM
+  employee by email and auto-provisioned on first check-in if needed, so the record always shows
+  up in the HRM attendance view.
 - Existing lint conventions are respected (`react-hooks/set-state-in-effect` is avoided, no new
-  `any` types added).
+  `any` types added); the eslint problem count is unchanged from the pre-feature baseline.

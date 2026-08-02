@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { generateCredential, type MemberFormData } from './data'
+import { ADMIN_ROLES, generateCredential, type MemberFormData } from './data'
+import type { OrgRole } from '@/data/organisations'
 
 const modalBackdrop: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex',
@@ -25,11 +26,12 @@ type FormProps = {
   submitLabel: string
   initial: MemberFormData
   kind: 'admin' | 'staff'
+  lockRole?: boolean
   onSave: (data: MemberFormData) => void
   onClose: () => void
 }
 
-export function MemberForm({ title, submitLabel, initial, kind, onSave, onClose }: FormProps) {
+export function MemberForm({ title, submitLabel, initial, kind, lockRole, onSave, onClose }: FormProps) {
   const [formData, setFormData] = useState<MemberFormData>(() => {
     if (initial.username && initial.password) return initial
     const cred = generateCredential(initial.name, initial.email)
@@ -59,6 +61,14 @@ export function MemberForm({ title, submitLabel, initial, kind, onSave, onClose 
             <input value={formData.jobTitle} onChange={e => setFormData(p => ({ ...p, jobTitle: e.target.value }))} style={inputStyle} placeholder="e.g. Cashier, Sales" />
           </div>
         )}
+        {kind === 'admin' && !lockRole && (
+          <div>
+            <label style={labelStyle}>Role</label>
+            <select value={formData.role} onChange={e => setFormData(p => ({ ...p, role: e.target.value as OrgRole }))} style={{ ...inputStyle, padding: '0 8px' }}>
+              {ADMIN_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
+          </div>
+        )}
         <div>
           <label style={labelStyle}>Phone</label>
           <input value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} style={inputStyle} placeholder="+233 20 000 0000" />
@@ -72,7 +82,7 @@ export function MemberForm({ title, submitLabel, initial, kind, onSave, onClose 
           <input value={formData.password} onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} style={inputStyle} placeholder="Login password" />
         </div>
         <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
-          Provide these credentials to the {kind === 'staff' ? 'staff member' : 'admin'} so they can log in with the organisation name.
+          Provide these credentials to the {kind === 'staff' ? 'staff member' : 'team member'} so they can log in with the organisation name.
         </p>
         <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
           <button onClick={onClose} style={{ flex: 1, height: '40px', fontSize: '13px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>

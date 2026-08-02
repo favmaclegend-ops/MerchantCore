@@ -1,8 +1,10 @@
 import { useState, useContext } from 'react'
+import type { ElementType } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
+import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
 
 const primaryItems = [
   { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
@@ -12,11 +14,14 @@ const primaryItems = [
   { path: '/home/calculator', label: 'Calc', icon: Calculator },
 ]
 
-const moreItems = [
+type MoreItem = { path: string; label: string; icon: ElementType; permission?: OrgPermissions; orgMemberOnly?: boolean }
+
+const moreItems: MoreItem[] = [
   { path: '/home/customers', label: 'Customers', icon: Users },
-  { path: '/home/finance', label: 'Finance', icon: Wallet, orgAdminOnly: true },
-  { path: '/home/hrm', label: 'HRM', icon: Contact, orgAdminOnly: true },
-  { path: '/home/users', label: 'Users', icon: UserCog, orgAdminOnly: true },
+  { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
+  { path: '/home/hrm', label: 'HRM', icon: Contact, permission: 'hrm' },
+  { path: '/home/attendance', label: 'Attendance', icon: Clock, orgMemberOnly: true },
+  { path: '/home/users', label: 'Users', icon: UserCog, permission: 'users' },
   { path: '/home/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -26,8 +31,13 @@ export function MobileNavbar() {
   const { orgUser } = useContext(Authcontext)
   const [open, setOpen] = useState(false)
 
-  const isOrgAdmin = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
-  const visibleMoreItems = moreItems.filter(i => !i.orgAdminOnly || isOrgAdmin)
+  const visibleMoreItems = moreItems.filter(item =>
+    item.permission
+      ? canAccess(orgUser, item.permission)
+      : item.orgMemberOnly
+        ? !!orgUser
+        : true,
+  )
 
   if (bp.lg) return null
 

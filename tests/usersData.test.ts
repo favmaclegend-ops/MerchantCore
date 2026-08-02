@@ -45,6 +45,8 @@ describe('users data helpers', () => {
     expect(roleLabel(admin)).toBe('Admin')
     expect(roleLabel(staff)).toBe('Cashier')
     expect(roleLabel(staffNoTitle)).toBe('Staff')
+    expect(roleLabel({ ...admin, role: 'hrm-manager' })).toBe('HRM Manager')
+    expect(roleLabel({ ...admin, role: 'finance-manager' })).toBe('Finance Manager')
   })
 
   it('generates credentials from the email username', () => {
@@ -60,7 +62,7 @@ describe('users data helpers', () => {
 
   it('toMember shapes a staff member', () => {
     const member = toMember(
-      { name: 'Ama Serwaa', email: 'ama@sunrise.example', username: '', password: '', phone: '+1 555', jobTitle: 'Cashier' },
+      { name: 'Ama Serwaa', email: 'ama@sunrise.example', username: '', password: '', phone: '+1 555', jobTitle: 'Cashier', role: 'staff' },
       'staff',
     )
     expect(member).toMatchObject({
@@ -78,7 +80,7 @@ describe('users data helpers', () => {
 
   it('toMember keeps explicit credentials and defaults job titles', () => {
     const member = toMember(
-      { name: 'Ama', email: 'a@b.example', username: 'ama_custom', password: 'Fixed@1', phone: '', jobTitle: '' },
+      { name: 'Ama', email: 'a@b.example', username: 'ama_custom', password: 'Fixed@1', phone: '', jobTitle: '', role: 'staff' },
       'staff',
     )
     expect(member.username).toBe('ama_custom')
@@ -86,10 +88,26 @@ describe('users data helpers', () => {
     expect(member.jobTitle).toBe('Staff')
 
     const adminMember = toMember(
-      { name: 'B', email: 'b@b.example', username: '', password: '', phone: '', jobTitle: 'Anything' },
+      { name: 'B', email: 'b@b.example', username: '', password: '', phone: '', jobTitle: 'Anything', role: 'admin' },
       'admin',
     )
     expect(adminMember.jobTitle).toBe('Administrator')
+  })
+
+  it('toMember assigns manager job titles for manager roles', () => {
+    const hrm = toMember(
+      { name: 'C', email: 'c@b.example', username: '', password: '', phone: '', jobTitle: '', role: 'hrm-manager' },
+      'hrm-manager',
+    )
+    expect(hrm.role).toBe('hrm-manager')
+    expect(hrm.jobTitle).toBe('HR Manager')
+
+    const finance = toMember(
+      { name: 'D', email: 'd@b.example', username: '', password: '', phone: '', jobTitle: '', role: 'finance-manager' },
+      'finance-manager',
+    )
+    expect(finance.role).toBe('finance-manager')
+    expect(finance.jobTitle).toBe('Accountant')
   })
 
   it('toFormData round-trips a member and yields an empty form for none', () => {
@@ -98,7 +116,8 @@ describe('users data helpers', () => {
       email: 'daniel.kofi@sunrise.example',
       username: 'dkofi',
       jobTitle: 'Cashier',
+      role: 'staff',
     })
-    expect(toFormData(null)).toEqual({ name: '', email: '', username: '', password: '', phone: '', jobTitle: '' })
+    expect(toFormData(null)).toEqual({ name: '', email: '', username: '', password: '', phone: '', jobTitle: '', role: 'admin' })
   })
 })

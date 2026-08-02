@@ -1,19 +1,30 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus, Wallet, Contact } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus, Wallet, Contact, Clock } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Icons } from 'elk-components'
 import { useContext } from 'react'
+import type { ElementType } from 'react'
 import { Authcontext } from '@/context/auth_context'
+import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
 
-const navItems = [
+type NavItem = {
+  path: string
+  label: string
+  icon: ElementType
+  permission?: OrgPermissions
+  orgMemberOnly?: boolean
+}
+
+const navItems: NavItem[] = [
   { path: '/home/dashboard', label: 'Dashboard', icon: LayoutGrid },
   { path: '/home/inventory', label: 'Inventory', icon: Package },
   { path: '/home/credit', label: 'Credit Ledger', icon: CreditCard },
   { path: '/home/pos', label: 'POS', icon: ShoppingCart },
   { path: '/home/customers', label: 'Customers', icon: Users },
-  { path: '/home/finance', label: 'Finance', icon: Wallet, orgAdminOnly: true },
-  { path: '/home/hrm', label: 'HRM', icon: Contact, orgAdminOnly: true },
-  { path: '/home/users', label: 'Users', icon: Icons.icon.UserPlus, orgAdminOnly: true },
+  { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
+  { path: '/home/hrm', label: 'HRM', icon: Contact, permission: 'hrm' },
+  { path: '/home/attendance', label: 'Attendance', icon: Clock, orgMemberOnly: true },
+  { path: '/home/users', label: 'Users', icon: Icons.icon.UserPlus, permission: 'users' },
   { path: '/home/calculator', label: 'Calculator', icon: Calculator },
 ]
 
@@ -23,8 +34,13 @@ export function DesktopSidebar() {
   const bp = useBreakpoint()
   const { orgUser } = useContext(Authcontext)
 
-  const isOrgAdmin = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
-  const visibleItems = navItems.filter(item => !item.orgAdminOnly || isOrgAdmin)
+  const visibleItems = navItems.filter(item =>
+    item.permission
+      ? canAccess(orgUser, item.permission)
+      : item.orgMemberOnly
+        ? !!orgUser
+        : true,
+  )
 
   if (!bp.lg) return null
 

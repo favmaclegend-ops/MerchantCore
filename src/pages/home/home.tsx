@@ -7,6 +7,7 @@ import { DesktopHeader } from '@/components/layout/DesktopHeader'
 import { MobileNavbar } from '@/components/layout/MobileNavbar'
 import { MobileHeader } from '@/components/layout/MobileHeader'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { canManageFinance, canManageHRM, canManageUsers } from '@/lib/orgAccess'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
 const InventoryPage = lazy(() => import('@/pages/inventory/InventoryPage').then(m => ({ default: m.InventoryPage })))
@@ -18,6 +19,7 @@ const CalculatorPage = lazy(() => import('@/pages/calculator/CalculatorPage').th
 const FinancePage = lazy(() => import('@/pages/finance/FinancePage').then(m => ({ default: m.FinancePage })))
 const HRMPage = lazy(() => import('@/pages/hrm/HRMPage').then(m => ({ default: m.HRMPage })))
 const Users = lazy(() => import('@/pages/users/UsersPage').then(m => ({ default: m.Users })))
+const AttendancePage = lazy(() => import('@/pages/attendance/AttendancePage').then(m => ({ default: m.AttendancePage })))
 
 export default function Home() {
     const location = useLocation();
@@ -55,10 +57,6 @@ export default function Home() {
         )
     }
 
-    const canManageUsers = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
-    const canManageFinance = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
-    const canManageHRM = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
-
     return (
         <>
             <div style={{ display: 'flex', width: '100%', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
@@ -76,10 +74,11 @@ export default function Home() {
                                 <Route path="/credit" element={<CreditLedgerPage />} />
                                 <Route path="/customers" element={<CustomersPage />} />
                                 <Route path="/calculator" element={<CalculatorPage />} />
-                                <Route path="/finance" element={canManageFinance ? <FinancePage /> : <Navigate to="/dashboard" replace />} />
-                                <Route path="/hrm" element={canManageHRM ? <HRMPage /> : <Navigate to="/dashboard" replace />} />
+                                <Route path="/finance" element={canManageFinance(orgUser) ? <FinancePage /> : <Navigate to="/dashboard" replace />} />
+                                <Route path="/hrm" element={canManageHRM(orgUser) ? <HRMPage /> : <Navigate to="/dashboard" replace />} />
+                                <Route path="/attendance" element={orgUser ? <AttendancePage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/settings" element={<SettingsPage />} />
-                                <Route path="/users" element={canManageUsers ? <Users /> : <Navigate to="/dashboard" replace />} />
+                                <Route path="/users" element={canManageUsers(orgUser) ? <Users /> : <Navigate to="/dashboard" replace />} />
                             </Routes>
                         </Suspense>
                     </div>

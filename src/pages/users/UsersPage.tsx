@@ -4,6 +4,7 @@ import { MemberTable } from './MemberTable'
 import { MemberForm } from './MemberForm'
 import { Authcontext } from '@/context/auth_context'
 import { api } from '@/lib/api'
+import { canManageUsers } from '@/lib/orgAccess'
 import { isSuperAdmin, TABS, toFormData, toMember, type Member, type MemberFormData, type TabId } from './data'
 
 type FormState = { open: boolean; editing: Member | null }
@@ -22,23 +23,20 @@ export function Users() {
   const [credential, setCredential] = useState<Member | null>(null)
 
   const applyMembers = (members: Member[]) => {
-    setAdmins(members.filter(m => m.role === 'super-admin' || m.role === 'admin'))
+    setAdmins(members.filter(m => m.role !== 'staff'))
     setStaff(members.filter(m => m.role === 'staff'))
   }
 
   useEffect(() => {
     api.org.getUsers()
-      .then(members => {
-        setAdmins(members.filter(m => m.role === 'super-admin' || m.role === 'admin'))
-        setStaff(members.filter(m => m.role === 'staff'))
-      })
+      .then(applyMembers)
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
   const loadMembers = () => api.org.getUsers().then(applyMembers).catch(() => {})
 
-  if (!orgUser || currentRole === 'staff') {
+  if (!canManageUsers(orgUser)) {
     return (
       <div style={{ width: '100%', padding: '40px 16px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', textAlign: 'center' }}>
         <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Restricted area</p>
@@ -49,7 +47,7 @@ export function Users() {
     )
   }
 
-  const visibleTabs = isOrdinaryAdmin ? TABS.filter(t => t.id === 'staff') : TABS
+  const visibleTabs = TABS
   const members = active === 'admin' ? admins : staff
   const prefix = active === 'admin' ? 'ADM' : 'STF'
 
@@ -65,16 +63,20 @@ export function Users() {
   const handleSave = (data: MemberFormData) => {
     const editing = form.editing
     if (editing) {
-      api.org.updateUser(editing.id, {
+      const patch: Partial<Member> = {
         name: data.name,
         email: data.email,
         username: data.username,
         password: data.password || editing.password,
         phone: data.phone,
         jobTitle: editing.role === 'staff' ? data.jobTitle : editing.jobTitle,
-      }).then(loadMembers)
+      }
+      if (editing.role !== 'super-admin' && data.role && data.role !== editing.role) {
+        patch.role = data.role
+      }
+      api.org.updateUser(editing.id, patch).then(loadMembers)
     } else {
-      const role = active === 'admin' ? 'admin' : 'staff'
+      const role = active === 'admin' ? (data.role || 'admin') : 'staff'
       api.org.addUser(toMember(data, role)).then(created => {
         loadMembers()
         setCredential(created)
@@ -134,7 +136,7 @@ export function Users() {
           child={() => (
             <>
               <Icon icon={Icons.icon.Add} color="white" size={20}/>
-              <span style={{ color: 'var(--text-on-dark)', fontSize: '.9rem' }}>Add new {active === 'admin' ? 'Admin' : 'Staff'}</span>
+              <span style={{ color: 'var(--text-on-dark)', fontSize: '.9rem' }}>Add new {active === 'admin' ? 'Team member' : 'Staff'}</span>
             </>
           )}
         />
@@ -166,10 +168,11 @@ export function Users() {
         <MemberForm
           key={form.editing?.id || 'new'}
           title={form.editing
-            ? `Edit ${active === 'admin' ? 'Admin' : 'Staff'}`
-            : `Add new ${active === 'admin' ? 'Admin' : 'Staff'}`}
+            ? `Edit ${active === 'admin' ? 'Team member' : 'Staff'}`
+            : `Add new ${active === 'admin' ? 'Team member' : 'Staff'}`}
           submitLabel={form.editing ? 'Save' : 'Add'}
           kind={form.editing ? (form.editing.role === 'staff' ? 'staff' : 'admin') : prefix === 'STF' ? 'staff' : 'admin'}
+          lockRole={form.editing?.role === 'super-admin'}
           initial={toFormData(form.editing)}
           onSave={handleSave}
           onClose={closeForm}

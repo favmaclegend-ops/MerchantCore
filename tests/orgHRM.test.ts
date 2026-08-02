@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  checkInOrg,
   createOrgBenefit,
   createOrgEmployee,
   createOrgReview,
   deleteOrgBenefit,
+  getOrgAttendance,
+  getOrgAttendanceSummary,
   getOrgBenefits,
   getOrgEmployees,
   getOrgPayrollRuns,
@@ -36,6 +39,7 @@ describe('orgHRM (mock data layer)', () => {
     expect(state.payrollRuns).toHaveLength(11)
     expect(state.timeEntries.length).toBeGreaterThan(0)
     expect(state.reviews.length).toBeGreaterThan(0)
+    expect(state.attendance.length).toBeGreaterThan(0)
     expect(localStorage.getItem(KEY)).not.toBeNull()
   })
 
@@ -155,6 +159,55 @@ describe('orgHRM (mock data layer)', () => {
       expect(entry.employee_name).toBe('Michael Owusu')
       expect(getOrgTimeEntries(ORG)[0].id).toBe('TM-009')
       expect(() => logOrgTime(ORG, { employee_id: 'EMP-999', date: '2026-08-01', hours: 8 })).toThrow('Employee not found')
+    })
+  })
+
+  describe('attendance & self check-in', () => {
+    it('seeds attendance across recent working days', () => {
+      const records = getOrgAttendance(ORG)
+      expect(records.length).toBeGreaterThan(0)
+      const grace = records.filter(r => r.employee_id === 'EMP-003')
+      expect(grace.length).toBeGreaterThan(0)
+      expect(grace.some(r => r.status === 'present')).toBe(true)
+    })
+
+    it('checks in an employee today and is idempotent', () => {
+      const today = new Date().toISOString().slice(0, 10)
+      const first = checkInOrg(ORG, 'EMP-003')
+      expect(first.date).toBe(today)
+      expect(first.status).toBe('present')
+      expect(first.check_in).toMatch(/^\d{2}:\d{2}$/)
+
+      const second = checkInOrg(ORG, 'EMP-003')
+      expect(second.id).toBe(first.id)
+      expect(getOrgAttendance(ORG).filter(a => a.employee_id === 'EMP-003' && a.date === today)).toHaveLength(1)
+    })
+
+    it('rejects check-in for an unknown employee', () => {
+      expect(() => checkInOrg(ORG, 'EMP-999')).toThrow('Employee not found')
+    })
+
+    it('summarises attendance, hours and latest review per employee', () => {
+      const summary = getOrgAttendanceSummary(ORG)
+      const grace = summary.find(s => s.employee_id === 'EMP-003')
+      expect(grace).toBeTruthy()
+      expect(grace!.scheduled_days).toBeGreaterThan(0)
+      expect(grace!.present_days).toBeGreaterThan(0)
+      expect(grace!.absent_days).toBeGreaterThanOrEqual(0)
+      expect(grace!.attendance_rate).toBeGreaterThan(0)
+      expect(grace!.attendance_rate).toBeLessThanOrEqual(100)
+      // EMP-003 has a completed review (REV-003, score 3.8 -> meets).
+      expect(grace!.latest_review_score).toBe(3.8)
+      expect(grace!.latest_review_rating).toBe('meets')
+      // EMP-003 has seeded time entries (TM-003, TM-007).
+      expect(grace!.total_hours).toBeGreaterThan(0)
+    })
+
+    it('excludes non-active employees from the summary', () => {
+      const ids = new Set(getOrgAttendanceSummary(ORG).map(s => s.employee_id))
+      expect(ids.has('EMP-011')).toBe(false) // on-leave
+      expect(ids.has('EMP-012')).toBe(false) // retired
+      expect(ids.has('EMP-013')).toBe(false) // terminated
     })
   })
 

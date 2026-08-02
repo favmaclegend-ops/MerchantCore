@@ -115,10 +115,33 @@ export interface OrgHrmState {
   payrollRuns: OrgPayrollRun[]
   timeEntries: OrgTimeEntry[]
   reviews: OrgPerformanceReview[]
+  attendance: OrgAttendanceRecord[]
+}
+
+export interface OrgAttendanceRecord {
+  id: string
+  employee_id: string
+  employee_name: string
+  date: string
+  check_in: string
+  status: 'present' | 'absent'
+}
+
+export interface OrgAttendanceSummary {
+  employee_id: string
+  employee_name: string
+  scheduled_days: number
+  present_days: number
+  absent_days: number
+  attendance_rate: number
+  total_hours: number
+  overtime_hours: number
+  latest_review_score: number | null
+  latest_review_rating: OrgReviewRating | null
 }
 
 const HRM_KEY_PREFIX = 'merchant_org_hrm_'
-const HRM_VERSION = 1
+const HRM_VERSION = 2
 const PAYROLL_TAX_RATE = 0.1
 const REVIEW_THRESHOLDS = { exceeds: 4.5, meets: 3.5 }
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const
@@ -133,6 +156,16 @@ function daysAgo(n: number): string {
   return d.toISOString().slice(0, 10)
 }
 
+function todayStr(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function nowTime(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export function currentPeriod(date = new Date()): string {
   return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`
 }
@@ -145,6 +178,38 @@ function reviewRating(score: number): OrgReviewRating {
 
 function paidStatuses(): OrgEmploymentStatus[] {
   return ['active', 'probation', 'on-leave']
+}
+
+function seedAttendance(employees: OrgEmployee[]): OrgAttendanceRecord[] {
+  const records: OrgAttendanceRecord[] = []
+  const active = employees.filter(e => e.status === 'active' || e.status === 'probation')
+  const dates: string[] = []
+  let cursor = 1
+  while (dates.length < 21) {
+    const d = new Date()
+    d.setDate(d.getDate() - cursor)
+    const dow = d.getDay()
+    if (dow !== 0 && dow !== 6) dates.push(d.toISOString().slice(0, 10))
+    cursor += 1
+  }
+  let n = 0
+  dates.forEach((date, di) => {
+    active.forEach((emp, ei) => {
+      const absent = (di + ei) % 9 === 0
+      const hour = 7 + (ei % 3)
+      const minute = 5 + (n % 4) * 10
+      records.push({
+        id: `ATD-${String(records.length + 1).padStart(3, '0')}`,
+        employee_id: emp.id,
+        employee_name: emp.name,
+        date,
+        check_in: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+        status: absent ? 'absent' : 'present',
+      })
+      n += 1
+    })
+  })
+  return records
 }
 
 function seedHrmState(): OrgHrmState {
@@ -207,7 +272,7 @@ function seedHrmState(): OrgHrmState {
     { id: 'REV-006', employee_id: 'EMP-004', employee_name: 'Michael Owusu', period: 'H1 2026', score: 4.0, rating: reviewRating(4.0), notes: 'Good sales numbers.', status: 'pending', reviewed_at: '' },
   ]
 
-  return { employees, benefits, payrollRuns, timeEntries, reviews }
+  return { employees, benefits, payrollRuns, timeEntries, reviews, attendance: seedAttendance(employees) }
 }
 
 export function loadHrmState(orgId: string): OrgHrmState {
@@ -399,6 +464,62 @@ export function logOrgTime(orgId: string, input: OrgTimeInput): OrgTimeEntry {
   state.timeEntries.unshift(entry)
   saveHrmState(orgId, state)
   return entry
+}
+
+// ---- Self check-in / attendance -------------------------------------------
+
+export function getOrgAttendance(orgId: string): OrgAttendanceRecord[] {
+  return loadHrmState(orgId).attendance
+}
+
+// Idempotent: checking in twice on the same day returns the existing record.
+export function checkInOrg(orgId: string, employeeId: string): OrgAttendanceRecord {
+  const state = loadHrmState(orgId)
+  const employee = state.employees.find(e => e.id === employeeId)
+  if (!employee) throw new Error('Employee not found')
+  const date = todayStr()
+  const existing = state.attendance.find(a => a.employee_id === employeeId && a.date === date)
+  if (existing) return existing
+  const record: OrgAttendanceRecord = {
+    id: nextId(state.attendance.map(a => a.id), 'ATD'),
+    employee_id: employee.id,
+    employee_name: employee.name,
+    date,
+    check_in: nowTime(),
+    status: 'present',
+  }
+  state.attendance.unshift(record)
+  saveHrmState(orgId, state)
+  return record
+}
+
+// Per-employee attendance & performance indicators (drives both the HRM page and the
+// staff self-service "My Attendance" summary). Only active/probation employees count.
+export function getOrgAttendanceSummary(orgId: string): OrgAttendanceSummary[] {
+  const state = loadHrmState(orgId)
+  return state.employees
+    .filter(e => e.status === 'active' || e.status === 'probation')
+    .map(employee => {
+      const records = state.attendance.filter(a => a.employee_id === employee.id)
+      const presentDays = records.filter(a => a.status === 'present').length
+      const timeEntries = state.timeEntries.filter(t => t.employee_id === employee.id)
+      const reviews = state.reviews
+        .filter(r => r.employee_id === employee.id)
+        .sort((a, b) => (b.reviewed_at || '').localeCompare(a.reviewed_at || ''))
+      const latest = reviews[0] ?? null
+      return {
+        employee_id: employee.id,
+        employee_name: employee.name,
+        scheduled_days: records.length,
+        present_days: presentDays,
+        absent_days: records.length - presentDays,
+        attendance_rate: records.length ? Math.round((presentDays / records.length) * 100) : 0,
+        total_hours: timeEntries.reduce((sum, t) => sum + t.hours, 0),
+        overtime_hours: timeEntries.reduce((sum, t) => sum + t.overtime_hours, 0),
+        latest_review_score: latest ? latest.score : null,
+        latest_review_rating: latest ? latest.rating : null,
+      }
+    })
 }
 
 // ---- Performance Reviews ---------------------------------------------------

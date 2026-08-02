@@ -1,6 +1,7 @@
 import {
   addOrgMember,
   deleteOrgMember,
+  getOrgSession,
   getSessionOrganisation,
   loginOrganisation,
   registerOrganisation,
@@ -272,6 +273,14 @@ export const api = {
         await delay(200)
         return orgHRM.logOrgTime(requireOrgId(), data)
       },
+      getAttendance: async () => {
+        await delay(200)
+        return orgHRM.getOrgAttendance(requireOrgId())
+      },
+      getSummary: async () => {
+        await delay(200)
+        return orgHRM.getOrgAttendanceSummary(requireOrgId())
+      },
       getReviews: async () => {
         await delay(200)
         return orgHRM.getOrgReviews(requireOrgId())
@@ -283,6 +292,50 @@ export const api = {
       updateReview: async (id: string, patch: Parameters<typeof orgHRM.updateOrgReview>[2]) => {
         await delay(200)
         return orgHRM.updateOrgReview(requireOrgId(), id, patch)
+      },
+    },
+
+    // Attendance / self check-in — available to every org member (self-service). The
+    // logged-in member is matched to their HRM employee record by email; if they have
+    // none yet, one is provisioned so the check-in flows into the HRM attendance view.
+    attendance: {
+      self: async () => {
+        await delay(200)
+        const session = getOrgSession()
+        if (!session) throw new Error('No active organisation session')
+        const employee = orgHRM.getOrgEmployees(session.orgId)
+          .find(e => e.email.toLowerCase() === session.member.email.toLowerCase())
+        return employee ?? null
+      },
+      getRecords: async () => {
+        await delay(200)
+        return orgHRM.getOrgAttendance(requireOrgId())
+      },
+      getSummary: async () => {
+        await delay(200)
+        return orgHRM.getOrgAttendanceSummary(requireOrgId())
+      },
+      checkIn: async () => {
+        await delay(250)
+        const session = getOrgSession()
+        if (!session) throw new Error('No active organisation session')
+        const orgId = session.orgId
+        let employee = orgHRM.getOrgEmployees(orgId)
+          .find(e => e.email.toLowerCase() === session.member.email.toLowerCase())
+        if (!employee) {
+          employee = orgHRM.createOrgEmployee(orgId, {
+            name: session.member.name,
+            email: session.member.email,
+            phone: session.member.phone || undefined,
+            department: 'Unassigned',
+            jobTitle: session.member.jobTitle || 'Staff',
+            employmentType: 'full-time',
+            hireDate: new Date().toISOString().slice(0, 10),
+            salary: 0,
+            status: 'probation',
+          })
+        }
+        return orgHRM.checkInOrg(orgId, employee.id)
       },
     },
   },

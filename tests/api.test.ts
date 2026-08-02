@@ -243,4 +243,32 @@ describe('api.org (mock-backed organisation workspace)', () => {
     const review = await api.org.hrm.createReview({ employee_id: 'EMP-003', period: 'H2 2026', score: 4.7 })
     expect(review.rating).toBe('exceeds')
   })
+
+  it('supports self check-in and attendance summaries for the active org', async () => {
+    const session = await registerAndSession()
+    setOrgSession(session)
+
+    // The super-admin has no HRM employee record yet — check-in auto-provisions one.
+    expect(await api.org.attendance.self()).toBeNull()
+
+    const record = await api.org.attendance.checkIn()
+    expect(record.status).toBe('present')
+    expect(record.employee_name).toBe('Kofi Mensah')
+
+    const again = await api.org.attendance.checkIn()
+    expect(again.id).toBe(record.id)
+
+    const self = await api.org.attendance.self()
+    expect(self?.email).toBe('kofi@kofistores.example')
+    expect(self?.status).toBe('probation')
+
+    const records = await api.org.attendance.getRecords()
+    expect(records.some(r => r.id === record.id)).toBe(true)
+
+    const summary = await api.org.attendance.getSummary()
+    const own = summary.find(s => s.employee_id === self!.id)
+    expect(own?.present_days).toBe(1)
+    expect(own?.scheduled_days).toBe(1)
+    expect(own?.attendance_rate).toBe(100)
+  })
 })

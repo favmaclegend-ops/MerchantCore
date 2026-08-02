@@ -6,8 +6,11 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context/auth_context'
 import { CurrencyContext } from '@/context/currency_context'
+import { canManageHRM } from '@/lib/orgAccess'
 import {
   currentPeriod,
+  type OrgAttendanceRecord,
+  type OrgAttendanceSummary,
   type OrgBenefit,
   type OrgBenefitInput,
   type OrgBenefitType,
@@ -138,6 +141,8 @@ export function HRMPage() {
   const [active, setActive] = useState<TabId>('overview')
   const [state, setState] = useState<OrgHrmState | null>(null)
   const [benefits, setBenefits] = useState<OrgBenefit[]>([])
+  const [attendance, setAttendance] = useState<OrgAttendanceRecord[]>([])
+  const [summary, setSummary] = useState<OrgAttendanceSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -169,6 +174,12 @@ export function HRMPage() {
     api.org.hrm.getBenefits()
       .then(setBenefits)
       .catch(() => {})
+    api.org.hrm.getAttendance()
+      .then(setAttendance)
+      .catch(() => {})
+    api.org.hrm.getSummary()
+      .then(setSummary)
+      .catch(() => {})
   }
 
   useEffect(() => {
@@ -179,14 +190,20 @@ export function HRMPage() {
     api.org.hrm.getBenefits()
       .then(setBenefits)
       .catch(() => {})
+    api.org.hrm.getAttendance()
+      .then(setAttendance)
+      .catch(() => {})
+    api.org.hrm.getSummary()
+      .then(setSummary)
+      .catch(() => {})
   }, [])
 
-  if (!orgUser || orgUser.role === 'staff') {
+  if (!canManageHRM(orgUser)) {
     return (
       <div style={{ width: '100%', padding: '40px 16px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', textAlign: 'center' }}>
         <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Restricted area</p>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', marginBottom: 0 }}>
-          You do not have permission to view Human Resources. This area is only available to organisation admins.
+          You do not have permission to view Human Resources. This area is only available to organisation admins and HRM managers.
         </p>
       </div>
     )
@@ -205,6 +222,11 @@ export function HRMPage() {
   const openReviews = reviews.filter(r => r.status === 'pending').length
   const loggedHours = timeEntries.reduce((sum, t) => sum + t.hours, 0)
   const overtimeHours = timeEntries.reduce((sum, t) => sum + t.overtime_hours, 0)
+  const today = new Date().toISOString().slice(0, 10)
+  const presentToday = attendance.filter(a => a.date === today && a.status === 'present').length
+  const summaryByEmp = new Map(summary.map(s => [s.employee_id, s]))
+  const todayByEmp = new Map(attendance.filter(a => a.date === today).map(a => [a.employee_id, a]))
+  const rosterEmployees = employees.filter(e => e.status === 'active' || e.status === 'probation')
 
   const openEmployeeForm = (employee?: OrgEmployee) => {
     setEditingEmployee(employee ?? null)
@@ -454,6 +476,7 @@ export function HRMPage() {
                 <StatCard label="Monthly Payroll" value={format(monthlyGross)} sub="Gross (active + probation + leave)" icon={<Wallet size={18} />} tone="green" />
                 <StatCard label="Benefits Cost" value={format(benefitsCost)} sub={`Across ${benefits.length} benefit plans / month`} icon={<ShieldCheck size={18} />} tone="neutral" />
                 <StatCard label="Open Reviews" value={String(openReviews)} sub="Pending performance reviews" icon={<Star size={18} />} tone="amber" />
+                <StatCard label="Present Today" value={String(presentToday)} sub={`Of ${rosterEmployees.length} active staff`} icon={<Clock size={18} />} tone="green" />
                 <StatCard label="Hours Logged" value={String(loggedHours)} sub={`+ ${overtimeHours} overtime (recent)`} icon={<Clock size={18} />} tone="neutral" />
               </div>
 
@@ -516,6 +539,8 @@ export function HRMPage() {
                       <th style={thStyle}>Type</th>
                       <th style={thStyle}>Hire Date</th>
                       <th style={{ ...thStyle, textAlign: 'right' }}>Salary</th>
+                      <th style={thStyle}>Attendance</th>
+                      <th style={thStyle}>Review</th>
                       <th style={thStyle}>Status</th>
                       <th style={{ ...thStyle, textAlign: 'right' }}>Actions</th>
                     </tr>
@@ -532,6 +557,14 @@ export function HRMPage() {
                         <td style={{ ...tdStyle, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{employee.employmentType}</td>
                         <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{formatDate(employee.hireDate)}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{format(employee.salary)}</td>
+                        <td style={{ ...tdStyle, fontWeight: 600 }}>
+                          {summaryByEmp.get(employee.id) ? `${summaryByEmp.get(employee.id)!.attendance_rate}%` : '—'}
+                        </td>
+                        <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>
+                          {summaryByEmp.get(employee.id)?.latest_review_score != null
+                            ? `${summaryByEmp.get(employee.id)!.latest_review_score!.toFixed(1)} · ${summaryByEmp.get(employee.id)!.latest_review_rating}`
+                            : '—'}
+                        </td>
                         <td style={tdStyle}><EmpStatusBadge status={employee.status} /></td>
                         <td style={{ ...tdStyle, textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
@@ -547,7 +580,7 @@ export function HRMPage() {
                       </tr>
                     ))}
                     {employees.length === 0 && (
-                      <tr><td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-placeholder)' }}>No employees yet</td></tr>
+                      <tr><td colSpan={10} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-placeholder)' }}>No employees yet</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -598,31 +631,109 @@ export function HRMPage() {
           )}
 
           {active === 'attendance' && (
-            <div style={panelStyle}>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-                  <thead>
-                    <tr>
-                      <th style={thStyle}>Date</th>
-                      <th style={thStyle}>Employee</th>
-                      <th style={{ ...thStyle, textAlign: 'right' }}>Hours</th>
-                      <th style={{ ...thStyle, textAlign: 'right' }}>Overtime</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {timeEntries.map(entry => (
-                      <tr key={entry.id}>
-                        <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{formatDate(entry.date)}</td>
-                        <td style={{ ...tdStyle, fontWeight: 600 }}>{entry.employee_name}</td>
-                        <td style={{ ...tdStyle, textAlign: 'right' }}>{entry.hours}</td>
-                        <td style={{ ...tdStyle, textAlign: 'right', color: entry.overtime_hours > 0 ? '#fbbf24' : 'var(--text-muted)' }}>{entry.overtime_hours}</td>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+              <div style={panelStyle}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 12px 0' }}>Today's attendance</h3>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '480px' }}>
+                    <thead>
+                      <tr>
+                        <th style={thStyle}>Employee</th>
+                        <th style={thStyle}>Status</th>
                       </tr>
-                    ))}
-                    {timeEntries.length === 0 && (
-                      <tr><td colSpan={4} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-placeholder)' }}>No time entries yet</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {rosterEmployees.map(employee => {
+                        const record = todayByEmp.get(employee.id)
+                        return (
+                          <tr key={employee.id}>
+                            <td style={{ ...tdStyle, fontWeight: 600 }}>{employee.name}</td>
+                            <td style={tdStyle}>
+                              {record
+                                ? <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: 'rgba(16,185,129,0.18)', color: '#6ee7b7', whiteSpace: 'nowrap' }}>Present · {record.check_in}</span>
+                                : <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: 'var(--bg-secondary)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Pending</span>}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                      {rosterEmployees.length === 0 && (
+                        <tr><td colSpan={2} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-placeholder)' }}>No active staff</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div style={panelStyle}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 12px 0' }}>Attendance &amp; performance summary</h3>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '760px' }}>
+                    <thead>
+                      <tr>
+                        <th style={thStyle}>Employee</th>
+                        <th style={{ ...thStyle, textAlign: 'right' }}>Scheduled</th>
+                        <th style={{ ...thStyle, textAlign: 'right' }}>Present</th>
+                        <th style={{ ...thStyle, textAlign: 'right' }}>Absent</th>
+                        <th style={{ ...thStyle, textAlign: 'right' }}>Rate</th>
+                        <th style={{ ...thStyle, textAlign: 'right' }}>Hours</th>
+                        <th style={{ ...thStyle, textAlign: 'right' }}>Overtime</th>
+                        <th style={thStyle}>Latest Review</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summary.map(row => (
+                        <tr key={row.employee_id}>
+                          <td style={{ ...tdStyle, fontWeight: 600 }}>{row.employee_name}</td>
+                          <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>{row.scheduled_days}</td>
+                          <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>{row.present_days}</td>
+                          <td style={{ ...tdStyle, textAlign: 'right', color: row.absent_days > 0 ? 'var(--text-danger)' : 'var(--text-muted)' }}>{row.absent_days}</td>
+                          <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{row.attendance_rate}%</td>
+                          <td style={{ ...tdStyle, textAlign: 'right' }}>{row.total_hours}</td>
+                          <td style={{ ...tdStyle, textAlign: 'right', color: row.overtime_hours > 0 ? '#fbbf24' : 'var(--text-muted)' }}>{row.overtime_hours}</td>
+                          <td style={{ ...tdStyle }}>
+                            {row.latest_review_score != null ? (
+                              <>
+                                {row.latest_review_score.toFixed(1)} <RatingBadge rating={row.latest_review_rating!} />
+                              </>
+                            ) : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                      {summary.length === 0 && (
+                        <tr><td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-placeholder)' }}>No attendance data yet</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div style={panelStyle}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 12px 0' }}>Time entries</h3>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                    <thead>
+                      <tr>
+                        <th style={thStyle}>Date</th>
+                        <th style={thStyle}>Employee</th>
+                        <th style={{ ...thStyle, textAlign: 'right' }}>Hours</th>
+                        <th style={{ ...thStyle, textAlign: 'right' }}>Overtime</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {timeEntries.map(entry => (
+                        <tr key={entry.id}>
+                          <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{formatDate(entry.date)}</td>
+                          <td style={{ ...tdStyle, fontWeight: 600 }}>{entry.employee_name}</td>
+                          <td style={{ ...tdStyle, textAlign: 'right' }}>{entry.hours}</td>
+                          <td style={{ ...tdStyle, textAlign: 'right', color: entry.overtime_hours > 0 ? '#fbbf24' : 'var(--text-muted)' }}>{entry.overtime_hours}</td>
+                        </tr>
+                      ))}
+                      {timeEntries.length === 0 && (
+                        <tr><td colSpan={4} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-placeholder)' }}>No time entries yet</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
