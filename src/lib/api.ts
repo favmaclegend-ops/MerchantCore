@@ -18,6 +18,12 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
 console.log(API_BASE) // debugging
+
+// Only public (unauthenticated) endpoints may be called without a token. Organisation logins
+// have NO token — the real server only belongs to normal (personal) logins, so any server call
+// without a token is rejected here instead of reaching the backend "anyhow".
+const PUBLIC_PATHS = ['/auth/login', '/auth/register', '/auth/verify-email']
+
 function getHeaders(): Record<string, string> {
   const token = localStorage.getItem('token')
   return {
@@ -27,6 +33,11 @@ function getHeaders(): Record<string, string> {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = localStorage.getItem('token')
+  const isPublic = PUBLIC_PATHS.some(p => path === p || path.startsWith(`${p}?`))
+  if (!token && !isPublic) {
+    throw new Error('Not authenticated. The live server is only available to normal (personal) logins.')
+  }
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: { ...getHeaders(), ...(options?.headers as Record<string, string>) },

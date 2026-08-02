@@ -38,6 +38,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('login', 'true');
     const profile = await api.getProfile();
     setUser(profile);
+    clearOrgSession();
   };
 
   const orgLogin = async (organisationName: string, email: string, password: string) => {
@@ -45,6 +46,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setOrgSession({ orgId: org.id, orgName: org.name, member });
     localStorage.setItem('login', 'true');
     localStorage.removeItem('token');
+    localStorage.removeItem('dashboard_cache');
     setOrgUser(member);
     setOrgName(org.name);
     setUser(null);
@@ -53,6 +55,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('login');
+    localStorage.removeItem('dashboard_cache');
     clearOrgSession();
     setUser(null);
     setOrgUser(null);

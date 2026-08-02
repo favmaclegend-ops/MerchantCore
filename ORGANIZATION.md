@@ -249,10 +249,19 @@ When the backend implements organisations, do this:
 
 ## 6. Notes & constraints
 
-- **No real API call** is made by the organisation feature yet — every function is backed by
-  `localStorage` mock data. Personal login still hits the real server as before.
-- The stock `DashboardPage` / POS flows still require the real server; an org member without a
-  personal token will see the usual fetch errors in those areas until the backend also moves
-  product/transaction data into org workspaces.
+- **The real server belongs to normal (personal) logins ONLY.** Organisation logins have no
+  token, and `request()` in `src/lib/api.ts` rejects **every** server call made without a token
+  (only `/auth/login`, `/auth/register`, `/auth/verify-email` are public). It is impossible for
+  an organisation account to reach the backend "anyhow".
+- **Organisation dashboard is 100% mock** (`src/data/orgDashboard.ts`) — it never reads the
+  shared `dashboard_cache` (which belongs to normal logins) and never calls
+  `getDashboardStats` / `getRevenueTrend` / `getTransactions`. Its figures are consistent with
+  the Finance mock (total revenue = ledger income total, etc.).
+- **No data leaks between auth modes.** `orgLogin` clears `token` and `dashboard_cache`;
+  `logout` clears them too; normal `login` clears any leftover org session. The two modes are
+  strictly exclusive.
+- The stock Inventory / POS / Customers / Credit pages still target the real server, so an org
+  member sees empty/default states there (their requests are rejected by the no-token guard,
+  never real server data) until the backend moves product/transaction data into org workspaces.
 - Existing lint conventions are respected (`react-hooks/set-state-in-effect` is avoided, no new
   `any` types added).
