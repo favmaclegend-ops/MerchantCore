@@ -1,5 +1,6 @@
 import { Suspense, useContext, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { Ban, LogOut } from 'lucide-react'
 import { Authcontext } from '@/context/auth_context'
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
 import { DesktopHeader } from '@/components/layout/DesktopHeader'
@@ -17,7 +18,7 @@ const Users = lazy(() => import('@/pages/users/UsersPage').then(m => ({ default:
 
 
 export default function Home() {
-    const { user, orgUser, loading } = useContext(Authcontext)
+    const { user, orgUser, loading, logout } = useContext(Authcontext)
 
     if (loading) {
         return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
@@ -25,6 +26,29 @@ export default function Home() {
 
     if (!user && !orgUser) {
         return <Navigate to="/" replace />
+    }
+
+    if (orgUser?.disabled) {
+        return (
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', padding: '24px' }}>
+                <div style={{ maxWidth: 420, width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 32, textAlign: 'center' }}>
+                    <div style={{ width: 64, height: 64, margin: '0 auto 20px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ban size={32} color="var(--danger, #ef4444)" />
+                    </div>
+                    <h2 style={{ margin: 0, fontSize: 20, color: 'var(--text-primary)' }}>Account disabled</h2>
+                    <p style={{ margin: '12px 0 24px', fontSize: 14, lineHeight: 1.6, color: 'var(--text-muted)' }}>
+                        Your account has been disabled by an administrator. You no longer have access to the platform.
+                        Contact your administrator for more information.
+                    </p>
+                    <button
+                        onClick={logout}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                        <LogOut size={16} /> Sign out
+                    </button>
+                </div>
+            </div>
+        )
     }
 
     const canManageUsers = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')

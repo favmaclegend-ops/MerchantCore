@@ -21,6 +21,7 @@ export interface OrgMember {
   jobTitle: string
   isActive: boolean // false  -> blocked from logging in
   dataBlocked: boolean // true -> blocked from dashboard data preview
+  disabled: boolean // true -> fully disabled: no access to anything on the platform
 }
 
 export interface Organisation {
@@ -59,7 +60,7 @@ const LEGACY_ORG_KEYS = ['org_data', 'org_session', 'org_data_version']
 
 // Bump SEED_VERSION whenever SEED_ORGS changes so stored demo data is reset to the
 // fresh seed (prevents stale/conflicting demo credentials lingering in localStorage).
-const SEED_VERSION = 2
+const SEED_VERSION = 3
 
 // Seeded demo organisation. Login with these while the backend is missing:
 //   Organisation name : Sunrise Mart
@@ -77,11 +78,11 @@ const SEED_ORGS: Organisation[] = [
     name: 'Sunrise Mart',
     businessEmail: 'business@sunrise.example',
     members: [
-      { id: 'ADM-001', name: 'Daniel Kofi', email: 'daniel.kofi@sunrise.example', username: 'dkofi', password: 'DemoPass@123', phone: '+1 555 010 1001', role: 'super-admin', jobTitle: 'Super Admin', isActive: true, dataBlocked: false },
-      { id: 'ADM-002', name: 'Sarah Mensah', email: 'sarah.mensah@sunrise.example', username: 'smensah', password: 'DemoPass@123', phone: '+1 555 010 1002', role: 'admin', jobTitle: 'Administrator', isActive: true, dataBlocked: false },
-      { id: 'STF-101', name: 'Grace Addo', email: 'grace.addo@sunrise.example', username: 'grace', password: 'StaffPass@123', phone: '+1 555 010 1003', role: 'staff', jobTitle: 'Cashier', isActive: true, dataBlocked: false },
-      { id: 'STF-102', name: 'Michael Owusu', email: 'michael.owusu@sunrise.example', username: 'michael', password: 'StaffPass@123', phone: '+1 555 010 1004', role: 'staff', jobTitle: 'Sales', isActive: true, dataBlocked: false },
-      { id: 'STF-103', name: 'Rita Boateng', email: 'rita.boateng@sunrise.example', username: 'rita', password: 'StaffPass@123', phone: '+1 555 010 1005', role: 'staff', jobTitle: 'Stock Clerk', isActive: true, dataBlocked: true },
+      { id: 'ADM-001', name: 'Daniel Kofi', email: 'daniel.kofi@sunrise.example', username: 'dkofi', password: 'DemoPass@123', phone: '+1 555 010 1001', role: 'super-admin', jobTitle: 'Super Admin', isActive: true, dataBlocked: false, disabled: false },
+      { id: 'ADM-002', name: 'Sarah Mensah', email: 'sarah.mensah@sunrise.example', username: 'smensah', password: 'DemoPass@123', phone: '+1 555 010 1002', role: 'admin', jobTitle: 'Administrator', isActive: true, dataBlocked: false, disabled: false },
+      { id: 'STF-101', name: 'Grace Addo', email: 'grace.addo@sunrise.example', username: 'grace', password: 'StaffPass@123', phone: '+1 555 010 1003', role: 'staff', jobTitle: 'Cashier', isActive: true, dataBlocked: false, disabled: false },
+      { id: 'STF-102', name: 'Michael Owusu', email: 'michael.owusu@sunrise.example', username: 'michael', password: 'StaffPass@123', phone: '+1 555 010 1004', role: 'staff', jobTitle: 'Sales', isActive: true, dataBlocked: false, disabled: false },
+      { id: 'STF-103', name: 'Rita Boateng', email: 'rita.boateng@sunrise.example', username: 'rita', password: 'StaffPass@123', phone: '+1 555 010 1005', role: 'staff', jobTitle: 'Stock Clerk', isActive: true, dataBlocked: true, disabled: false },
     ],
   },
 ]
@@ -158,6 +159,7 @@ export function registerOrganisation(input: OrgRegisterInput): Organisation {
         jobTitle: 'Super Admin',
         isActive: true,
         dataBlocked: false,
+        disabled: false
       },
     ],
   }
@@ -175,6 +177,7 @@ export function loginOrganisation(orgName: string, email: string, password: stri
   )
   if (!member) throw new Error('Invalid credentials for this organisation.')
   if (member.password !== password) throw new Error('Invalid credentials for this organisation.')
+  if (member.disabled) throw new Error('Your account has been disabled. Contact your administrator.')
   if (!member.isActive) throw new Error('Your account has been blocked. Contact your administrator.')
 
   return { org, member }
@@ -206,6 +209,20 @@ export function clearOrgSession() {
   } catch {
     return
   }
+}
+
+// Re-checks a stored session against the current mock data: if the member no longer
+// exists, was disabled, or was blocked from logging in, the session is cleared so the
+// user is signed out of the platform entirely.
+export function validateOrgSession(session: OrgSession | null): OrgSession | null {
+  if (!session) return null
+  const org = loadOrganisations().find(o => o.id === session.orgId)
+  const member = org?.members.find(m => m.id === session.member.id)
+  if (!org || !member || member.disabled || !member.isActive) {
+    clearOrgSession()
+    return null
+  }
+  return { orgId: org.id, orgName: org.name, member }
 }
 
 // ---- Member CRUD against the active organisation -------------------------

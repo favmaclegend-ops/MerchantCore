@@ -47,6 +47,7 @@ export const toMember = (form: MemberFormData, role: 'admin' | 'staff'): Omit<Me
     jobTitle: role === 'staff' ? form.jobTitle || 'Staff' : 'Administrator',
     isActive: true,
     dataBlocked: false,
+    disabled: false,
   }
 }
 

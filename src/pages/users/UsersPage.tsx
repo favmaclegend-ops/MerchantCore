@@ -92,6 +92,11 @@ export function Users() {
     api.org.updateUser(member.id, { dataBlocked: !member.dataBlocked }).then(loadMembers)
   }
 
+  const handleToggleDisabled = (member: Member) => {
+    if (isSuperAdmin(member)) return
+    api.org.updateUser(member.id, { disabled: !member.disabled }).then(loadMembers)
+  }
+
   const handleDelete = (member: Member) => {
     if (isSuperAdmin(member)) return
     api.org.deleteUser(member.id).then(loadMembers)
@@ -151,6 +156,7 @@ export function Users() {
             onEdit={openEdit}
             onToggleActive={handleToggleActive}
             onToggleDataBlock={handleToggleDataBlock}
+            onToggleDisabled={handleToggleDisabled}
             onDelete={handleDelete}
           />
         </div>

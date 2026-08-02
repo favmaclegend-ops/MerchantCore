@@ -20,10 +20,14 @@ There are three roles with a clear hierarchy:
 |--------------|--------|
 | **Super Admin** | Full control. Manages admins and staff, can block/delete anyone except themselves. |
 | **Admin**       | Below the Super Admin. Manages **staff only**; the Admin tab is hidden for them; they cannot manage other admins. |
-| **Staff**       | Logs in to work the POS/inventory/etc. Cannot access the Users page. Admins can **block their login** and **block their dashboard data preview**. |
+| **Staff**       | Logs in to work the POS/inventory/etc. Cannot access the Users page. Admins can **disable** them, **block their login** and **block their dashboard data preview**. |
 | **Personal login (non-org)** | **No organisation features.** The Users page is completely hidden/redirected for any non-org login — only organisation admins (Super Admin / Admin) can access it. |
 
 ### Blocking rules
+- **Disable** (`disabled: true`) → **full lockout.** The member cannot log in and, if they had an
+  active session, they are signed out / shown the *"Account disabled"* screen. They have **no
+  access to anything on the platform** — not the dashboard, not inventory, not the POS. This is
+  the recommended alternative to deleting a user.
 - **Block login** (`isActive: false`) → the member cannot log in. The login page shows
   *"Your account has been blocked. Contact your administrator."*
 - **Block dashboard data** (`dataBlocked: true`) → the member can log in, but the dashboard
@@ -55,9 +59,12 @@ collide with real server users**:
 2. Sign in with `Sunrise Mart` + one of the credentials above.
 3. As **Super Admin**: `Users` nav item → add Admins/Staff. When you add a member, a modal
    shows the generated **username + password** — share those credentials with them.
-4. Block a staff member's **login** (Block login) or **dashboard data** (Block dashboard data).
-5. Log out, log back in as that staff member. Blocked-login users are rejected; data-blocked
-   users see the blocked dashboard message.
+4. **Disable** a staff member (Disable user) → they can no longer access anything on the
+   platform. Or block a staff member's **login** (Block login) or **dashboard data** (Block
+   dashboard data).
+5. Log out, log back in as that staff member. Disabled and blocked-login users are rejected;
+   data-blocked users see the blocked dashboard message. A disabled user who still has an
+   active session is signed out automatically (session re-validation on load).
 6. As an **Admin** (Kwame), the Users page only shows the **Staff** tab.
 
 ---
@@ -87,8 +94,9 @@ Key exports:
 | Function | Purpose |
 |----------|---------|
 | `registerOrganisation(input)` | Creates an org + its Super Admin member. Throws if name/business email is taken. |
-| `loginOrganisation(orgName, email, password)` | Validates credentials. Throws for unknown org, bad credentials, or blocked (`isActive: false`) accounts. |
+| `loginOrganisation(orgName, email, password)` | Validates credentials. Throws for unknown org, bad credentials, disabled (`disabled: true`), or blocked (`isActive: false`) accounts. |
 | `getSessionOrganisation()` | Returns the org of the currently logged-in session. |
+| `validateOrgSession(session)` | Re-checks a stored session against the mock data; clears it (and returns `null`) if the member no longer exists, is disabled, or is blocked from login. |
 | `addOrgMember(member)` / `updateOrgMember(id, patch)` / `deleteOrgMember(id)` | CRUD against the active org's member list. |
 
 Types (`OrgMember`, `Organisation`, `OrgRole`, `OrgRegisterInput`, `OrgSession`) are the
@@ -139,13 +147,13 @@ interface AuthContextType {
 | `src/pages/authentication/default_page.tsx` | Added the "Log in as an organisation" toggle + back link. |
 | `src/context/auth_context.tsx`, `src/context/auth_provider.tsx` | Added `orgUser`, `orgName`, `orgLogin`, logout handling. |
 | `src/lib/api.ts` | Added the `org.*` API namespace (mock-backed). |
-| `src/pages/home/home.tsx` | Allow org users; guard `/home/users` for admins only. |
+| `src/pages/home/home.tsx` | Allow org users; guard `/home/users` for admins only; full-screen "Account disabled" lockout for `orgUser.disabled`. |
 | `src/components/layout/DesktopSidebar.tsx`, `MobileNavbar.tsx` | Hide the **Users** nav item for staff. |
 | `src/components/layout/DesktopHeader.tsx`, `MobileHeader.tsx` | Show org member name/role/email. |
 | `src/pages/users/UsersPage.tsx` | Fetch members from `api.org.getUsers()`; role-based tabs & actions; credential reveal modal. |
 | `src/pages/users/data.ts` | `Member` = `OrgMember`; credential generator (`generateCredential`), `toMember`, `roleLabel`. |
 | `src/pages/users/MemberForm.tsx` | Username/Password/Job Title fields; auto-generates credentials for new members. |
-| `src/pages/users/MemberTable.tsx` | "Block login", "Block dashboard data", blocked badges, super-admin guard. |
+| `src/pages/users/MemberTable.tsx` | "Disable user"/"Enable user", "Block login", "Block dashboard data", status badges, super-admin guard. |
 | `src/pages/dashboard/DashboardPage.tsx` | Shows the blocked-data message for `orgUser.dataBlocked`. |
 
 ---
@@ -158,8 +166,9 @@ When the backend implements organisations, do this:
    to the endpoints in section 3.2. Use the same request/response shapes.
 2. **Login/register** should return an access token + the member object (and org id/name).
    Store the member/org data in `org_session` exactly like `setOrgSession` does today.
-3. **`isActive` / `dataBlocked`** should be returned by the users endpoints and respected
-   server-side (reject login when `isActive === false`).
+3. **`isActive` / `dataBlocked` / `disabled`** should be returned by the users endpoints and
+   respected server-side (reject login when `isActive === false` or `disabled === true`, and
+   revoke/deny access for disabled sessions).
 4. **Passwords** must never be returned by the backend. When the API returns members, drop the
    `password` field; the credential reveal modal should instead read the response of
    `addUser`/`updateUser` only (server returns the generated credential once, e.g. at creation).
@@ -180,6 +189,7 @@ When the backend implements organisations, do this:
   id, name, email, username, phone, role, jobTitle,
   isActive: boolean,      // false => blocked from login
   dataBlocked: boolean,   // true  => blocked from dashboard data
+  disabled: boolean,      // true  => fully disabled (no access to anything)
 }
 ```
 

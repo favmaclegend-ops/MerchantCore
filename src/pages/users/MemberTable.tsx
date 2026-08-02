@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MoreVertical, Phone, Mail, Pencil, Ban, Power, Trash2, EyeOff, CheckCircle } from 'lucide-react'
+import { MoreVertical, Phone, Mail, Pencil, Ban, Power, Trash2, EyeOff, CheckCircle, UserX, UserCheck } from 'lucide-react'
 import { AVATAR_COLORS, initials, isSuperAdmin, isStaffMember, roleLabel } from './data'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { Member } from './data'
@@ -38,7 +38,7 @@ function MenuAction({ icon, label, onClick, danger }: { icon: React.ReactNode; l
 
 function Avatar({ member, color, size }: { member: Member; color: string; size: number }) {
   return (
-    <div style={{ width: `${size}px`, height: `${size}px`, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: color, color: '#fff', fontSize: `${Math.round(size / 3)}px`, fontWeight: 700, overflow: 'hidden', opacity: member.isActive === false ? 0.4 : 1 }}>
+    <div style={{ width: `${size}px`, height: `${size}px`, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: color, color: '#fff', fontSize: `${Math.round(size / 3)}px`, fontWeight: 700, overflow: 'hidden', opacity: member.disabled ? 0.3 : member.isActive === false ? 0.4 : 1 }}>
       {initials(member.name)}
     </div>
   )
@@ -53,12 +53,14 @@ type RowProps = {
   onEdit: (member: Member) => void
   onToggleActive: (member: Member) => void
   onToggleDataBlock: (member: Member) => void
+  onToggleDisabled: (member: Member) => void
   onDelete: (member: Member) => void
 }
 
-function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleActive, onToggleDataBlock, onDelete }: RowProps) {
+function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleActive, onToggleDataBlock, onToggleDisabled, onDelete }: RowProps) {
   const inactive = member.isActive === false
-  const nameColor = inactive ? 'var(--text-placeholder)' : 'var(--text-primary)'
+  const disabled = member.disabled === true
+  const nameColor = disabled || inactive ? 'var(--text-placeholder)' : 'var(--text-primary)'
 
   return (
     <tr style={{ opacity: 1 }}>
@@ -71,6 +73,9 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
           <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '999px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{roleLabel(member)}</span>
           {inactive && (
             <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '999px', background: 'var(--bg-danger)', color: 'var(--text-danger)', whiteSpace: 'nowrap' }}>Blocked login</span>
+          )}
+          {disabled && (
+            <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '999px', background: 'var(--bg-danger)', color: 'var(--text-danger)', whiteSpace: 'nowrap' }}>Disabled</span>
           )}
           {member.dataBlocked && (
             <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '999px', background: 'var(--bg-warning)', color: 'var(--text-warning)', whiteSpace: 'nowrap' }}>Data blocked</span>
@@ -114,6 +119,14 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
                 <MenuAction icon={<Pencil style={{ width: '14px', height: '14px' }} />} label="Edit" onClick={() => { onEdit(member); onToggle() }} />
                 {!isSuperAdmin(member) && (
                   <MenuAction
+                    icon={disabled ? <UserCheck style={{ width: '14px', height: '14px' }} /> : <UserX style={{ width: '14px', height: '14px' }} />}
+                    label={disabled ? 'Enable user' : 'Disable user'}
+                    danger={!disabled}
+                    onClick={() => { onToggleDisabled(member); onToggle() }}
+                  />
+                )}
+                {!isSuperAdmin(member) && (
+                  <MenuAction
                     icon={inactive ? <Power style={{ width: '14px', height: '14px' }} /> : <Ban style={{ width: '14px', height: '14px' }} />}
                     label={inactive ? 'Allow login' : 'Block login'}
                     onClick={() => { onToggleActive(member); onToggle() }}
@@ -143,10 +156,11 @@ type TableProps = {
   onEdit: (member: Member) => void
   onToggleActive: (member: Member) => void
   onToggleDataBlock: (member: Member) => void
+  onToggleDisabled: (member: Member) => void
   onDelete: (member: Member) => void
 }
 
-export function MemberTable({ members, onEdit, onToggleActive, onToggleDataBlock, onDelete }: TableProps) {
+export function MemberTable({ members, onEdit, onToggleActive, onToggleDataBlock, onToggleDisabled, onDelete }: TableProps) {
   const [openId, setOpenId] = useState<string | null>(null)
   const bp = useBreakpoint()
   const compact = !bp.sm
@@ -176,6 +190,7 @@ export function MemberTable({ members, onEdit, onToggleActive, onToggleDataBlock
               onEdit={onEdit}
               onToggleActive={onToggleActive}
               onToggleDataBlock={onToggleDataBlock}
+              onToggleDisabled={onToggleDisabled}
               onDelete={onDelete}
             />
           ))}
