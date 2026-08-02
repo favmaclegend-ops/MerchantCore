@@ -55,8 +55,11 @@ export const api = {
   createCreditEntry: (data: any) => request<any>('/credit-entries', { method: 'POST', body: JSON.stringify(data) }),
   updateCreditEntry: (id: string, data: any) => request<any>(`/credit-entries/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
-  checkout: (data: { items: any[]; total: number; payment_method: string }) =>
-    request<any>('/pos/checkout', { method: 'POST', body: JSON.stringify(data) }),
+  checkout: async (data: { items: any[]; total: number; payment_method: string }) => {
+    const res = await request<any>('/pos/checkout', { method: 'POST', body: JSON.stringify(data) })
+    localStorage.removeItem('dashboard_cache')
+    return res
+  },
 
   getNotifications: () => request<any[]>('/notifications'),
   getUnreadNotificationCount: () => request<{ count: number }>('/notifications/unread-count'),

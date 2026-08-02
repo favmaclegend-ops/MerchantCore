@@ -23,7 +23,7 @@ export function CalculatorPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', padding: '0 8px' }}>
       <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--bg-surface)', margin: 0 }}>Calculator</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-on-dark)', margin: 0 }}>Calculator</h1>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
           {tab === 'basic' ? 'Standard arithmetic operations' : tab === 'business' ? 'Profit, markup & business tools' : 'Real-time currency conversion'}
         </p>
@@ -147,26 +147,26 @@ function BasicCalculator() {
         {btn('C', clear, { background: 'var(--bg-danger)', color: 'var(--text-danger)' })}
         {btn('±', () => setDisplay(String(parseFloat(display) * -1)), { background: 'var(--bg-tertiary)' })}
         {btn('%', () => setDisplay(String(parseFloat(display) / 100)), { background: 'var(--bg-tertiary)' })}
-        {btn('÷', () => performOp('/'), { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
+        {btn('÷', () => performOp('/'), { background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)' })}
 
         {btn('7', () => inputDigit('7'))}
         {btn('8', () => inputDigit('8'))}
         {btn('9', () => inputDigit('9'))}
-        {btn('×', () => performOp('*'), { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
+        {btn('×', () => performOp('*'), { background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)' })}
 
         {btn('4', () => inputDigit('4'))}
         {btn('5', () => inputDigit('5'))}
         {btn('6', () => inputDigit('6'))}
-        {btn('-', () => performOp('-'), { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
+        {btn('-', () => performOp('-'), { background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)' })}
 
         {btn('1', () => inputDigit('1'))}
         {btn('2', () => inputDigit('2'))}
         {btn('3', () => inputDigit('3'))}
-        {btn('+', () => performOp('+'), { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
+        {btn('+', () => performOp('+'), { background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)' })}
 
         {btn('0', () => inputDigit('0'), { gridColumn: 'span 2' })}
         {btn('.', inputDecimal)}
-        {btn('=', evaluate, { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
+        {btn('=', evaluate, { background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)' })}
       </div>
     </div>
   )
@@ -308,7 +308,7 @@ function BusinessCalculator() {
 
       <button onClick={handleCalc} style={{
         width: '100%', padding: '10px 0', fontSize: '13px', fontWeight: 600,
-        color: 'var(--bg-surface)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '8px', cursor: 'pointer',
+        color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '8px', cursor: 'pointer',
       }}>
         Calculate
       </button>

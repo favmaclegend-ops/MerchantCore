@@ -78,7 +78,7 @@ export function Users() {
           child={() => (
             <>
               <Icon icon={Icons.icon.Add} color="white" size={20}/>
-              <span style={{ color: 'var(--bg-surface)', fontSize: '.9rem' }}>Add new {active === 'admin' ? 'Admin' : 'Staff'}</span>
+              <span style={{ color: 'var(--text-on-dark)', fontSize: '.9rem' }}>Add new {active === 'admin' ? 'Admin' : 'Staff'}</span>
             </>
           )}
         />

@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from 'react'
 import { Minus, Plus, CreditCard, Smartphone, Wallet, History, CheckCircle } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
+import { refreshDashboardCache } from '@/lib/dashboardCache'
 import Alert from '@/components/alert/alert'
 import { CurrencyContext } from '@/context/currency_context'
 
@@ -66,6 +67,7 @@ export function POSPage() {
       await api.checkout({ items: cart, total, payment_method: paymentMethod })
       setCart([])
         setSuccessMsg(`Sale of ${format(total)} completed!`)
+      refreshDashboardCache()
       setTimeout(() => setSuccessMsg(''), 3000)
     } catch (e) {
       console.error('Checkout failed', e)
@@ -164,7 +166,7 @@ export function POSPage() {
               </div>
               <button onClick={() => {addToCart(product.id); setAlert({isAlert: true, message: `Product ${product.name} is Added to cart`, type: 'success'})}} disabled={product.status === 'out-of-stock'} style={{
                 width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
-                color: 'var(--text-primary)', background: 'var(--bg-nav-active)', border: 'none', cursor: product.status === 'out-of-stock' ? 'not-allowed' : 'pointer',
+                color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', cursor: product.status === 'out-of-stock' ? 'not-allowed' : 'pointer',
                 opacity: product.status === 'out-of-stock' ? 0.5 : 1,
                 borderRadius: '.5rem'
               }}>

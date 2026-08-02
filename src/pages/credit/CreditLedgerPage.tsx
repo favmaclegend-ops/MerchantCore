@@ -97,7 +97,7 @@ export function CreditLedgerPage() {
   return (
     <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: bp.sm ? 'repeat(3, 1fr)' : '1fr', gap: '12px' }}>
-        <div style={{ background: 'var(--bg-nav-active)', borderRadius: '8px', padding: '16px', color: 'var(--bg-surface)' }}>
+        <div style={{ background: 'var(--bg-nav-active)', borderRadius: '8px', padding: '16px', color: 'var(--text-on-dark)' }}>
           <span style={{ fontSize: '10px', color: 'var(--text-placeholder)', textTransform: 'uppercase' }}>Total Outstanding</span>
           <p style={{ fontSize: '20px', fontWeight: 700, marginTop: '4px', margin: '4px 0 0 0' }}>{format(totalOutstanding)}</p>
         </div>
@@ -124,7 +124,7 @@ export function CreditLedgerPage() {
               <option value="overdue">Overdue</option>
               <option value="critical">Critical</option>
             </select>
-            <button onClick={() => setShowForm(true)} style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 500, color: 'var(--bg-surface)', background: 'var(--bg-nav-active)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
+            <button onClick={() => setShowForm(true)} style={{ padding: '4px 12px', fontSize: '10px', fontWeight: 500, color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
               + New Entry
             </button>
           </div>
@@ -204,7 +204,7 @@ export function CreditLedgerPage() {
             </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
               <button onClick={() => setShowForm(false)} style={{ flex: 1, height: '40px', fontSize: '13px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleCreate} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--bg-surface)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Create Entry</button>
+              <button onClick={handleCreate} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Create Entry</button>
             </div>
           </div>
         </div>
@@ -221,7 +221,7 @@ export function CreditLedgerPage() {
             </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
               <button onClick={() => setShowPayForm(null)} style={{ flex: 1, height: '40px', fontSize: '13px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => handlePay(showPayForm)} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: '#059669', color: 'var(--bg-surface)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Record Payment</button>
+              <button onClick={() => handlePay(showPayForm)} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: '#059669', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Record Payment</button>
             </div>
           </div>
         </div>

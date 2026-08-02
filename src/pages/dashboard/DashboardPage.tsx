@@ -3,60 +3,67 @@ import { ArrowUpRight, AlertTriangle, DollarSign, Package, TrendingUp } from 'lu
 import { useNavigate } from 'react-router-dom'
 import DLineChart from '@/components/layout/chart'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { api } from '@/lib/api'
 import { CurrencyContext } from '@/context/currency_context'
+import { loadDashboardCache, refreshDashboardCache, defaultStats, type Tx, type DashboardAlert } from '@/lib/dashboardCache'
 
-interface Tx {
-  id: string
-  type: string
-  customer_name?: string
-  amount: number
-  status: string
-  items?: string
-  date?: string
+const RANGE_OPTIONS = [
+  { id: '6m', label: 'Last 6 months' },
+  { id: '7d', label: 'Last 7 days' },
+  { id: '24h', label: 'Last 24 hours' },
+  { id: '60m', label: 'Last 60 min' },
+] as const
+
+type ChartRange = (typeof RANGE_OPTIONS)[number]['id']
+
+const RANGE_CONFIG: Record<'7d' | '24h' | '60m', { count: number; step: number; label: (d: Date) => string }> = {
+  '60m': {
+    count: 60,
+    step: 60 * 1000,
+    label: d => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true }),
+  },
+  '24h': {
+    count: 24,
+    step: 60 * 60 * 1000,
+    label: d => d.toLocaleTimeString(undefined, { hour: 'numeric', hour12: true }),
+  },
+  '7d': {
+    count: 7,
+    step: 24 * 60 * 60 * 1000,
+    label: d => d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }),
+  },
 }
 
-interface Alert {
-  id: string
-  type: 'low-stock' | 'overdue' | 'system' | 'info'
-  title: string
-  description: string
-}
+function computeRangeChart(txns: Tx[], range: '7d' | '24h' | '60m'): { labels: string[]; data: number[] } {
+  const now = new Date()
+  const config = RANGE_CONFIG[range]
+  const start = now.getTime() - (config.count - 1) * config.step
 
-interface DashboardCache {
-  stats: typeof defaultStats
-  revenueMonths: string[]
-  revenueData: number[]
-  txns: Tx[]
-  alertList: Alert[]
-  timestamp: number
-}
-
-const CACHE_TTL = 5 * 60 * 1000
-const CACHE_KEY = 'dashboard_cache'
-
-const defaultStats = { totalRevenue: 0, monthlyRevenue: 0, totalOrders: 0, activeCustomers: 0, lowStockAlerts: 0, inventoryValue: 0, creditOutstanding: 0, avgTicket: 0, totalProducts: 0 }
-
-function loadCache(): DashboardCache | null {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY)
-    if (!raw) return null
-    const cache: DashboardCache = JSON.parse(raw)
-    if (Date.now() - cache.timestamp > CACHE_TTL) {
-      localStorage.removeItem(CACHE_KEY)
-      return null
-    }
-    return cache
-  } catch {
-    return null
+  const labels: string[] = []
+  for (let i = 0; i < config.count; i++) {
+    labels.push(config.label(new Date(start + i * config.step)))
   }
+
+  const data = new Array(config.count).fill(0) as number[]
+  for (const tx of txns) {
+    const raw = tx.created_at || tx.date
+    if (!raw) continue
+    const t = new Date(raw).getTime()
+    if (Number.isNaN(t)) continue
+    const clamped = Math.min(t, now.getTime())
+    if (clamped < start) continue
+    const idx = Math.floor((clamped - start) / config.step)
+    if (idx >= 0 && idx < config.count) data[idx] += Number(tx.amount) || 0
+  }
+
+  return { labels, data }
 }
 
-function saveCache(data: Omit<DashboardCache, 'timestamp'>) {
-  try {
-    const cache: DashboardCache = { ...data, timestamp: Date.now() }
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
-  } catch {}
+function formatTxTime(tx: Tx): string {
+  const raw = tx.created_at || tx.date
+  if (!raw) return ''
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) return ` • ${raw}`
+  return ` • ${d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}`
 }
 
 const skeletonPulse: React.CSSProperties = {
@@ -134,69 +141,39 @@ export function DashboardPage() {
   const navigate = useNavigate()
   const bp = useBreakpoint()
   const { format } = useContext(CurrencyContext)
-  const [stats, setStats] = useState(defaultStats)
-  const [revenueMonths, setRevenueMonths] = useState<string[]>([])
-  const [revenueData, setRevenueData] = useState<number[]>([])
-  const [txns, setTxns] = useState<Tx[]>([])
-  const [alertList, setAlertList] = useState<Alert[]>([])
-  const [loading, setLoading] = useState(true)
+  const [cacheSnapshot] = useState(loadDashboardCache)
+  const [stats, setStats] = useState(cacheSnapshot?.stats ?? defaultStats)
+  const [revenueMonths, setRevenueMonths] = useState<string[]>(cacheSnapshot?.revenueMonths ?? [])
+  const [revenueData, setRevenueData] = useState<number[]>(cacheSnapshot?.revenueData ?? [])
+  const [txns, setTxns] = useState<Tx[]>(cacheSnapshot?.txns ?? [])
+  const [alertList, setAlertList] = useState<DashboardAlert[]>(cacheSnapshot?.alertList ?? [])
+  const [loading, setLoading] = useState(!cacheSnapshot)
+  const [chartRange, setChartRange] = useState<ChartRange>('6m')
 
   const fetchId = useRef(0)
 
   useEffect(() => {
     const id = ++fetchId.current
+    if (cacheSnapshot) return
 
-    const cached = loadCache()
-    if (cached) {
-      setStats(cached.stats)
-      setRevenueMonths(cached.revenueMonths)
-      setRevenueData(cached.revenueData)
-      setTxns(cached.txns)
-      setAlertList(cached.alertList)
-      setLoading(false)
-      return
-    }
-
-    Promise.all([
-      api.getDashboardStats().catch(() => null),
-      api.getRevenueTrend().catch(() => null),
-      api.getTransactions().catch(() => [] as Tx[]),
-      api.getProducts().catch(() => []),
-    ]).then(([s, trend, t, p]) => {
-      if (id !== fetchId.current) return
-      if (s) setStats(s)
-      if (trend) {
-        setRevenueMonths(trend.months.map(m => m.month))
-        setRevenueData(trend.months.map(m => m.revenue))
-      }
-      if (t) setTxns(t)
-      const alerts: Alert[] = []
-      const lowItems = (p as any[]).filter(x => x.status === 'low-stock')
-      if (lowItems.length) {
-        alerts.push({
-          id: 'low-stock-1',
-          type: 'low-stock',
-          title: 'Low Stock Alert',
-          description: `${lowItems.length} items are running low on stock. Restock suggested.`,
-        })
-      }
-      setAlertList(alerts)
-      saveCache({
-        stats: s || defaultStats,
-        revenueMonths: trend ? trend.months.map(m => m.month) : [],
-        revenueData: trend ? trend.months.map(m => m.revenue) : [],
-        txns: t || [],
-        alertList: alerts,
-      })
+    refreshDashboardCache().then((data) => {
+      if (id !== fetchId.current || !data) return
+      setStats(data.stats)
+      setRevenueMonths(data.revenueMonths)
+      setRevenueData(data.revenueData)
+      setTxns(data.txns)
+      setAlertList(data.alertList)
     }).finally(() => {
       if (id === fetchId.current) setLoading(false)
     })
-  }, [])
+  }, [cacheSnapshot])
+
+  const rangeChart = chartRange === '6m' ? { labels: revenueMonths, data: revenueData } : computeRangeChart(txns, chartRange)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', width: '100%', padding: '0 8px',paddingBlockEnd: '2rem', }}>
       <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--bg-surface)', margin: 0 }}>Dashboard</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-on-dark)', margin: 0 }}>Dashboard</h1>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
           {loading ? 'Loading your data...' : "Here's what's happening with MerchantCore today."}
         </p>
@@ -265,14 +242,26 @@ export function DashboardPage() {
           </div>
 
           <div style={{ width: '100%', padding: '16px', background: 'var(--bg-surface)', borderRadius: '16px', boxShadow: 'var(--shadow-card)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
               <h3 style={{ fontWeight: 700, fontSize: '16px', margin: 0 }}>Revenue Trend</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 0 3px rgb(227,222,222)', padding: '6px', borderRadius: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                Last 6 months
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px', borderRadius: '8px', background: 'var(--bg-tertiary)', overflowX: 'auto', maxWidth: '100%', scrollbarWidth: 'none' }}>
+                {RANGE_OPTIONS.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setChartRange(r.id)}
+                    style={{
+                      padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 500, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                      color: chartRange === r.id ? 'var(--text-on-dark)' : 'var(--text-muted)',
+                      background: chartRange === r.id ? 'var(--bg-nav-active)' : 'transparent',
+                    }}
+                  >
+                    {r.label}
+                  </button>
+                ))}
               </div>
             </div>
-            {revenueData.length > 0 ? (
-              <DLineChart datas={revenueData} labels={revenueMonths} />
+            {rangeChart.data.length > 0 ? (
+              <DLineChart key={chartRange} datas={rangeChart.data} labels={rangeChart.labels} />
             ) : (
               <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '12px' }}>
                 No revenue data yet
@@ -300,7 +289,7 @@ export function DashboardPage() {
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{tx.customer_name || 'Transaction'} #{tx.id}</p>
-                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{tx.items} {tx.date ? `• ${tx.date}` : ''}</p>
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{tx.items}{formatTxTime(tx)}</p>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '8px' }}>

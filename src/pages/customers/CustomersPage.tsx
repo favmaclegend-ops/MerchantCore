@@ -158,7 +158,7 @@ export function CustomersPage() {
         <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', overflow: 'hidden' }}>
           {selectedCustomer ? (
             <>
-              <div style={{ background: 'var(--bg-nav-active)', padding: '20px', color: 'var(--bg-surface)' }}>
+              <div style={{ background: 'var(--bg-nav-active)', padding: '20px', color: 'var(--text-on-dark)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
                     <div style={{ width: '56px', height: '56px', background: 'var(--bg-surface-hover)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -180,13 +180,13 @@ export function CustomersPage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                     <button onClick={openEdit} style={{ padding: '6px', background: 'var(--bg-surface-hover)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
-                      <Edit style={{ width: '14px', height: '14px', color: 'var(--bg-surface)' }} />
+                      <Edit style={{ width: '14px', height: '14px', color: 'var(--text-on-dark)' }} />
                     </button>
                     <button onClick={handleAddToCredit} style={{ padding: '6px', background: 'var(--bg-surface-hover)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
-                      <CreditCard style={{ width: '14px', height: '14px', color: 'var(--bg-surface)' }} />
+                      <CreditCard style={{ width: '14px', height: '14px', color: 'var(--text-on-dark)' }} />
                     </button>
                     <button onClick={() => window.location.href = `mailto:${selectedCustomer.email}`} style={{ padding: '6px', background: 'var(--bg-surface-hover)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
-                      <Mail style={{ width: '14px', height: '14px', color: 'var(--bg-surface)' }} />
+                      <Mail style={{ width: '14px', height: '14px', color: 'var(--text-on-dark)' }} />
                     </button>
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export function CustomersPage() {
             </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
               <button onClick={() => setShowForm(false)} style={{ flex: 1, height: '40px', fontSize: '13px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleSave} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--bg-surface)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>{editCustomer ? 'Update' : 'Create'}</button>
+              <button onClick={handleSave} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>{editCustomer ? 'Update' : 'Create'}</button>
             </div>
           </div>
         </div>

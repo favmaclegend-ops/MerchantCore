@@ -24,7 +24,7 @@ const buttonStyle: React.CSSProperties = {
   width: '100%',
   height: '44px',
   background: 'var(--bg-nav-active)',
-  color: 'var(--bg-surface)',
+  color: 'var(--text-on-dark)',
   fontSize: '14px',
   fontWeight: 500,
   borderRadius: '10px',
