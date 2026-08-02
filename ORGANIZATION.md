@@ -32,6 +32,21 @@ redirected if they try to reach `/home/finance`. It tracks cash flow and financi
 - **Real-time balance sheet** — assets/liabilities/equity recomputed from live invoice + tax
   state (receivables and tax payable update automatically when an invoice or tax changes).
 
+### Human Resources (HRM)
+An **admin-only** area for organisation members that manages the **entire employee lifecycle
+from hiring to retirement**. Staff never see the HRM nav item and get redirected if they try to
+reach `/home/hrm`. It covers:
+- **Employees** — hire, promote (probation → active), put on leave, **terminate or retire**;
+  full records (department, job title, employment type, hire date, salary, benefits).
+- **Payroll processing** — admins run payroll per period (gross, 10% tax, net) and mark runs
+  paid. Retired/terminated employees are automatically excluded from runs.
+- **Time tracking** — log daily hours + overtime per employee.
+- **Performance reviews** — score 1–5 with an auto-derived rating (`exceeds` / `meets` /
+  `below`); mark reviews complete.
+- **Benefits administration** — benefit plans (health, retirement, transport, insurance,
+  training…) with cost per employee; enrollment counts are derived from employee enrolments
+  so the monthly benefits cost stays accurate.
+
 ### Blocking rules
 - **Disable** (`disabled: true`) → **full lockout.** The member cannot log in and, if they had an
   active session, they are signed out / shown the *"Account disabled"* screen. They have **no
@@ -79,9 +94,15 @@ collide with real server users**:
    Invoices / Tax & Compliance / Balance Sheet). Create an invoice and watch the Balance Sheet's
    **Accounts Receivable** and the Overview's **Outstanding** update in real time. Mark it paid
    and they drop again.
+8. As Super Admin or Admin: `HRM` nav item → manage the employee lifecycle (Add employee → hire
+   on probation → promote, retire or terminate), run payroll for the current month and mark runs
+   paid, log hours for time tracking, add performance reviews, and manage benefit plans.
 
 > **Reset finance demo data**: clear the `merchant_org_finance_{orgId}` keys from `localStorage`
 > (or bump `FINANCE_VERSION` in `src/data/finance.ts` — all orgs reseed on next load).
+>
+> **Reset HRM demo data**: clear the `merchant_org_hrm_{orgId}` keys from `localStorage` (or
+> bump `HRM_VERSION` in `src/data/orgHRM.ts` — all orgs reseed on next load).
 
 ---
 
@@ -147,7 +168,24 @@ the org dashboard:
   transaction **and decrements stock**.
 - Bump `COMMERCE_VERSION` to force every org's commerce data to reseed.
 
-### 3.4 API layer — `src/lib/api.ts` → `api.org.*`
+### 3.4 Mock data layer — `src/data/orgHRM.ts` (Human Resources)
+Per-organisation HRM mock, scoped by org id (storage key `merchant_org_hrm_{orgId}` holding
+`{ version, state }`). It models the full employee lifecycle and everything stays cross-consistent:
+`OrgHrmState = { employees, benefits, payrollRuns, timeEntries, reviews }`.
+
+- **13 seeded employees** spanning every lifecycle status: 9 active, 1 probation, 1 on-leave,
+  1 retired, 1 terminated.
+- **Monthly gross payroll = 40,300** — derived only from employees who are active, on
+  probation or on leave (retired/terminated are excluded). Payroll tax is 10% of gross
+  (`Math.round`), `net = gross - tax`. `runOrgPayroll` never double-runs a period.
+- **Benefit enrollment is derived from employees** — each employee carries the benefit ids they
+  are enrolled in, so the monthly benefits cost (**3,845**) updates automatically when
+  enrollment changes. Deleting a benefit un-enrolls every employee.
+- **Review rating is derived from the score** (≥ 4.5 `exceeds`, ≥ 3.5 `meets`, else `below`);
+  completing a review stamps `reviewed_at`.
+- Bump `HRM_VERSION` to force every org's HRM data to reseed.
+
+### 3.5 API layer — `src/lib/api.ts` → `api.org.*`
 The app calls the API through the `api` object, exactly like a real endpoint. Each function
 adds a small artificial `delay(...)` to mimic network latency and returns the same shapes the
 real backend should return.
@@ -176,8 +214,26 @@ real backend should return.
 | `api.org.updateCreditEntry(id, patch)` | `updateOrgCreditEntry(orgId, id, patch)` | `PATCH /api/v1/organisations/{org_id}/credit-entries/{id}` |
 | `api.org.getTransactions()` | `getOrgPosTransactions(orgId)` | `GET /api/v1/organisations/{org_id}/transactions` |
 | `api.org.checkout(data)` | `checkoutOrg(orgId, data)` | `POST /api/v1/organisations/{org_id}/pos/checkout` |
+| `api.org.hrm.getState()` | `loadHrmState(orgId)` | `GET /api/v1/organisations/{org_id}/hrm` |
+| `api.org.hrm.getEmployees()` | `getOrgEmployees(orgId)` | `GET /api/v1/organisations/{org_id}/employees` |
+| `api.org.hrm.createEmployee(data)` | `createOrgEmployee(orgId, data)` | `POST /api/v1/organisations/{org_id}/employees` |
+| `api.org.hrm.updateEmployee(id, patch)` | `updateOrgEmployee(orgId, id, patch)` | `PATCH /api/v1/organisations/{org_id}/employees/{id}` |
+| `api.org.hrm.retireEmployee(id)` | `retireOrgEmployee(orgId, id)` | `POST /api/v1/organisations/{org_id}/employees/{id}/retire` |
+| `api.org.hrm.terminateEmployee(id)` | `terminateOrgEmployee(orgId, id)` | `POST /api/v1/organisations/{org_id}/employees/{id}/terminate` |
+| `api.org.hrm.getBenefits()` | `getOrgBenefits(orgId)` | `GET /api/v1/organisations/{org_id}/benefits` |
+| `api.org.hrm.createBenefit(data)` | `createOrgBenefit(orgId, data)` | `POST /api/v1/organisations/{org_id}/benefits` |
+| `api.org.hrm.updateBenefit(id, patch)` | `updateOrgBenefit(orgId, id, patch)` | `PATCH /api/v1/organisations/{org_id}/benefits/{id}` |
+| `api.org.hrm.deleteBenefit(id)` | `deleteOrgBenefit(orgId, id)` | `DELETE /api/v1/organisations/{org_id}/benefits/{id}` |
+| `api.org.hrm.getPayrollRuns()` | `getOrgPayrollRuns(orgId)` | `GET /api/v1/organisations/{org_id}/payroll` |
+| `api.org.hrm.runPayroll(period)` | `runOrgPayroll(orgId, period)` | `POST /api/v1/organisations/{org_id}/payroll/run` |
+| `api.org.hrm.setPayrollStatus(id, status)` | `setOrgPayrollStatus(orgId, id, status)` | `PATCH /api/v1/organisations/{org_id}/payroll/{id}` |
+| `api.org.hrm.getTimeEntries()` | `getOrgTimeEntries(orgId)` | `GET /api/v1/organisations/{org_id}/time-entries` |
+| `api.org.hrm.logTime(data)` | `logOrgTime(orgId, data)` | `POST /api/v1/organisations/{org_id}/time-entries` |
+| `api.org.hrm.getReviews()` | `getOrgReviews(orgId)` | `GET /api/v1/organisations/{org_id}/reviews` |
+| `api.org.hrm.createReview(data)` | `createOrgReview(orgId, data)` | `POST /api/v1/organisations/{org_id}/reviews` |
+| `api.org.hrm.updateReview(id, patch)` | `updateOrgReview(orgId, id, patch)` | `PATCH /api/v1/organisations/{org_id}/reviews/{id}` |
 
-### 3.5 Auth context — `src/context/auth_provider.tsx` / `auth_context.tsx`
+### 3.6 Auth context — `src/context/auth_provider.tsx` / `auth_context.tsx`
 The existing `AuthContext` now carries both auth modes:
 
 ```ts
@@ -206,14 +262,16 @@ interface AuthContextType {
 | `src/data/organisations.ts` | **New.** Mock org data, session, member CRUD. |
 | `src/data/finance.ts` | **New.** Mock finance state (ledger/invoices/taxes), per-org storage, invoice CRUD, `buildBalanceSheet`. |
 | `src/data/orgCommerce.ts` | **New.** Mock commerce state (products/customers/credit/POS transactions), per-org storage, product/customer/credit/checkout CRUD. |
+| `src/data/orgHRM.ts` | **New.** Mock HRM state (employees/benefits/payroll/time/reviews), per-org storage, employee lifecycle, payroll runs, derived benefit enrollment & review ratings. |
 | `src/pages/authentication/OrganisationAuth.tsx` | **New.** Org Login + Register UI (segmented control). |
 | `src/pages/authentication/default_page.tsx` | Added the "Log in as an organisation" toggle + back link. |
 | `src/context/auth_context.tsx`, `src/context/auth_provider.tsx` | Added `orgUser`, `orgName`, `orgLogin`, logout handling. |
-| `src/lib/api.ts` | Added the `org.*` API namespace (users, finance, commerce) — all mock-backed. |
-| `src/pages/home/home.tsx` | Allow org users; guard `/home/users` and `/home/finance` for admins only; full-screen "Account disabled" lockout for `orgUser.disabled`. |
-| `src/components/layout/DesktopSidebar.tsx`, `MobileNavbar.tsx` | Hide the **Users** and **Finance** nav items for staff/non-org. |
+| `src/lib/api.ts` | Added the `org.*` API namespace (users, finance, commerce, **hrm**) — all mock-backed. |
+| `src/pages/home/home.tsx` | Allow org users; guard `/home/users`, `/home/finance` and `/home/hrm` for admins only; full-screen "Account disabled" lockout for `orgUser.disabled`. |
+| `src/components/layout/DesktopSidebar.tsx`, `MobileNavbar.tsx` | Hide the **Users**, **Finance** and **HRM** nav items for staff/non-org. |
 | `src/components/layout/DesktopHeader.tsx`, `MobileHeader.tsx` | Show org member name/role/email. |
 | `src/pages/finance/FinancePage.tsx` | **New.** Admin-only Finance & Accounting (Overview, General Ledger, Invoices, Tax & Compliance, Balance Sheet). |
+| `src/pages/hrm/HRMPage.tsx` | **New.** Admin-only Human Resources (Overview, Employees, Payroll, Time & Attendance, Performance, Benefits). |
 | `src/pages/users/UsersPage.tsx` | Fetch members from `api.org.getUsers()`; role-based tabs & actions; credential reveal modal. |
 | `src/pages/users/data.ts` | `Member` = `OrgMember`; credential generator (`generateCredential`), `toMember`, `roleLabel`. |
 | `src/pages/users/MemberForm.tsx` | Username/Password/Job Title fields; auto-generates credentials for new members. |
@@ -231,7 +289,7 @@ interface AuthContextType {
 When the backend implements organisations, do this:
 
 1. **Replace the bodies of `api.org.*`** in `src/lib/api.ts` with real `fetch`/`request` calls
-   to the endpoints in section 3.2. Use the same request/response shapes.
+   to the endpoints in section 3.5. Use the same request/response shapes.
 2. **Login/register** should return an access token + the member object (and org id/name).
    Store the member/org data in `org_session` exactly like `setOrgSession` does today.
 3. **`isActive` / `dataBlocked` / `disabled`** should be returned by the users endpoints and
@@ -251,6 +309,10 @@ When the backend implements organisations, do this:
    `merchant_org_commerce_{orgId}`). Server-side, every commerce endpoint must be scoped by
    `org_id`. Products return `status` computed from `stock` (threshold 20); a POS checkout must
    record a transaction and decrement stock atomically.
+9. HRM data is **per-organisation** (mock key `merchant_org_hrm_{orgId}`) and **admin-only**.
+   Server-side, every HRM endpoint must be scoped by `org_id` and only admins of that org may
+   access it. Payroll runs must never be created twice for the same period/employee; employee
+   `retire`/`terminate` transitions are explicit lifecycle actions.
 
 ### Suggested payloads
 
@@ -281,6 +343,33 @@ When the backend implements organisations, do this:
 
 // PATCH /organisations/{org_id}/invoices/{id}
 { status: 'draft' | 'sent' | 'paid' | 'overdue' | 'void' }
+
+// GET /organisations/{org_id}/hrm  ->  OrgHrmState
+{
+  employees: [{
+    id, name, email, phone, department, jobTitle,
+    employmentType: 'full-time' | 'part-time' | 'contract',
+    hireDate, salary: number,
+    status: 'active' | 'probation' | 'on-leave' | 'terminated' | 'retired',
+    benefits: ['BNF-001', ...],
+  }],
+  benefits: [{ id, name, type, cost, description, enrollment }],  // enrollment derived
+  payrollRuns: [{ id, period, employee_id, employee_name, gross, tax, net, status: 'pending' | 'paid', processed_at }],
+  timeEntries: [{ id, employee_id, employee_name, date, hours, overtime_hours }],
+  reviews: [{ id, employee_id, employee_name, period, score, rating, notes, status: 'pending' | 'completed', reviewed_at }],
+}
+
+// POST /organisations/{org_id}/employees
+{ name, email, phone?, department, jobTitle, employmentType, hireDate, salary, status?, benefits?: string[] }
+
+// PATCH /organisations/{org_id}/employees/{id}
+{ salary?, status?, department?, benefits?, ... }   // retire/terminate set status
+
+// POST /organisations/{org_id}/payroll/run
+{ period: 'Aug 2026' }   // creates pending runs for active/probation/on-leave employees only
+
+// PATCH /organisations/{org_id}/payroll/{id}
+{ status: 'pending' | 'paid' }
 ```
 
 ---
@@ -302,5 +391,9 @@ When the backend implements organisations, do this:
   accounts** (`api.org.*` → `src/data/orgCommerce.ts`), so everything an organisation touches
   is fully self-contained in the browser and never reaches the server. Normal logins keep using
   the real backend.
+- The **HRM page is admin-only and 100% mock** (`api.org.hrm.*` → `src/data/orgHRM.ts`). Staff
+  and non-org logins are redirected away from `/home/hrm` and never see the nav item. Its
+  numbers are internally consistent (monthly payroll = active + probation + on-leave salaries;
+  benefits cost = Σ cost × derived enrollment).
 - Existing lint conventions are respected (`react-hooks/set-state-in-effect` is avoided, no new
   `any` types added).

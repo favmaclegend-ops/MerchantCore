@@ -37,6 +37,7 @@ function normalizeProducts(products: Product[]): Product[] {
 
 export function POSPage() {
   const bp = useBreakpoint()
+  
   const { format } = useContext(CurrencyContext)
   const { orgUser } = useContext(Authcontext)
   const posApi = orgUser ? api.org : api
@@ -132,90 +133,107 @@ export function POSPage() {
   
   return (
     <>
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', padding: '12px', flex: '1', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>POS Terminal</h1>
-        <button onClick={() => setCartView(true)} style={{marginInlineStart: 'auto', background: isCart ? 'var(--bg-nav-active)': 'none', color: isCart ? 'var(txt-primary)' : 'white', display: 'flex', cursor: 'pointer', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem', padding: '.2rem 1rem', borderRadius: '4rem', border: '1px solid var(--border-default)'}}>
-          <img src={`https://img.icons8.com/?size=100&id=9671&format=png&color=${isCart ? 'ffffff' : 'c3c0c0'}`} width={'20'} height={'20'}/>
-          <span style={{color: isCart ? 'var(--text-secondary-b)' : 'var(--text-primary)'}}>Cart</span>
-        </button>
+    <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.xl ? '1fr 400px' : '1fr', gridTemplateRows: '1fr',  padding: '12px',  flex: '1', height: '100%' }}>
+      {(bp.xl || !isCart) && (
+      <div style={{width: '100%', display: 'flex', flexDirection: 'column', gap: '16px', padding: '12px',  overflowY: 'auto', height: '100%', }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>POS Terminal</h1>
+          
+          {
+            !bp.xl &&
+            <button onClick={() => setCartView(!isCart)} style={{marginInlineStart: 'auto', background: isCart ? 'var(--bg-nav-active)': 'none', color: isCart ? 'var(txt-primary)' : 'white', display: 'flex', cursor: 'pointer', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem', padding: '.2rem 1rem', borderRadius: '4rem', border: '1px solid var(--border-default)'}}>
+            <img src={`https://img.icons8.com/?size=100&id=9671&format=png&color=${isCart ? 'ffffff' : 'c3c0c0'}`} width={'20'} height={'20'}/>
+            <span style={{color: isCart ? 'var(--text-secondary-b)' : 'var(--text-primary)'}}>Cart</span>
+          </button>}
+
+          {successMsg && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: 'var(--text-success)', background: 'var(--bg-success)', padding: '6px 12px', borderRadius: '8px' }}>
+              <CheckCircle style={{ width: '14px', height: '14px' }} />
+              {successMsg}
+            </div>
+          )}
+        </div>
+
         {successMsg && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: 'var(--text-success)', background: 'var(--bg-success)', padding: '6px 12px', borderRadius: '8px' }}>
-            <CheckCircle style={{ width: '14px', height: '14px' }} />
+          <div style={{ padding: '10px 14px', background: 'var(--bg-success)', border: '1px solid var(--border-success)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-success)', fontWeight: 500 }}>
             {successMsg}
           </div>
         )}
-      </div>
 
-      {successMsg && (
-        <div style={{ padding: '10px 14px', background: 'var(--bg-success)', border: '1px solid var(--border-success)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-success)', fontWeight: 500 }}>
-          {successMsg}
-        </div>
-      )}
-
-      <div style={{ width: '100%', display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'thin' }}>
-        {categories.map(cat => (
-          <button key={cat} onClick={() => {setCategory(cat); setCartView(false)}} style={{
-            padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '16px',
-            whiteSpace: 'nowrap', flexShrink: 0, border: category === cat ? 'none' : '1px solid var(--border-default)',
-            color: !isCart && category === cat ? 'var(--text-secondary-b)' : 'var(--text-secondary)', background: !isCart && category === cat ? 'var(--bg-nav-active)' : 'var(--bg-surface)', cursor: 'pointer',
-          }}>
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      {/**The container that holds the cart and the products===================================================== */}
-      <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? '3fr 1fr' : '1fr', gridAutoRows: '1fr', flex: '1', gap: bp.xl ? '16px' : '12px' }}>
-        
-        {/**The container that holds the product items in a grid format */}
-        {
-          !isCart &&
-          <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px', gridAutoRows: 'max-content' }}>
-         
-         {/**The filter product ======================================================== */}
-          {filteredProducts.map(product => (
-            <div key={product.id} style={{ padding: '.5rem', background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', overflow: 'hidden', height: 'auto'}}>
-              <div style={{ height: '96px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--border-input)' }}>{product.name[0]}</span>
-                <span style={{
-                  position: 'absolute', top: '6px', right: '6px', padding: '2px 6px',
-                  fontSize: '10px', fontWeight: 500, borderRadius: '4px',
-                  background: product.status === 'in-stock' ? 'var(--bg-success)' : product.status === 'low-stock' ? 'var(--bg-warning)' : 'var(--bg-danger)',
-                  color: product.status === 'in-stock' ? 'var(--text-success)' : product.status === 'low-stock' ? 'var(--text-warning)' : 'var(--text-danger)',
-                }}>
-                  {product.status === 'in-stock' ? 'In Stock' : product.status === 'low-stock' ? 'Low' : 'Out'}
-                </span>
-              </div>
-              <div style={{ padding: '10px' }}>
-                <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{product.name}</p>
-                <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', margin: '2px 0 0 0' }}>{format(product.price)}</p>
-              </div>
-              <button onClick={() => {addToCart(product.id); setAlert({isAlert: true, message: `Product ${product.name} is Added to cart`, type: 'success'})}} disabled={product.status === 'out-of-stock'} style={{
-                width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
-                color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', cursor: product.status === 'out-of-stock' ? 'not-allowed' : 'pointer',
-                opacity: product.status === 'out-of-stock' ? 0.5 : 1,
-                borderRadius: '.5rem'
-              }}>
-                Add
-              </button>
-            </div>
+        <div style={{ width: '100%', display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'thin', flexShrink: '0' }}>
+          {categories.map(cat => (
+            <button key={cat} onClick={() => {setCategory(cat); setCartView(false)}} style={{
+              padding: '6px 12px', fontSize: '12px', fontWeight: 500, borderRadius: '16px',
+              flex: '0 0 auto',
+              whiteSpace: 'nowrap', flexShrink: 0, border: category === cat ? 'none' : '1px solid var(--border-default)',
+              color: (!isCart || bp.xl) && category === cat ? 'var(--text-secondary-b)' : 'var(--text-secondary)', background: (!isCart || bp.xl) && category === cat ? 'var(--bg-nav-active)' : 'var(--bg-surface)', cursor: 'pointer',
+            }}>
+              {cat}
+            </button>
           ))}
-          {filteredProducts.length === 0 && (
-            <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '12px' }}>
-              No products in this category
-            </div>
-          )}
-        </div>}
+        </div>
 
+        {/**The container that holds the cart and the products===================================================== */}
+        <div style={{ display: 'flex', flexDirection: 'column',  flex: '1', gap: bp.xl ? '16px' : '12px', }}>
+          
+          {/**The container that holds the product items in a grid format */}
+          {
+            (!isCart || bp.xl) &&
+            <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px', gridAutoRows: 'max-content', width: '100%' }}>
+          
+          {/**The filter product ======================================================== */}
+            {filteredProducts.map(product => (
+              <div key={product.id} style={{ padding: '.5rem', background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', overflow: 'hidden', height: 'auto'}}>
+                <div style={{ height: '96px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--border-input)' }}>{product.name[0]}</span>
+                  <span style={{
+                    position: 'absolute', top: '6px', right: '6px', padding: '2px 6px',
+                    fontSize: '10px', fontWeight: 500, borderRadius: '4px',
+                    background: product.status === 'in-stock' ? 'var(--bg-success)' : product.status === 'low-stock' ? 'var(--bg-warning)' : 'var(--bg-danger)',
+                    color: product.status === 'in-stock' ? 'var(--text-success)' : product.status === 'low-stock' ? 'var(--text-warning)' : 'var(--text-danger)',
+                  }}>
+                    {product.status === 'in-stock' ? 'In Stock' : product.status === 'low-stock' ? 'Low' : 'Out'}
+                  </span>
+                </div>
+                <div style={{ padding: '10px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{product.name}</p>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', margin: '2px 0 0 0' }}>{format(product.price)}</p>
+                </div>
+                <button onClick={() => {addToCart(product.id); setAlert({isAlert: true, message: `Product ${product.name} is Added to cart`, type: 'success'})}} disabled={product.status === 'out-of-stock'} style={{
+                  width: '100%', padding: '8px 0', fontSize: '12px', fontWeight: 600,
+                  color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', cursor: product.status === 'out-of-stock' ? 'not-allowed' : 'pointer',
+                  opacity: product.status === 'out-of-stock' ? 0.5 : 1,
+                  borderRadius: '.5rem'
+                }}>
+                  Add
+                </button>
+              </div>
+            ))}
+            
+            {filteredProducts.length === 0 && (
+              <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '12px' }}>
+                No products in this category
+              </div>
+            )}
+          </div>
+          }
+
+        </div>
+      </div>
+      )}
 
         {/**CART=========================================================================================== */}
        { 
-        isCart &&
+        (bp.xl || isCart) &&
         <>
         <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '12px', borderBottom: '1px solid var(--bg-tertiary)' }}>
+          <div style={{ padding: '12px', borderBottom: '1px solid var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>Cart ({cart.length})</span>
+            {!bp.xl && (
+              <button onClick={() => setCartView(false)} style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-secondary)', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer' }}>
+                Close
+              </button>
+            )}
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', padding: '12px', maxHeight: bp.lg ? '240px' : '200px' }}>
@@ -304,8 +322,6 @@ export function POSPage() {
         </>
         }
         {/**CART ENDING=========================================================================================== */}
-
-      </div>
 
       {showLog && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }} onClick={() => setShowLog(false)}>

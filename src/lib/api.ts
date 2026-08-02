@@ -17,6 +17,8 @@ import {
 } from '@/data/finance'
 import * as orgCommerce from '@/data/orgCommerce'
 import type { CheckoutInput, OrgCreditEntry, OrgCreditInput, OrgCustomerInput, OrgProductInput } from '@/data/orgCommerce'
+import * as orgHRM from '@/data/orgHRM'
+import type { OrgBenefitInput, OrgEmployeeInput, OrgPayrollStatus, OrgReviewInput, OrgTimeInput } from '@/data/orgHRM'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
 console.log(API_BASE) // debugging
@@ -206,6 +208,82 @@ export const api = {
     checkout: async (data: CheckoutInput) => {
       await delay(250)
       return orgCommerce.checkoutOrg(requireOrgId(), data)
+    },
+
+    // HRM (Human Resources) — admin-only, mock-backed, scoped to the active org session.
+    hrm: {
+      getState: async () => {
+        await delay(250)
+        return orgHRM.loadHrmState(requireOrgId())
+      },
+      getEmployees: async () => {
+        await delay(200)
+        return orgHRM.getOrgEmployees(requireOrgId())
+      },
+      createEmployee: async (data: OrgEmployeeInput) => {
+        await delay(200)
+        return orgHRM.createOrgEmployee(requireOrgId(), data)
+      },
+      updateEmployee: async (id: string, patch: Partial<OrgEmployeeInput>) => {
+        await delay(200)
+        return orgHRM.updateOrgEmployee(requireOrgId(), id, patch)
+      },
+      retireEmployee: async (id: string) => {
+        await delay(200)
+        return orgHRM.retireOrgEmployee(requireOrgId(), id)
+      },
+      terminateEmployee: async (id: string) => {
+        await delay(200)
+        return orgHRM.terminateOrgEmployee(requireOrgId(), id)
+      },
+      getBenefits: async () => {
+        await delay(200)
+        return orgHRM.getOrgBenefits(requireOrgId())
+      },
+      createBenefit: async (data: OrgBenefitInput) => {
+        await delay(200)
+        return orgHRM.createOrgBenefit(requireOrgId(), data)
+      },
+      updateBenefit: async (id: string, patch: Partial<OrgBenefitInput>) => {
+        await delay(200)
+        return orgHRM.updateOrgBenefit(requireOrgId(), id, patch)
+      },
+      deleteBenefit: async (id: string) => {
+        await delay(200)
+        orgHRM.deleteOrgBenefit(requireOrgId(), id)
+      },
+      getPayrollRuns: async () => {
+        await delay(200)
+        return orgHRM.getOrgPayrollRuns(requireOrgId())
+      },
+      runPayroll: async (period: string) => {
+        await delay(250)
+        return orgHRM.runOrgPayroll(requireOrgId(), period)
+      },
+      setPayrollStatus: async (id: string, status: OrgPayrollStatus) => {
+        await delay(200)
+        return orgHRM.setOrgPayrollStatus(requireOrgId(), id, status)
+      },
+      getTimeEntries: async () => {
+        await delay(200)
+        return orgHRM.getOrgTimeEntries(requireOrgId())
+      },
+      logTime: async (data: OrgTimeInput) => {
+        await delay(200)
+        return orgHRM.logOrgTime(requireOrgId(), data)
+      },
+      getReviews: async () => {
+        await delay(200)
+        return orgHRM.getOrgReviews(requireOrgId())
+      },
+      createReview: async (data: OrgReviewInput) => {
+        await delay(200)
+        return orgHRM.createOrgReview(requireOrgId(), data)
+      },
+      updateReview: async (id: string, patch: Parameters<typeof orgHRM.updateOrgReview>[2]) => {
+        await delay(200)
+        return orgHRM.updateOrgReview(requireOrgId(), id, patch)
+      },
     },
   },
 }

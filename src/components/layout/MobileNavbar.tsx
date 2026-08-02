@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 
@@ -15,6 +15,7 @@ const primaryItems = [
 const moreItems = [
   { path: '/home/customers', label: 'Customers', icon: Users },
   { path: '/home/finance', label: 'Finance', icon: Wallet, orgAdminOnly: true },
+  { path: '/home/hrm', label: 'HRM', icon: Contact, orgAdminOnly: true },
   { path: '/home/users', label: 'Users', icon: UserCog, orgAdminOnly: true },
   { path: '/home/settings', label: 'Settings', icon: Settings },
 ]

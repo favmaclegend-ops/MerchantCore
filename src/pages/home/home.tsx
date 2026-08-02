@@ -1,11 +1,12 @@
 import { Suspense, useContext, lazy } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Ban, LogOut } from 'lucide-react'
 import { Authcontext } from '@/context/auth_context'
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
 import { DesktopHeader } from '@/components/layout/DesktopHeader'
 import { MobileNavbar } from '@/components/layout/MobileNavbar'
 import { MobileHeader } from '@/components/layout/MobileHeader'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
 const InventoryPage = lazy(() => import('@/pages/inventory/InventoryPage').then(m => ({ default: m.InventoryPage })))
@@ -15,11 +16,13 @@ const CustomersPage = lazy(() => import('@/pages/customers/CustomersPage').then(
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const CalculatorPage = lazy(() => import('@/pages/calculator/CalculatorPage').then(m => ({ default: m.CalculatorPage })))
 const FinancePage = lazy(() => import('@/pages/finance/FinancePage').then(m => ({ default: m.FinancePage })))
+const HRMPage = lazy(() => import('@/pages/hrm/HRMPage').then(m => ({ default: m.HRMPage })))
 const Users = lazy(() => import('@/pages/users/UsersPage').then(m => ({ default: m.Users })))
 
-
 export default function Home() {
+    const location = useLocation();
     const { user, orgUser, loading, logout } = useContext(Authcontext)
+    const bp = useBreakpoint()
 
     if (loading) {
         return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
@@ -54,6 +57,7 @@ export default function Home() {
 
     const canManageUsers = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
     const canManageFinance = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
+    const canManageHRM = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
 
     return (
         <>
@@ -63,7 +67,7 @@ export default function Home() {
                     <DesktopHeader />
                     <MobileHeader />
 
-                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '4rem' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: location.pathname == '/home/pos' && bp.lg || bp.md ? '0' : '4rem' }}>
                         <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>}>
                             <Routes>
                                 <Route path="/dashboard" element={<DashboardPage />} />
@@ -73,6 +77,7 @@ export default function Home() {
                                 <Route path="/customers" element={<CustomersPage />} />
                                 <Route path="/calculator" element={<CalculatorPage />} />
                                 <Route path="/finance" element={canManageFinance ? <FinancePage /> : <Navigate to="/dashboard" replace />} />
+                                <Route path="/hrm" element={canManageHRM ? <HRMPage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/users" element={canManageUsers ? <Users /> : <Navigate to="/dashboard" replace />} />
                             </Routes>

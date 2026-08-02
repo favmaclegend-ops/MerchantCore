@@ -209,4 +209,38 @@ describe('api.org (mock-backed organisation workspace)', () => {
     const log = await api.org.getTransactions()
     expect(log[0].id).toBe(txn.id)
   })
+
+  it('serves HRM data for the active organisation', async () => {
+    const session = await registerAndSession()
+    setOrgSession(session)
+
+    const state = await api.org.hrm.getState()
+    expect(state.employees).toHaveLength(13)
+    expect(state.payrollRuns).toHaveLength(11)
+
+    const created = await api.org.hrm.createEmployee({
+      name: 'Ama Owusu', email: 'ama@kofistores.example', phone: '', department: 'Sales',
+      jobTitle: 'Associate', employmentType: 'full-time', hireDate: '2026-08-01', salary: 1800,
+    })
+    expect(created.id).toBe('EMP-014')
+    expect(created.status).toBe('probation')
+
+    const retired = await api.org.hrm.retireEmployee('EMP-002')
+    expect(retired.status).toBe('retired')
+
+    const benefits = await api.org.hrm.getBenefits()
+    expect(benefits.find(b => b.id === 'BNF-001')?.enrollment).toBe(9)
+
+    const runs = await api.org.hrm.runPayroll('Sep 2099')
+    expect(runs).toHaveLength(11)
+
+    const paid = await api.org.hrm.setPayrollStatus(runs[0].id, 'paid')
+    expect(paid.status).toBe('paid')
+
+    const entry = await api.org.hrm.logTime({ employee_id: 'EMP-004', date: '2026-08-01', hours: 8 })
+    expect(entry.employee_name).toBe('Michael Owusu')
+
+    const review = await api.org.hrm.createReview({ employee_id: 'EMP-003', period: 'H2 2026', score: 4.7 })
+    expect(review.rating).toBe('exceeds')
+  })
 })
