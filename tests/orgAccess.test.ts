@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   canAccess,
+  canEditInventory,
   canManageFinance,
   canManageHRM,
+  canManageSupply,
   canManageUsers,
   isOrgMember,
 } from '@/lib/orgAccess'
@@ -22,7 +24,10 @@ describe('orgAccess (module-level permissions)', () => {
     expect(canManageUsers(null)).toBe(false)
     expect(canManageFinance(null)).toBe(false)
     expect(canManageHRM(null)).toBe(false)
+    expect(canManageSupply(null)).toBe(false)
+    expect(canEditInventory(null)).toBe(false)
     expect(canAccess(null, 'finance')).toBe(false)
+    expect(canAccess(null, 'supply')).toBe(false)
   })
 
   it('super-admin and admin access both Finance and HRM plus Users', () => {
@@ -40,6 +45,7 @@ describe('orgAccess (module-level permissions)', () => {
     expect(canManageHRM(m)).toBe(true)
     expect(canManageFinance(m)).toBe(false)
     expect(canManageUsers(m)).toBe(false)
+    expect(canManageSupply(m)).toBe(false)
     expect(canAccess(m, 'hrm')).toBe(true)
     expect(canAccess(m, 'finance')).toBe(false)
     expect(canAccess(m, 'users')).toBe(false)
@@ -50,6 +56,7 @@ describe('orgAccess (module-level permissions)', () => {
     expect(canManageFinance(m)).toBe(true)
     expect(canManageHRM(m)).toBe(false)
     expect(canManageUsers(m)).toBe(false)
+    expect(canManageSupply(m)).toBe(false)
     expect(canAccess(m, 'finance')).toBe(true)
     expect(canAccess(m, 'hrm')).toBe(false)
     expect(canAccess(m, 'users')).toBe(false)
@@ -60,5 +67,35 @@ describe('orgAccess (module-level permissions)', () => {
     expect(canManageFinance(m)).toBe(false)
     expect(canManageHRM(m)).toBe(false)
     expect(canManageUsers(m)).toBe(false)
+    expect(canManageSupply(m)).toBe(false)
+    expect(canEditInventory(m)).toBe(false)
+  })
+
+  it('super-admin and logistics-manager manage Supply Chain and inventory edits', () => {
+    for (const role of ['super-admin', 'logistics-manager'] as const) {
+      const m = member(role)
+      expect(canManageSupply(m)).toBe(true)
+      expect(canEditInventory(m)).toBe(true)
+      expect(canAccess(m, 'supply')).toBe(true)
+    }
+  })
+
+  it('logistics-manager is limited to Supply Chain (not Finance, not HRM, not Users)', () => {
+    const m = member('logistics-manager')
+    expect(canManageSupply(m)).toBe(true)
+    expect(canManageFinance(m)).toBe(false)
+    expect(canManageHRM(m)).toBe(false)
+    expect(canManageUsers(m)).toBe(false)
+    expect(canAccess(m, 'supply')).toBe(true)
+    expect(canAccess(m, 'finance')).toBe(false)
+    expect(canAccess(m, 'hrm')).toBe(false)
+    expect(canAccess(m, 'users')).toBe(false)
+  })
+
+  it('admin cannot manage the Supply Chain module', () => {
+    const m = member('admin')
+    expect(canManageSupply(m)).toBe(false)
+    expect(canEditInventory(m)).toBe(false)
+    expect(canAccess(m, 'supply')).toBe(false)
   })
 })

@@ -8,6 +8,7 @@ import {
   updateOrgMember,
   type OrgMember,
   type OrgRegisterInput,
+  type OrgSession,
 } from '@/data/organisations'
 import {
   createInvoice,
@@ -21,6 +22,14 @@ import type { CheckoutInput, OrgCreditEntry, OrgCreditInput, OrgCustomerInput, O
 import * as orgHRM from '@/data/orgHRM'
 import type { OrgBenefitInput, OrgEmployeeInput, OrgPayrollStatus, OrgReviewInput, OrgTimeInput } from '@/data/orgHRM'
 import * as orgNotifications from '@/data/orgNotifications'
+import * as orgSupply from '@/data/orgSupply'
+import type {
+  OrgPoStatus,
+  OrgPurchaseOrderInput,
+  OrgShipmentInput,
+  OrgShipmentStatus,
+  OrgSupplierInput,
+} from '@/data/orgSupply'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
 console.log(API_BASE) // debugging
@@ -188,17 +197,55 @@ export const api = {
       await delay(200)
       return orgCommerce.getOrgProducts(requireOrgId())
     },
+    // Product creation / edit / delete is restricted to the head of the Supply Chain
+    // department (logistics-manager) and the Super Admin. Every change is broadcast on
+    // the transparency feed so all members stay informed.
     createProduct: async (data: OrgProductInput) => {
       await delay(200)
-      return orgCommerce.createOrgProduct(requireOrgId(), data)
+      const session = requireOrgSession()
+      requireInventoryPermission(session.member.role)
+      const orgId = session.orgId
+      const product = orgCommerce.createOrgProduct(orgId, data)
+      orgNotifications.addOrgNotification(orgId, {
+        kind: 'inventory',
+        title: 'Item added to inventory',
+        message: `${product.name} added with ${product.stock} units on hand`,
+        amount: product.price * product.stock,
+        ref: product.id,
+        severity: 'success',
+      })
+      return product
     },
     updateProduct: async (id: string, data: Partial<OrgProductInput>) => {
       await delay(200)
-      return orgCommerce.updateOrgProduct(requireOrgId(), id, data)
+      const session = requireOrgSession()
+      requireInventoryPermission(session.member.role)
+      const orgId = session.orgId
+      const before = orgCommerce.getOrgProducts(orgId).find(p => p.id === id)
+      const product = orgCommerce.updateOrgProduct(orgId, id, data)
+      orgNotifications.addOrgNotification(orgId, {
+        kind: 'inventory',
+        title: 'Inventory item updated',
+        message: `${product.name} details were changed${before ? ` (stock ${before.stock} → ${product.stock})` : ''}`,
+        amount: product.price * product.stock,
+        ref: product.id,
+      })
+      return product
     },
     deleteProduct: async (id: string) => {
       await delay(200)
-      orgCommerce.deleteOrgProduct(requireOrgId(), id)
+      const session = requireOrgSession()
+      requireInventoryPermission(session.member.role)
+      const orgId = session.orgId
+      const before = orgCommerce.getOrgProducts(orgId).find(p => p.id === id)
+      orgCommerce.deleteOrgProduct(orgId, id)
+      orgNotifications.addOrgNotification(orgId, {
+        kind: 'inventory',
+        title: 'Inventory item deleted',
+        message: before ? `${before.name} was removed from inventory` : 'An inventory item was removed',
+        ref: id,
+        severity: 'danger',
+      })
     },
 
     getCustomers: async () => {
@@ -407,6 +454,143 @@ export const api = {
       },
     },
 
+    // Supply Chain & Logistics — department head (logistics-manager) or Super Admin only.
+    // Reading is session-scoped; every mutation is permission-gated and broadcast on the
+    // transparency feed (inventory kind alerts).
+    supply: {
+      getState: async () => {
+        await delay(250)
+        return orgSupply.loadOrgSupplyState(requireOrgId())
+      },
+      getSuppliers: async () => {
+        await delay(200)
+        return orgSupply.getOrgSuppliers(requireOrgId())
+      },
+      createSupplier: async (data: OrgSupplierInput) => {
+        await delay(200)
+        const session = requireSupplyPermission()
+        return orgSupply.createOrgSupplier(session.orgId, data)
+      },
+      updateSupplier: async (id: string, patch: Partial<OrgSupplierInput>) => {
+        await delay(200)
+        const session = requireSupplyPermission()
+        return orgSupply.updateOrgSupplier(session.orgId, id, patch)
+      },
+      deleteSupplier: async (id: string) => {
+        await delay(200)
+        const session = requireSupplyPermission()
+        orgSupply.deleteOrgSupplier(session.orgId, id)
+      },
+
+      getPurchaseOrders: async () => {
+        await delay(200)
+        return orgSupply.getOrgPurchaseOrders(requireOrgId())
+      },
+      createPurchaseOrder: async (data: OrgPurchaseOrderInput) => {
+        await delay(200)
+        const session = requireSupplyPermission()
+        const po = orgSupply.createOrgPurchaseOrder(session.orgId, data, 'pending')
+        orgNotifications.addOrgNotification(session.orgId, {
+          kind: 'inventory',
+          title: 'Purchase order created',
+          message: `${po.po_number} raised for ${po.supplier_name} · ${po.items.length} line item${po.items.length === 1 ? '' : 's'}`,
+          amount: po.total,
+          ref: po.po_number,
+        })
+        return po
+      },
+      setPurchaseOrderStatus: async (id: string, status: OrgPoStatus) => {
+        await delay(200)
+        const session = requireSupplyPermission()
+        const po = orgSupply.setOrgPurchaseOrderStatus(session.orgId, id, status)
+        if (status === 'received') {
+          orgNotifications.addOrgNotification(session.orgId, {
+            kind: 'inventory',
+            title: 'Inventory restocked',
+            message: `${po.po_number} received from ${po.supplier_name} · stock updated`,
+            amount: po.total,
+            ref: po.po_number,
+            severity: 'success',
+          })
+        } else if (status === 'cancelled') {
+          orgNotifications.addOrgNotification(session.orgId, {
+            kind: 'inventory',
+            title: 'Purchase order cancelled',
+            message: `${po.po_number} for ${po.supplier_name} was cancelled`,
+            amount: po.total,
+            ref: po.po_number,
+            severity: 'warning',
+          })
+        }
+        return po
+      },
+      deletePurchaseOrder: async (id: string) => {
+        await delay(200)
+        const session = requireSupplyPermission()
+        orgSupply.deleteOrgPurchaseOrder(session.orgId, id)
+      },
+
+      suggestRestockProducts: async () => {
+        await delay(200)
+        return orgSupply.suggestRestockProducts(requireOrgId())
+      },
+      autoGeneratePurchaseOrders: async (supplierId?: string) => {
+        await delay(300)
+        const session = requireSupplyPermission()
+        const created = orgSupply.autoGeneratePurchaseOrders(session.orgId, supplierId)
+        for (const po of created) {
+          orgNotifications.addOrgNotification(session.orgId, {
+            kind: 'inventory',
+            title: 'Purchase order created',
+            message: `${po.po_number} auto-raised for ${po.supplier_name} · ${po.items.length} line item${po.items.length === 1 ? '' : 's'}`,
+            amount: po.total,
+            ref: po.po_number,
+          })
+        }
+        return created
+      },
+
+      getShipments: async () => {
+        await delay(200)
+        return orgSupply.getOrgShipments(requireOrgId())
+      },
+      createShipment: async (data: OrgShipmentInput) => {
+        await delay(200)
+        const session = requireSupplyPermission()
+        const shipment = orgSupply.createOrgShipment(session.orgId, data)
+        orgNotifications.addOrgNotification(session.orgId, {
+          kind: 'inventory',
+          title: 'Shipment created',
+          message: `Shipment ${shipment.tracking_number} for ${shipment.po_number} · ${shipment.carrier}`,
+          ref: shipment.tracking_number,
+        })
+        return shipment
+      },
+      setShipmentStatus: async (id: string, status: OrgShipmentStatus) => {
+        await delay(200)
+        const session = requireSupplyPermission()
+        const shipment = orgSupply.setOrgShipmentStatus(session.orgId, id, status)
+        if (status === 'delayed') {
+          orgNotifications.addOrgNotification(session.orgId, {
+            kind: 'inventory',
+            title: 'Shipment delayed',
+            message: `Shipment ${shipment.tracking_number} for ${shipment.po_number} is delayed`,
+            ref: shipment.tracking_number,
+            severity: 'warning',
+          })
+        } else if (status === 'cancelled') {
+          orgNotifications.addOrgNotification(session.orgId, {
+            kind: 'inventory',
+            title: 'Shipment cancelled',
+            message: `Shipment ${shipment.tracking_number} for ${shipment.po_number} was cancelled`,
+            ref: shipment.tracking_number,
+            severity: 'warning',
+          })
+        }
+        return shipment
+      },
+    },
+
     // Notifications & Alerts — the transparency feed. Every member sees every transaction
     // any employee performs. Deletion is restricted to the Super Admin, or to normal Admins
     // once the Super Admin grants `allow_admin_delete` in the settings.
@@ -465,6 +649,28 @@ function requireOrgId(): string {
   const org = getSessionOrganisation()
   if (!org) throw new Error('No active organisation session')
   return org.id
+}
+
+function requireOrgSession(): OrgSession {
+  const session = getOrgSession()
+  if (!session) throw new Error('No active organisation session')
+  return session
+}
+
+const SUPPLY_ROLES = ['super-admin', 'logistics-manager']
+
+function requireSupplyPermission(): OrgSession {
+  const session = requireOrgSession()
+  if (!SUPPLY_ROLES.includes(session.member.role)) {
+    throw new Error('Only the supply chain manager or super admin can manage the supply chain')
+  }
+  return session
+}
+
+function requireInventoryPermission(role: OrgMember['role']): void {
+  if (!SUPPLY_ROLES.includes(role)) {
+    throw new Error('Only the supply chain manager or super admin can modify inventory')
+  }
 }
 
 function delay(ms: number) {

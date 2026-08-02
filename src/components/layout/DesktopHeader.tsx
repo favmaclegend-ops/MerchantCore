@@ -15,6 +15,7 @@ const pageConfig: Record<string, { title: string; search?: string }> = {
   '/home/customers': { title: 'Customer Directory', search: 'Search customers...' },
   '/home/calculator': { title: 'Calculator' },
   '/home/notifications': { title: 'Notifications & Alerts' },
+  '/home/supply': { title: 'Supply Chain & Logistics' },
   '/home/users': {title: 'Users' },
   '/home/settings': { title: 'Settings' },
 }

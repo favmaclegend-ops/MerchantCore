@@ -24,6 +24,7 @@ export const ADMIN_ROLES: { value: OrgRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
   { value: 'hrm-manager', label: 'HRM Manager' },
   { value: 'finance-manager', label: 'Finance Manager' },
+  { value: 'logistics-manager', label: 'Logistics Manager' },
 ]
 
 export const AVATAR_COLORS = ['#0f172a', '#0d9488', '#2563eb', '#7c3aed', '#db2777', '#ea580c']
@@ -43,7 +44,9 @@ export const roleLabel = (member: Member) =>
         ? 'HRM Manager'
         : member.role === 'finance-manager'
           ? 'Finance Manager'
-          : member.jobTitle || 'Staff'
+          : member.role === 'logistics-manager'
+            ? 'Logistics Manager'
+            : member.jobTitle || 'Staff'
 
 export const generateCredential = (name: string, email: string) => {
   const username = email.split('@')[0] || name.toLowerCase().replace(/[^a-z0-9]+/g, '').substring(0, 10)
@@ -66,7 +69,9 @@ export const toMember = (form: MemberFormData, role: OrgRole): Omit<Member, 'id'
         ? 'HR Manager'
         : role === 'finance-manager'
           ? 'Accountant'
-          : 'Administrator',
+          : role === 'logistics-manager'
+            ? 'Supply Chain Manager'
+            : 'Administrator',
     isActive: true,
     dataBlocked: false,
     disabled: false,

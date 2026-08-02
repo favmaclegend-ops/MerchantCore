@@ -7,7 +7,7 @@ import { DesktopHeader } from '@/components/layout/DesktopHeader'
 import { MobileNavbar } from '@/components/layout/MobileNavbar'
 import { MobileHeader } from '@/components/layout/MobileHeader'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { canManageFinance, canManageHRM, canManageUsers } from '@/lib/orgAccess'
+import { canManageFinance, canManageHRM, canManageSupply, canManageUsers } from '@/lib/orgAccess'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
 const InventoryPage = lazy(() => import('@/pages/inventory/InventoryPage').then(m => ({ default: m.InventoryPage })))
@@ -18,6 +18,7 @@ const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage').then(m =
 const CalculatorPage = lazy(() => import('@/pages/calculator/CalculatorPage').then(m => ({ default: m.CalculatorPage })))
 const FinancePage = lazy(() => import('@/pages/finance/FinancePage').then(m => ({ default: m.FinancePage })))
 const HRMPage = lazy(() => import('@/pages/hrm/HRMPage').then(m => ({ default: m.HRMPage })))
+const SupplyChainPage = lazy(() => import('@/pages/supply/SupplyChainPage').then(m => ({ default: m.SupplyChainPage })))
 const Users = lazy(() => import('@/pages/users/UsersPage').then(m => ({ default: m.Users })))
 const AttendancePage = lazy(() => import('@/pages/attendance/AttendancePage').then(m => ({ default: m.AttendancePage })))
 const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })))
@@ -77,6 +78,7 @@ export default function Home() {
                                 <Route path="/calculator" element={<CalculatorPage />} />
                                 <Route path="/finance" element={canManageFinance(orgUser) ? <FinancePage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/hrm" element={canManageHRM(orgUser) ? <HRMPage /> : <Navigate to="/dashboard" replace />} />
+                                <Route path="/supply" element={canManageSupply(orgUser) ? <SupplyChainPage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/attendance" element={orgUser ? <AttendancePage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/notifications" element={orgUser ? <NotificationsPage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/settings" element={<SettingsPage />} />

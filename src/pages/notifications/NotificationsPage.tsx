@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react'
-import { AlertTriangle, Bell, CheckCheck, Clock, CreditCard, DollarSign, FileText, ShieldAlert, Trash2, Wallet, type LucideIcon } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCheck, Clock, CreditCard, DollarSign, FileText, Package, ShieldAlert, Trash2, Wallet, type LucideIcon } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { OrgNotificationContext } from '@/context/org_notification_context'
@@ -13,6 +13,7 @@ const kindConfig: Record<string, { icon: LucideIcon; color: string; bg: string }
   payroll: { icon: Wallet, color: 'var(--text-info)', bg: 'var(--bg-info)' },
   low_stock: { icon: AlertTriangle, color: 'var(--text-warning)', bg: 'var(--bg-warning)' },
   check_in: { icon: Clock, color: 'var(--text-info)', bg: 'var(--bg-info)' },
+  inventory: { icon: Package, color: 'var(--text-info)', bg: 'var(--bg-info)' },
   system: { icon: Bell, color: 'var(--text-muted)', bg: 'var(--bg-tertiary)' },
 }
 

@@ -8,7 +8,13 @@
 // should swap these calls for real HTTP requests. The shapes returned here are
 // the contract the rest of the app expects.
 
-export type OrgRole = 'super-admin' | 'admin' | 'hrm-manager' | 'finance-manager' | 'staff'
+export type OrgRole =
+  | 'super-admin'
+  | 'admin'
+  | 'hrm-manager'
+  | 'finance-manager'
+  | 'logistics-manager'
+  | 'staff'
 
 export interface OrgMember {
   id: string
@@ -60,7 +66,7 @@ const LEGACY_ORG_KEYS = ['org_data', 'org_session', 'org_data_version']
 
 // Bump SEED_VERSION whenever SEED_ORGS changes so stored demo data is reset to the
 // fresh seed (prevents stale/conflicting demo credentials lingering in localStorage).
-const SEED_VERSION = 4
+const SEED_VERSION = 5
 
 // Seeded demo organisation. Login with these while the backend is missing:
 //   Organisation name : Sunrise Mart
@@ -68,6 +74,7 @@ const SEED_VERSION = 4
 //   Admin             : sarah.mensah@sunrise.example / DemoPass@123
 //   HRM Manager       : efua.mensah@sunrise.example / DemoPass@123 (HRM only)
 //   Finance Manager   : kwame.asante@sunrise.example / DemoPass@123 (Finance only)
+//   Logistics Manager : akosua.amoah@sunrise.example / DemoPass@123 (Supply Chain only)
 //   Staff (Cashier)   : grace.addo@sunrise.example / StaffPass@123
 //   Staff (Sales)     : michael.owusu@sunrise.example / StaffPass@123
 //   Staff (Stock)     : rita.boateng@sunrise.example / StaffPass@123 (data-blocked demo)
@@ -84,6 +91,7 @@ const SEED_ORGS: Organisation[] = [
       { id: 'ADM-002', name: 'Sarah Mensah', email: 'sarah.mensah@sunrise.example', username: 'smensah', password: 'DemoPass@123', phone: '+1 555 010 1002', role: 'admin', jobTitle: 'Administrator', isActive: true, dataBlocked: false, disabled: false },
       { id: 'ADM-003', name: 'Efua Mensah', email: 'efua.mensah@sunrise.example', username: 'efua', password: 'DemoPass@123', phone: '+1 555 010 1007', role: 'hrm-manager', jobTitle: 'HR Manager', isActive: true, dataBlocked: false, disabled: false },
       { id: 'ADM-004', name: 'Kwame Asante', email: 'kwame.asante@sunrise.example', username: 'kwame', password: 'DemoPass@123', phone: '+1 555 010 1006', role: 'finance-manager', jobTitle: 'Accountant', isActive: true, dataBlocked: false, disabled: false },
+      { id: 'ADM-005', name: 'Akosua Amoah', email: 'akosua.amoah@sunrise.example', username: 'akosua', password: 'DemoPass@123', phone: '+1 555 010 1008', role: 'logistics-manager', jobTitle: 'Supply Chain Manager', isActive: true, dataBlocked: false, disabled: false },
       { id: 'STF-101', name: 'Grace Addo', email: 'grace.addo@sunrise.example', username: 'grace', password: 'StaffPass@123', phone: '+1 555 010 1003', role: 'staff', jobTitle: 'Cashier', isActive: true, dataBlocked: false, disabled: false },
       { id: 'STF-102', name: 'Michael Owusu', email: 'michael.owusu@sunrise.example', username: 'michael', password: 'StaffPass@123', phone: '+1 555 010 1004', role: 'staff', jobTitle: 'Sales', isActive: true, dataBlocked: false, disabled: false },
       { id: 'STF-103', name: 'Rita Boateng', email: 'rita.boateng@sunrise.example', username: 'rita', password: 'StaffPass@123', phone: '+1 555 010 1005', role: 'staff', jobTitle: 'Stock Clerk', isActive: true, dataBlocked: true, disabled: false },

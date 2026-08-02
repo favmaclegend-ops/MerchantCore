@@ -1,5 +1,5 @@
 import { useContext, useRef, useEffect } from 'react'
-import { AlertTriangle, Bell, CreditCard, DollarSign, X, Trash2, FileText, Wallet, Clock, ChevronRight, type LucideIcon } from 'lucide-react'
+import { AlertTriangle, Bell, CreditCard, DollarSign, X, Trash2, FileText, Wallet, Clock, Package, ChevronRight, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Authcontext } from '@/context/auth_context'
 import { NotificationContext, type Notification } from '@/context/notification_context'
@@ -21,6 +21,7 @@ const orgKindConfig: Record<string, { icon: LucideIcon; color: string }> = {
   payroll: { icon: Wallet, color: 'var(--text-info)' },
   low_stock: { icon: AlertTriangle, color: 'var(--text-warning)' },
   check_in: { icon: Clock, color: 'var(--text-info)' },
+  inventory: { icon: Package, color: 'var(--text-info)' },
   system: { icon: Bell, color: 'var(--text-muted)' },
 }
 

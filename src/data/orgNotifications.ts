@@ -24,6 +24,7 @@ export type OrgNotificationKind =
   | 'payroll'
   | 'low_stock'
   | 'check_in'
+  | 'inventory'
   | 'system'
 
 export type OrgNotificationSeverity = 'success' | 'info' | 'warning' | 'danger'
@@ -63,13 +64,14 @@ export interface OrgNotificationInput {
 }
 
 const NOTIF_KEY_PREFIX = 'merchant_org_notifications_'
-const NOTIF_VERSION = 1
+const NOTIF_VERSION = 2
 
 const SEED_MEMBERS = [
   { id: 'ADM-001', name: 'Daniel Kofi', role: 'Super Admin' },
   { id: 'ADM-002', name: 'Sarah Mensah', role: 'Administrator' },
   { id: 'ADM-003', name: 'Efua Mensah', role: 'HR Manager' },
   { id: 'ADM-004', name: 'Kwame Asante', role: 'Accountant' },
+  { id: 'ADM-005', name: 'Akosua Amoah', role: 'Supply Chain Manager' },
   { id: 'STF-101', name: 'Grace Addo', role: 'Cashier' },
   { id: 'STF-102', name: 'Michael Owusu', role: 'Sales' },
   { id: 'STF-103', name: 'Rita Boateng', role: 'Stock Clerk' },
@@ -89,13 +91,22 @@ function severityForKind(kind: OrgNotificationKind): OrgNotificationSeverity {
       return 'success'
     case 'low_stock':
       return 'warning'
+    case 'inventory':
+      return 'info'
     default:
       return 'info'
   }
 }
 
 function isAlertKind(kind: OrgNotificationKind): boolean {
-  return kind === 'sale' || kind === 'credit' || kind === 'invoice' || kind === 'payroll' || kind === 'low_stock'
+  return (
+    kind === 'sale' ||
+    kind === 'credit' ||
+    kind === 'invoice' ||
+    kind === 'payroll' ||
+    kind === 'low_stock' ||
+    kind === 'inventory'
+  )
 }
 
 interface SeedTemplate {
@@ -127,6 +138,8 @@ function seedNotificationsState(): OrgNotificationsState {
     { kind: 'low_stock', title: 'Low stock alert', message: 'Fruit Cake Slice is below the restock threshold', amount: 0, ref: 'PRD-032', actor: 'Rita Boateng' },
     { kind: 'sale', title: 'New sale completed', message: 'Walk-in customer · 55 items', amount: 13100, ref: 'POS-0889', actor: 'Rita Boateng' },
     { kind: 'check_in', title: 'Employee check-in', message: 'Grace Addo checked in at 08:05', amount: 0, ref: '', actor: 'Grace Addo' },
+    { kind: 'inventory', title: 'Inventory restocked', message: 'PO-2026-002 received from Essential Foods Ltd · 20 units', amount: 6000, ref: 'PO-2026-002', actor: 'Akosua Amoah' },
+    { kind: 'inventory', title: 'Purchase order created', message: 'PO-2026-003 raised for Snacks & Treats Ltd', amount: 140, ref: 'PO-2026-003', actor: 'Akosua Amoah' },
   ]
 
   const notifications: OrgNotification[] = templates.map((t, i) => {

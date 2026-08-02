@@ -2,13 +2,14 @@
 // members. These gate nav items, routes and page bodies. The org user (`orgUser`)
 // may be null when a normal (personal) login is active, so every check accepts null.
 //
-//   super-admin / admin     -> all manager modules (Finance, HRM) + Users page
-//   hrm-manager             -> HRM only (NOT Finance, NOT Users)
-//   finance-manager         -> Finance only (NOT HRM, NOT Users)
+//   super-admin / admin     -> all manager modules (Finance, HRM, Supply) + Users page
+//   hrm-manager             -> HRM only (NOT Finance, NOT Users, NOT Supply)
+//   finance-manager         -> Finance only (NOT HRM, NOT Users, NOT Supply)
+//   logistics-manager       -> Supply Chain & Logistics only (NOT Finance, NOT HRM, NOT Users)
 //   staff                   -> self-service only (dashboard, POS, My Attendance)
 import type { OrgMember } from '@/data/organisations'
 
-export type OrgPermissions = 'finance' | 'hrm' | 'users'
+export type OrgPermissions = 'finance' | 'hrm' | 'users' | 'supply'
 
 export const isOrgMember = (orgUser: OrgMember | null): orgUser is OrgMember => !!orgUser
 
@@ -30,6 +31,18 @@ export function canManageHRM(orgUser: OrgMember | null): boolean {
   )
 }
 
+// Supply Chain & Logistics — the department head (logistics-manager) and the Super Admin.
+export function canManageSupply(orgUser: OrgMember | null): boolean {
+  return !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'logistics-manager')
+}
+
+// Product creation / edit / delete in inventory. Only the head of the Supply Chain
+// department and the Super Admin may add, edit or delete products — everyone else can
+// only read stock levels and run sales.
+export function canEditInventory(orgUser: OrgMember | null): boolean {
+  return canManageSupply(orgUser)
+}
+
 export function canAccess(orgUser: OrgMember | null, permission: OrgPermissions): boolean {
   switch (permission) {
     case 'finance':
@@ -38,5 +51,7 @@ export function canAccess(orgUser: OrgMember | null, permission: OrgPermissions)
       return canManageHRM(orgUser)
     case 'users':
       return canManageUsers(orgUser)
+    case 'supply':
+      return canManageSupply(orgUser)
   }
 }

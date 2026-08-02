@@ -1,9 +1,10 @@
 import { useEffect, useState, useContext } from 'react'
-import { Plus, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, Lock } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context'
 import { CurrencyContext } from '@/context/currency_context'
+import { canEditInventory } from '@/lib/orgAccess'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', height: '40px', padding: '0 12px', border: '1px solid var(--border-input)',
@@ -37,6 +38,9 @@ export function InventoryPage() {
   const { format, currency } = useContext(CurrencyContext)
   const { orgUser } = useContext(Authcontext)
   const productsApi = orgUser ? api.org : api
+  // Only the head of the Supply Chain department and the Super Admin may add/edit/delete
+  // products in an organisation workspace. Normal (personal) logins keep full control.
+  const canEdit = orgUser ? canEditInventory(orgUser) : true
   const [items, setItems] = useState<any[]>([])
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
   const [search, setSearch] = useState('')
@@ -114,10 +118,17 @@ export function InventoryPage() {
           <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Inventory</h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <button onClick={openAdd} style={{ display: 'flex', padding: '6px 12px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary-b)', background: 'var(--bg-nav-active)', borderRadius: '8px', border: 'none', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-            <Plus style={{ width: '14px', height: '14px' }} />
-            Add Item
-          </button>
+          {canEdit ? (
+            <button onClick={openAdd} style={{ display: 'flex', padding: '6px 12px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary-b)', background: 'var(--bg-nav-active)', borderRadius: '8px', border: 'none', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <Plus style={{ width: '14px', height: '14px' }} />
+              Add Item
+            </button>
+          ) : (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '12px', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+              <Lock style={{ width: '13px', height: '13px' }} />
+              Read only
+            </span>
+          )}
         </div>
       </div>
 
@@ -189,12 +200,16 @@ export function InventoryPage() {
                 <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{format(product.price)}</p>
               </div>
               <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                <button onClick={() => openEdit(product)} style={{ padding: '6px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
-                  <Edit2 style={{ width: '14px', height: '14px' }} />
-                </button>
-                <button onClick={() => handleDelete(product.id)} style={{ padding: '6px', color: 'var(--text-danger)', background: 'var(--bg-danger)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
-                  <Trash2 style={{ width: '14px', height: '14px' }} />
-                </button>
+                {canEdit ? (
+                  <>
+                    <button onClick={() => openEdit(product)} style={{ padding: '6px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                      <Edit2 style={{ width: '14px', height: '14px' }} />
+                    </button>
+                    <button onClick={() => handleDelete(product.id)} style={{ padding: '6px', color: 'var(--text-danger)', background: 'var(--bg-danger)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                      <Trash2 style={{ width: '14px', height: '14px' }} />
+                    </button>
+                  </>
+                ) : null}
               </div>
             </div>
           ))}

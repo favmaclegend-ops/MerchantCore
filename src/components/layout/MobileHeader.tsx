@@ -15,6 +15,7 @@ const pageConfig: Record<string, { title: string; subtitle?: string }> = {
   '/home/customers': { title: 'Customers', subtitle: 'Directory & profiles' },
   '/home/calculator': { title: 'Calculator', subtitle: 'Business tools & currency' },
   '/home/notifications': { title: 'Notifications', subtitle: 'Alerts & activity feed' },
+  '/home/supply': { title: 'Supply Chain', subtitle: 'Inventory, orders & shipping' },
   '/home/settings': { title: 'Settings', subtitle: 'Account & preferences' },
   '/home/users': {title: 'Users', subtitle: 'Administarator Control'}
 }

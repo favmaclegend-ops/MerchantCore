@@ -41,8 +41,8 @@ describe('organisations (mock data layer)', () => {
       const orgs = loadOrganisations()
       expect(orgs).toHaveLength(1)
       expect(orgs[0].name).toBe('Sunrise Mart')
-      expect(orgs[0].members).toHaveLength(7)
-      expect(localStorage.getItem('merchant_org_data_version')).toBe('4')
+      expect(orgs[0].members).toHaveLength(8)
+      expect(localStorage.getItem('merchant_org_data_version')).toBe('5')
     })
 
     it('removes legacy unprefixed keys on load', () => {
@@ -67,11 +67,11 @@ describe('organisations (mock data layer)', () => {
       localStorage.setItem('merchant_org_data', JSON.stringify([]))
       const orgs = loadOrganisations()
       expect(orgs[0].name).toBe('Sunrise Mart')
-      expect(localStorage.getItem('merchant_org_data_version')).toBe('4')
+      expect(localStorage.getItem('merchant_org_data_version')).toBe('5')
     })
 
     it('reseeds when stored data is corrupt', () => {
-      localStorage.setItem('merchant_org_data_version', '4')
+      localStorage.setItem('merchant_org_data_version', '5')
       localStorage.setItem('merchant_org_data', 'not-json')
       expect(loadOrganisations()[0].name).toBe('Sunrise Mart')
     })
@@ -212,9 +212,9 @@ describe('organisations (mock data layer)', () => {
       expect(staff.id).toBe('STF-104')
 
       const admin = addOrgMember({ ...staffInput, role: 'admin', jobTitle: 'Administrator' })
-      expect(admin.id).toBe('ADM-005')
+      expect(admin.id).toBe('ADM-006')
 
-      expect(loadOrganisations()[0].members).toHaveLength(9)
+      expect(loadOrganisations()[0].members).toHaveLength(10)
 
       const updated = updateOrgMember(staff.id, { disabled: true })
       expect(updated.disabled).toBe(true)
