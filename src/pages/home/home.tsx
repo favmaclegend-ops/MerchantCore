@@ -14,6 +14,7 @@ const CreditLedgerPage = lazy(() => import('@/pages/credit/CreditLedgerPage').th
 const CustomersPage = lazy(() => import('@/pages/customers/CustomersPage').then(m => ({ default: m.CustomersPage })))
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const CalculatorPage = lazy(() => import('@/pages/calculator/CalculatorPage').then(m => ({ default: m.CalculatorPage })))
+const FinancePage = lazy(() => import('@/pages/finance/FinancePage').then(m => ({ default: m.FinancePage })))
 const Users = lazy(() => import('@/pages/users/UsersPage').then(m => ({ default: m.Users })))
 
 
@@ -52,6 +53,7 @@ export default function Home() {
     }
 
     const canManageUsers = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
+    const canManageFinance = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
 
     return (
         <>
@@ -70,6 +72,7 @@ export default function Home() {
                                 <Route path="/credit" element={<CreditLedgerPage />} />
                                 <Route path="/customers" element={<CustomersPage />} />
                                 <Route path="/calculator" element={<CalculatorPage />} />
+                                <Route path="/finance" element={canManageFinance ? <FinancePage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/users" element={canManageUsers ? <Users /> : <Navigate to="/dashboard" replace />} />
                             </Routes>

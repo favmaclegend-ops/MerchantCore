@@ -20,8 +20,17 @@ There are three roles with a clear hierarchy:
 |--------------|--------|
 | **Super Admin** | Full control. Manages admins and staff, can block/delete anyone except themselves. |
 | **Admin**       | Below the Super Admin. Manages **staff only**; the Admin tab is hidden for them; they cannot manage other admins. |
-| **Staff**       | Logs in to work the POS/inventory/etc. Cannot access the Users page. Admins can **disable** them, **block their login** and **block their dashboard data preview**. |
-| **Personal login (non-org)** | **No organisation features.** The Users page is completely hidden/redirected for any non-org login — only organisation admins (Super Admin / Admin) can access it. |
+| **Staff**       | Logs in to work the POS/inventory/etc. Cannot access the Users or Finance pages. Admins can **disable** them, **block their login** and **block their dashboard data preview**. |
+| **Personal login (non-org)** | **No organisation features.** The Users and Finance pages are completely hidden/redirected for any non-org login — only organisation admins (Super Admin / Admin) can access them. |
+
+### Finance & Accounting
+An **admin-only** area for organisation members. Staff never see the Finance nav item and get
+redirected if they try to reach `/home/finance`. It tracks cash flow and financial health with:
+- **General Ledger** — every income/expense/asset/liability entry (mock-seeded).
+- **Automated invoicing** — admins create invoices; one-click *Mark as sent / paid / void*.
+- **Tax compliance tools** — obligations with rate, taxable base, payable/paid/balance, due dates.
+- **Real-time balance sheet** — assets/liabilities/equity recomputed from live invoice + tax
+  state (receivables and tax payable update automatically when an invoice or tax changes).
 
 ### Blocking rules
 - **Disable** (`disabled: true`) → **full lockout.** The member cannot log in and, if they had an
@@ -66,6 +75,13 @@ collide with real server users**:
    data-blocked users see the blocked dashboard message. A disabled user who still has an
    active session is signed out automatically (session re-validation on load).
 6. As an **Admin** (Kwame), the Users page only shows the **Staff** tab.
+7. As Super Admin or Admin: `Finance` nav item → try the tabs (Overview / General Ledger /
+   Invoices / Tax & Compliance / Balance Sheet). Create an invoice and watch the Balance Sheet's
+   **Accounts Receivable** and the Overview's **Outstanding** update in real time. Mark it paid
+   and they drop again.
+
+> **Reset finance demo data**: clear the `merchant_org_finance_{orgId}` keys from `localStorage`
+> (or bump `FINANCE_VERSION` in `src/data/finance.ts` — all orgs reseed on next load).
 
 ---
 
@@ -102,7 +118,20 @@ Key exports:
 Types (`OrgMember`, `Organisation`, `OrgRole`, `OrgRegisterInput`, `OrgSession`) are the
 **contract** the rest of the app consumes — keep them stable when writing the real backend.
 
-### 3.2 API layer — `src/lib/api.ts` → `api.org.*`
+### 3.2 Mock data layer — `src/data/finance.ts` (Finance & Accounting)
+Per-organisation finance mock, scoped by org id:
+
+- Storage key `merchant_org_finance_{orgId}` holds `{ version, state }` — namespaced so it can
+  never mix with other orgs or normal-login caches.
+- `FinanceState = { ledger, invoices, taxes }`. Seeded demo data uses dates **relative to
+  today** so the demo always looks current.
+- Invoices are **mutatable** (`createInvoice`, `setInvoiceStatus`) and persist across reloads.
+- `buildBalanceSheet(state)` derives a **real-time** balance sheet: Accounts Receivable = unpaid
+  invoice total, Tax Payable = unpaid tax total, Retained Earnings balances the sheet — so
+  changing an invoice or tax instantly moves the balance sheet.
+- Bump `FINANCE_VERSION` to force every org's finance data to reseed.
+
+### 3.3 API layer — `src/lib/api.ts` → `api.org.*`
 The app calls the API through the `api` object, exactly like a real endpoint. Each function
 adds a small artificial `delay(...)` to mimic network latency and returns the same shapes the
 real backend should return.
@@ -115,8 +144,11 @@ real backend should return.
 | `api.org.addUser(member)` | `addOrgMember` | `POST /api/v1/organisations/{org_id}/users` |
 | `api.org.updateUser(id, patch)` | `updateOrgMember` | `PATCH /api/v1/organisations/{org_id}/users/{id}` |
 | `api.org.deleteUser(id)` | `deleteOrgMember` | `DELETE /api/v1/organisations/{org_id}/users/{id}` |
+| `api.org.finance.getState()` | `loadFinanceState(orgId)` | `GET /api/v1/organisations/{org_id}/finance` |
+| `api.org.finance.createInvoice(input)` | `createInvoice(orgId, input)` | `POST /api/v1/organisations/{org_id}/invoices` |
+| `api.org.finance.setInvoiceStatus(id, status)` | `setInvoiceStatus(orgId, id, status)` | `PATCH /api/v1/organisations/{org_id}/invoices/{id}` |
 
-### 3.3 Auth context — `src/context/auth_provider.tsx` / `auth_context.tsx`
+### 3.4 Auth context — `src/context/auth_provider.tsx` / `auth_context.tsx`
 The existing `AuthContext` now carries both auth modes:
 
 ```ts
@@ -143,13 +175,15 @@ interface AuthContextType {
 | File | Change |
 |------|--------|
 | `src/data/organisations.ts` | **New.** Mock org data, session, member CRUD. |
+| `src/data/finance.ts` | **New.** Mock finance state (ledger/invoices/taxes), per-org storage, invoice CRUD, `buildBalanceSheet`. |
 | `src/pages/authentication/OrganisationAuth.tsx` | **New.** Org Login + Register UI (segmented control). |
 | `src/pages/authentication/default_page.tsx` | Added the "Log in as an organisation" toggle + back link. |
 | `src/context/auth_context.tsx`, `src/context/auth_provider.tsx` | Added `orgUser`, `orgName`, `orgLogin`, logout handling. |
-| `src/lib/api.ts` | Added the `org.*` API namespace (mock-backed). |
-| `src/pages/home/home.tsx` | Allow org users; guard `/home/users` for admins only; full-screen "Account disabled" lockout for `orgUser.disabled`. |
-| `src/components/layout/DesktopSidebar.tsx`, `MobileNavbar.tsx` | Hide the **Users** nav item for staff. |
+| `src/lib/api.ts` | Added the `org.*` and `org.finance.*` API namespaces (mock-backed). |
+| `src/pages/home/home.tsx` | Allow org users; guard `/home/users` and `/home/finance` for admins only; full-screen "Account disabled" lockout for `orgUser.disabled`. |
+| `src/components/layout/DesktopSidebar.tsx`, `MobileNavbar.tsx` | Hide the **Users** and **Finance** nav items for staff/non-org. |
 | `src/components/layout/DesktopHeader.tsx`, `MobileHeader.tsx` | Show org member name/role/email. |
+| `src/pages/finance/FinancePage.tsx` | **New.** Admin-only Finance & Accounting (Overview, General Ledger, Invoices, Tax & Compliance, Balance Sheet). |
 | `src/pages/users/UsersPage.tsx` | Fetch members from `api.org.getUsers()`; role-based tabs & actions; credential reveal modal. |
 | `src/pages/users/data.ts` | `Member` = `OrgMember`; credential generator (`generateCredential`), `toMember`, `roleLabel`. |
 | `src/pages/users/MemberForm.tsx` | Username/Password/Job Title fields; auto-generates credentials for new members. |
@@ -173,7 +207,12 @@ When the backend implements organisations, do this:
    `password` field; the credential reveal modal should instead read the response of
    `addUser`/`updateUser` only (server returns the generated credential once, e.g. at creation).
 5. Roles stay as strings: `super-admin`, `admin`, `staff`. The frontend derives all permission
-   decisions from `orgUser.role` (see `UsersPage`, `home.tsx`, `DesktopSidebar`).
+   decisions from `orgUser.role` (see `UsersPage`, `FinancePage`, `home.tsx`, `DesktopSidebar`).
+6. Finance data is **per-organisation** (mock key `merchant_org_finance_{orgId}`). Server-side,
+   every finance endpoint must be scoped by `org_id` and only admins of that org may access it.
+7. Invoice status transitions are `draft → sent → paid`, `overdue` (auto when past due), and
+   `void`. `paid` moves the invoice out of outstanding/receivables; `void` excludes it from
+   totals.
 
 ### Suggested payloads
 
@@ -191,6 +230,19 @@ When the backend implements organisations, do this:
   dataBlocked: boolean,   // true  => blocked from dashboard data
   disabled: boolean,      // true  => fully disabled (no access to anything)
 }
+
+// GET /organisations/{org_id}/finance  ->  FinanceState
+{
+  ledger: [{ id, date, account, category, description, amount, reference, status }],
+  invoices: [{ id, number, customer, issuedAt, dueAt, amount, status, items: [{ description, qty, unitPrice }] }],
+  taxes: [{ id, name, rate, basis, period, dueAt, paid, status }],
+}
+
+// POST /organisations/{org_id}/invoices
+{ customer, dueAt, items: [{ description, qty, unitPrice }] }
+
+// PATCH /organisations/{org_id}/invoices/{id}
+{ status: 'draft' | 'sent' | 'paid' | 'overdue' | 'void' }
 ```
 
 ---

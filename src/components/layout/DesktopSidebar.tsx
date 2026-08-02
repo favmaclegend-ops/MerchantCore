@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus, Wallet } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Icons } from 'elk-components'
 import { useContext } from 'react'
@@ -11,7 +11,8 @@ const navItems = [
   { path: '/home/credit', label: 'Credit Ledger', icon: CreditCard },
   { path: '/home/pos', label: 'POS', icon: ShoppingCart },
   { path: '/home/customers', label: 'Customers', icon: Users },
-  { path: '/home/users', label: 'Users', icon: Icons.icon.UserPlus },
+  { path: '/home/finance', label: 'Finance', icon: Wallet, orgAdminOnly: true },
+  { path: '/home/users', label: 'Users', icon: Icons.icon.UserPlus, orgAdminOnly: true },
   { path: '/home/calculator', label: 'Calculator', icon: Calculator },
 ]
 
@@ -22,7 +23,7 @@ export function DesktopSidebar() {
   const { orgUser } = useContext(Authcontext)
 
   const isOrgAdmin = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
-  const visibleItems = navItems.filter(item => item.path !== '/home/users' || isOrgAdmin)
+  const visibleItems = navItems.filter(item => !item.orgAdminOnly || isOrgAdmin)
 
   if (!bp.lg) return null
 

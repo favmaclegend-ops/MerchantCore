@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 
@@ -14,7 +14,8 @@ const primaryItems = [
 
 const moreItems = [
   { path: '/home/customers', label: 'Customers', icon: Users },
-  { path: '/home/users', label: 'Users', icon: UserCog },
+  { path: '/home/finance', label: 'Finance', icon: Wallet, orgAdminOnly: true },
+  { path: '/home/users', label: 'Users', icon: UserCog, orgAdminOnly: true },
   { path: '/home/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -25,7 +26,7 @@ export function MobileNavbar() {
   const [open, setOpen] = useState(false)
 
   const isOrgAdmin = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
-  const visibleMoreItems = isOrgAdmin ? moreItems : moreItems.filter(i => i.path !== '/home/users')
+  const visibleMoreItems = moreItems.filter(i => !i.orgAdminOnly || isOrgAdmin)
 
   if (bp.lg) return null
 

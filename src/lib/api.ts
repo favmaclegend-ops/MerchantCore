@@ -8,6 +8,13 @@ import {
   type OrgMember,
   type OrgRegisterInput,
 } from '@/data/organisations'
+import {
+  createInvoice,
+  loadFinanceState,
+  setInvoiceStatus,
+  type Invoice,
+  type InvoiceInput,
+} from '@/data/finance'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
 console.log(API_BASE) // debugging
@@ -105,6 +112,28 @@ export const api = {
     deleteUser: async (memberId: string) => {
       await delay(200)
       deleteOrgMember(memberId)
+    },
+
+    // Finance & Accounting — mock-backed, scoped to the active organisation session.
+    finance: {
+      getState: async () => {
+        await delay(250)
+        const org = getSessionOrganisation()
+        if (!org) throw new Error('No active organisation session')
+        return loadFinanceState(org.id)
+      },
+      createInvoice: async (input: InvoiceInput) => {
+        await delay(250)
+        const org = getSessionOrganisation()
+        if (!org) throw new Error('No active organisation session')
+        return createInvoice(org.id, input)
+      },
+      setInvoiceStatus: async (invoiceId: string, status: Invoice['status']) => {
+        await delay(200)
+        const org = getSessionOrganisation()
+        if (!org) throw new Error('No active organisation session')
+        return setInvoiceStatus(org.id, invoiceId, status)
+      },
     },
   },
 }
