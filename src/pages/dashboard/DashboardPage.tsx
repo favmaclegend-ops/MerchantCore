@@ -232,8 +232,8 @@ export function DashboardPage() {
               </div>
               <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{format(stats.totalRevenue)}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                <ArrowUpRight style={{ width: '14px', height: '14px', color: '#10b981', flexShrink: 0 }} />
-                <span style={{ fontSize: '10px', fontWeight: 500, color: '#059669' }}>{format(stats.monthlyRevenue)} this month</span>
+                <ArrowUpRight style={{ width: '14px', height: '14px', color: 'var(--text-success)', flexShrink: 0 }} />
+                <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-success)' }}>{format(stats.monthlyRevenue)} this month</span>
               </div>
             </div>
             <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', boxShadow: 'var(--shadow-card)' }}>
@@ -257,9 +257,9 @@ export function DashboardPage() {
             <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: 'var(--shadow-card)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Credit Outstanding</span>
-                <AlertTriangle style={{ width: '14px', height: '14px', color: '#f59e0b' }} />
+                <AlertTriangle style={{ width: '14px', height: '14px', color: 'var(--text-warning)' }} />
               </div>
-              <p style={{ fontSize: '20px', fontWeight: 700, color: '#d97706', margin: 0 }}>{format(stats.creditOutstanding)}</p>
+              <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-warning)', margin: 0 }}>{format(stats.creditOutstanding)}</p>
               <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>{stats.lowStockAlerts} low stock alerts</p>
             </div>
           </div>
@@ -293,8 +293,8 @@ export function DashboardPage() {
                       <div style={{
                         width: '32px', height: '32px', borderRadius: '8px', display: 'flex',
                         alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                        background: tx.type === 'sale' ? 'var(--bg-success)' : tx.type === 'payment' ? '#eff6ff' : 'var(--bg-warning)',
-                        color: tx.type === 'sale' ? '#059669' : tx.type === 'payment' ? '#2563eb' : '#d97706',
+                        background: tx.type === 'sale' ? 'var(--bg-success)' : tx.type === 'payment' ? 'var(--bg-info)' : 'var(--bg-warning)',
+                        color: tx.type === 'sale' ? 'var(--text-success)' : tx.type === 'payment' ? 'var(--text-info)' : 'var(--text-warning)',
                       }}>
                         {tx.type === 'sale' || tx.type === 'payment' ? <DollarSign style={{ width: '14px', height: '14px' }} /> : <Package style={{ width: '14px', height: '14px' }} />}
                       </div>
@@ -305,7 +305,7 @@ export function DashboardPage() {
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '8px' }}>
                       <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{format(tx.amount)}</p>
-                      <p style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', color: tx.status === 'completed' ? '#059669' : '#2563eb', margin: 0 }}>{tx.status}</p>
+                      <p style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', color: tx.status === 'completed' ? 'var(--text-success)' : 'var(--text-info)', margin: 0 }}>{tx.status}</p>
                     </div>
                   </div>
                 ))}
@@ -326,7 +326,7 @@ export function DashboardPage() {
                       borderColor: alert.type === 'low-stock' ? 'var(--border-warning)' : alert.type === 'overdue' ? 'var(--border-danger)' : 'var(--border-default)',
                     }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <AlertTriangle style={{ width: '14px', height: '14px', marginTop: '2px', flexShrink: 0, color: alert.type === 'low-stock' ? '#f59e0b' : alert.type === 'overdue' ? '#ef4444' : undefined }} />
+                        <AlertTriangle style={{ width: '14px', height: '14px', marginTop: '2px', flexShrink: 0, color: alert.type === 'low-stock' ? 'var(--text-warning)' : alert.type === 'overdue' ? 'var(--text-danger)' : undefined }} />
                         <div style={{ minWidth: 0 }}>
                           <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{alert.title}</p>
                           <p style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: 1.3, margin: '2px 0 0 0' }}>{alert.description}</p>

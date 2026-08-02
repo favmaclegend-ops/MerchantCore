@@ -126,7 +126,7 @@ export function InventoryPage() {
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             {(['all', 'low', 'out'] as const).map((f) => (
               <button key={f} onClick={() => setFilter(f)} style={{
-                display: 'flex', padding: '6px 12px', borderRadius: '16px', border: filter !== f ? '1px solid #808080' : 'none',
+                display: 'flex', padding: '6px 12px', borderRadius: '16px', border: filter !== f ? '1px solid var(--border-default)' : 'none',
                 fontSize: '12px', fontWeight: 500, cursor: 'pointer',
                 color: filter === f ? 'var(--bg-surface)' : 'var(--text-secondary)', background: filter === f ? 'var(--bg-nav-active)' : 'transparent',
               }}>
@@ -149,7 +149,7 @@ export function InventoryPage() {
                   <span style={{
                     padding: '2px 6px', fontSize: '10px', fontWeight: 500, borderRadius: '4px',
                     background: product.status === 'in-stock' ? 'var(--bg-success)' : product.status === 'low-stock' ? 'var(--bg-warning)' : 'var(--bg-danger)',
-                    color: product.status === 'in-stock' ? '#047857' : product.status === 'low-stock' ? '#b45309' : '#b91c1c',
+                    color: product.status === 'in-stock' ? 'var(--text-success)' : product.status === 'low-stock' ? 'var(--text-warning)' : 'var(--text-danger)',
                   }}>
                     {product.status === 'in-stock' ? 'In Stock' : product.status === 'low-stock' ? 'Low' : 'Out'}
                   </span>
@@ -166,7 +166,7 @@ export function InventoryPage() {
                 <button onClick={() => openEdit(product)} style={{ padding: '6px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
                   <Edit2 style={{ width: '14px', height: '14px' }} />
                 </button>
-                <button onClick={() => handleDelete(product.id)} style={{ padding: '6px', color: '#dc2626', background: 'var(--bg-danger)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                <button onClick={() => handleDelete(product.id)} style={{ padding: '6px', color: 'var(--text-danger)', background: 'var(--bg-danger)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
                   <Trash2 style={{ width: '14px', height: '14px' }} />
                 </button>
               </div>

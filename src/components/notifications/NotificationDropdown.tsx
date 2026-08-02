@@ -3,9 +3,9 @@ import { AlertTriangle, Bell, CreditCard, DollarSign, X } from 'lucide-react'
 import { NotificationContext, type Notification } from '@/context/notification_context'
 
 const typeConfig: Record<string, { icon: typeof DollarSign; color: string }> = {
-  new_sale: { icon: DollarSign, color: '#059669' },
-  low_stock: { icon: AlertTriangle, color: '#f59e0b' },
-  credit_payment: { icon: CreditCard, color: '#2563eb' },
+  new_sale: { icon: DollarSign, color: 'var(--text-success)' },
+  low_stock: { icon: AlertTriangle, color: 'var(--text-warning)' },
+  credit_payment: { icon: CreditCard, color: 'var(--text-info)' },
   system: { icon: Bell, color: 'var(--text-muted)' },
 }
 
@@ -50,7 +50,7 @@ export function NotificationDropdown({ onClose }: Props) {
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button
             onClick={markAllAsRead}
-            style={{ fontSize: '11px', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            style={{ fontSize: '11px', color: 'var(--text-info)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
             Mark all read
           </button>
@@ -107,7 +107,7 @@ function NotificationItem({ notification: n, onMarkRead }: { notification: Notif
       </div>
       {!n.is_read && (
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563eb' }} />
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text-info)' }} />
         </div>
       )}
     </div>

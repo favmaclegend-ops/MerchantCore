@@ -14,6 +14,7 @@ const pageConfig: Record<string, { title: string; subtitle?: string }> = {
   '/home/customers': { title: 'Customers', subtitle: 'Directory & profiles' },
   '/home/calculator': { title: 'Calculator', subtitle: 'Business tools & currency' },
   '/home/settings': { title: 'Settings', subtitle: 'Account & preferences' },
+  '/home/users': {title: 'Users', subtitle: 'Administarator Control'}
 }
 
 export function MobileHeader() {
@@ -66,7 +67,7 @@ export function MobileHeader() {
                 <Settings style={{ width: '14px', height: '14px' }} />
                 Settings
               </button>
-              <button onClick={() => { logout() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => { logout() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: 'var(--text-danger)', background: 'none', border: 'none', cursor: 'pointer' }}>
                 <LogOut style={{ width: '14px', height: '14px' }} />
                 Sign Out
               </button>

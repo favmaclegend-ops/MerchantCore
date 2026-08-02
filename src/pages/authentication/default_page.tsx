@@ -23,9 +23,9 @@ export default function DefaultPage() {
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)', padding: '24px' }}>
-            <nav style={{ padding: '6px', borderRadius: '6rem', background: '#d4d4d4', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '24px' }}>
-                <button style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', borderRadius: '2rem', padding: '8px 48px', color: isPage === 'login' ? 'var(--bg-surface)' : 'gray', background: isPage === 'login' ? 'var(--bg-nav-active)' : 'transparent', cursor: 'pointer', fontWeight: 500, transition: 'background .3s ease' }} onClick={() => handlePage('login')}>Login</button>
-                <button style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', borderRadius: '2rem', padding: '8px 48px', color: isPage === 'signin' ? 'var(--bg-surface)' : 'gray', background: isPage === 'signin' ? 'var(--bg-nav-active)' : 'transparent', cursor: 'pointer', fontWeight: 500, transition: 'background .3s ease' }} onClick={() => handlePage('signin')}>Sign up</button>
+            <nav style={{ padding: '6px', borderRadius: '6rem', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '24px' }}>
+                <button style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', borderRadius: '2rem', padding: '8px 48px', color: isPage === 'login' ? 'var(--bg-surface)' : 'var(--text-muted)', background: isPage === 'login' ? 'var(--bg-nav-active)' : 'transparent', cursor: 'pointer', fontWeight: 500, transition: 'background .3s ease' }} onClick={() => handlePage('login')}>Login</button>
+                <button style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', borderRadius: '2rem', padding: '8px 48px', color: isPage === 'signin' ? 'var(--bg-surface)' : 'var(--text-muted)', background: isPage === 'signin' ? 'var(--bg-nav-active)' : 'transparent', cursor: 'pointer', fontWeight: 500, transition: 'background .3s ease' }} onClick={() => handlePage('signin')}>Sign up</button>
             </nav>
             {
                 isPage === 'login' ?

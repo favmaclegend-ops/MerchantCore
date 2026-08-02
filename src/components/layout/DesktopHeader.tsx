@@ -13,6 +13,7 @@ const pageConfig: Record<string, { title: string; search?: string }> = {
   '/home/credit': { title: 'Credit Ledger', search: 'Search accounts...' },
   '/home/customers': { title: 'Customer Directory', search: 'Search customers...' },
   '/home/calculator': { title: 'Calculator' },
+  '/home/users': {title: 'Users' },
   '/home/settings': { title: 'Settings' },
 }
 
@@ -77,7 +78,7 @@ export function DesktopHeader() {
                 <Settings style={{ width: '14px', height: '14px' }} />
                 Settings
               </button>
-              <button onClick={() => { logout() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => { logout() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: 'var(--text-danger)', background: 'none', border: 'none', cursor: 'pointer' }}>
                 <LogOut style={{ width: '14px', height: '14px' }} />
                 Sign Out
               </button>

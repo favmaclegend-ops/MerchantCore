@@ -144,7 +144,7 @@ function BasicCalculator() {
         {display}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-        {btn('C', clear, { background: 'var(--bg-danger)', color: '#dc2626' })}
+        {btn('C', clear, { background: 'var(--bg-danger)', color: 'var(--text-danger)' })}
         {btn('±', () => setDisplay(String(parseFloat(display) * -1)), { background: 'var(--bg-tertiary)' })}
         {btn('%', () => setDisplay(String(parseFloat(display) / 100)), { background: 'var(--bg-tertiary)' })}
         {btn('÷', () => performOp('/'), { background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' })}
@@ -316,7 +316,7 @@ function BusinessCalculator() {
       {result !== null && (
         <div style={{
           marginTop: '12px', padding: '12px', borderRadius: '8px', background: 'var(--bg-success)',
-          border: '1px solid var(--border-success)', fontSize: '13px', fontWeight: 600, color: '#166534',
+          border: '1px solid var(--border-success)', fontSize: '13px', fontWeight: 600, color: 'var(--text-success)',
           textAlign: 'center', lineHeight: 1.5,
         }}>
           {result}

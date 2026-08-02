@@ -74,7 +74,7 @@ export function SettingsPage() {
           ))}
         </select>
 
-        <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-success)', border: '1px solid var(--border-success)', fontSize: '12px', color: '#166534', textAlign: 'center' }}>
+        <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-success)', border: '1px solid var(--border-success)', fontSize: '12px', color: 'var(--text-success)', textAlign: 'center' }}>
           Preview: 1,000.00 = {format(1000)}
         </div>
       </div>
@@ -107,7 +107,7 @@ export function SettingsPage() {
         <div style={{ paddingTop: '0', borderTop: 'none' }}>
           <button
             onClick={logout}
-            style={{ width: '100%', padding: '10px', background: 'var(--bg-danger)', color: '#dc2626', fontSize: '14px', fontWeight: 500, borderRadius: '8px', border: '1px solid var(--border-danger)', cursor: 'pointer' }}
+            style={{ width: '100%', padding: '10px', background: 'var(--bg-danger)', color: 'var(--text-danger)', fontSize: '14px', fontWeight: 500, borderRadius: '8px', border: '1px solid var(--border-danger)', cursor: 'pointer' }}
           >
             Sign Out
           </button>

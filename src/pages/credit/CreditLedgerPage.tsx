@@ -5,9 +5,9 @@ import { CurrencyContext } from '@/context/currency_context'
 
 const statusStyle = (status: string) => {
   switch (status) {
-    case 'active': return { background: 'var(--bg-success)', color: '#047857' }
-    case 'overdue': return { background: 'var(--bg-warning)', color: '#b45309' }
-    case 'critical': return { background: 'var(--bg-danger)', color: '#b91c1c' }
+    case 'active': return { background: 'var(--bg-success)', color: 'var(--text-success)' }
+    case 'overdue': return { background: 'var(--bg-warning)', color: 'var(--text-warning)' }
+    case 'critical': return { background: 'var(--bg-danger)', color: 'var(--text-danger)' }
     default: return { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
   }
 }
@@ -103,11 +103,11 @@ export function CreditLedgerPage() {
         </div>
         <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', padding: '16px' }}>
           <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Overdue Accounts</span>
-          <p style={{ fontSize: '20px', fontWeight: 700, color: '#dc2626', marginTop: '4px', margin: '4px 0 0 0' }}>{overdueCount}</p>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-danger)', marginTop: '4px', margin: '4px 0 0 0' }}>{overdueCount}</p>
         </div>
         <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', padding: '16px' }}>
           <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Collected</span>
-          <p style={{ fontSize: '20px', fontWeight: 700, color: '#059669', marginTop: '4px', margin: '4px 0 0 0' }}>{format(collectedMtd)}</p>
+          <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-success)', marginTop: '4px', margin: '4px 0 0 0' }}>{format(collectedMtd)}</p>
         </div>
       </div>
 

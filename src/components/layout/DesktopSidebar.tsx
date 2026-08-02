@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { Icons } from 'elk-components'
 
 const navItems = [
   { path: '/home/dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -9,6 +10,7 @@ const navItems = [
   { path: '/home/pos', label: 'POS', icon: ShoppingCart },
   { path: '/home/customers', label: 'Customers', icon: Users },
   { path: '/home/calculator', label: 'Calculator', icon: Calculator },
+  { path: '/home/users', label: 'Users', icon: Icons.icon.UserPlus },
 ]
 
 export function DesktopSidebar() {
@@ -56,12 +58,12 @@ export function DesktopSidebar() {
       </nav>
 
       <div style={{ padding: '12px', borderTop: '1px solid var(--bg-tertiary)' }}>
-        <button onClick={() => navigate('/home/pos')} style={{ width: '100%', background: 'var(--bg-nav-active)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 500, padding: '8px 0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', cursor: 'pointer', marginBottom: '4px' }}>
+        <button onClick={() => navigate('/home/pos')} style={{ width: '100%', background: 'var(--bg-nav-active)', color: 'var(--bg-surface)' , fontSize: '14px', fontWeight: 500, padding: '8px 0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', cursor: 'pointer', marginBottom: '4px' }}>
           <Plus style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           Quick Sale
         </button>
-        <button onClick={() => navigate('/home/settings')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', fontSize: '14px', color: location.pathname === '/home/settings' ? 'var(--bg-surface)' : 'var(--text-secondary)', background: location.pathname === '/home/settings' ? 'var(--bg-nav-active)' : 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '2px' }}>
-          <Settings style={{ width: '16px', height: '16px', flexShrink: 0 }} />
+        <button onClick={() => navigate('/home/settings')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',  fontSize: '14px', color: location.pathname === '/home/settings' ? 'var(--bg-surface)' : 'var(--text-secondary)', background: location.pathname === '/home/settings' ? 'var(--bg-nav-active)' : 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '2px' }}>
+          <Settings style={{ width: '16px', height: '16px', flexShrink: 0, color: 'var(--bg-surface)' }} />
           Settings
         </button>
         <button style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', fontSize: '14px', color: 'var(--text-secondary)', background: 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>

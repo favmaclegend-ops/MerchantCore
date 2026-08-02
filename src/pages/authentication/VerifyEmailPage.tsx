@@ -77,14 +77,14 @@ export default function VerifyEmailPage() {
         </div>
 
         {message && (
-          <div style={{ marginBottom: '20px', padding: '12px 14px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px' }}>
-            <p style={{ fontSize: '14px', color: '#059669', margin: 0 }}>{message}</p>
+          <div style={{ marginBottom: '20px', padding: '12px 14px', background: 'var(--bg-success)', border: '1px solid var(--border-success)', borderRadius: '10px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-success)', margin: 0 }}>{message}</p>
           </div>
         )}
 
         {error && (
-          <div style={{ marginBottom: '20px', padding: '12px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px' }}>
-            <p style={{ fontSize: '14px', color: '#dc2626', margin: 0 }}>{error}</p>
+          <div style={{ marginBottom: '20px', padding: '12px 14px', background: 'var(--bg-danger)', border: '1px solid var(--border-danger)', borderRadius: '10px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-danger)', margin: 0 }}>{error}</p>
           </div>
         )}
 

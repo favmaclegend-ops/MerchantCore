@@ -111,7 +111,7 @@ export function POSPage() {
           <span style={{color: isCart ? 'var(--text-secondary-b)' : 'var(--text-primary)'}}>Cart</span>
         </button>
         {successMsg && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: '#059669', background: 'var(--bg-success)', padding: '6px 12px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, color: 'var(--text-success)', background: 'var(--bg-success)', padding: '6px 12px', borderRadius: '8px' }}>
             <CheckCircle style={{ width: '14px', height: '14px' }} />
             {successMsg}
           </div>
@@ -119,7 +119,7 @@ export function POSPage() {
       </div>
 
       {successMsg && (
-        <div style={{ padding: '10px 14px', background: 'var(--bg-success)', border: '1px solid #a7f3d0', borderRadius: '8px', fontSize: '12px', color: '#059669', fontWeight: 500 }}>
+        <div style={{ padding: '10px 14px', background: 'var(--bg-success)', border: '1px solid var(--border-success)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-success)', fontWeight: 500 }}>
           {successMsg}
         </div>
       )}
@@ -153,7 +153,7 @@ export function POSPage() {
                   position: 'absolute', top: '6px', right: '6px', padding: '2px 6px',
                   fontSize: '10px', fontWeight: 500, borderRadius: '4px',
                   background: product.status === 'in-stock' ? 'var(--bg-success)' : product.status === 'low-stock' ? 'var(--bg-warning)' : 'var(--bg-danger)',
-                  color: product.status === 'in-stock' ? '#047857' : product.status === 'low-stock' ? '#b45309' : '#b91c1c',
+                  color: product.status === 'in-stock' ? 'var(--text-success)' : product.status === 'low-stock' ? 'var(--text-warning)' : 'var(--text-danger)',
                 }}>
                   {product.status === 'in-stock' ? 'In Stock' : product.status === 'low-stock' ? 'Low' : 'Out'}
                 </span>
@@ -289,7 +289,7 @@ export function POSPage() {
                   <p style={{ fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>{tx.type} — {format(tx.amount)}</p>
                   <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{tx.customer_name || 'POS Sale'} • {tx.created_at ? new Date(tx.created_at).toLocaleString() : ''}</p>
                 </div>
-                <span style={{ fontWeight: 600, color: tx.status === 'completed' ? '#059669' : '#d97706', textTransform: 'uppercase' }}>{tx.status}</span>
+                <span style={{ fontWeight: 600, color: tx.status === 'completed' ? 'var(--text-success)' : 'var(--text-warning)', textTransform: 'uppercase' }}>{tx.status}</span>
               </div>
             ))}
           </div>
