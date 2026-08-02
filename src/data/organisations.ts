@@ -46,9 +46,16 @@ export interface OrgSession {
   member: OrgMember
 }
 
-const ORG_DATA_KEY = 'org_data'
-const ORG_SESSION_KEY = 'org_session'
-const ORG_VERSION_KEY = 'org_data_version'
+// All organisation storage is namespaced under `merchant_org_` so it can never mix with
+// data from normal (server-backed) logins — which also read/write localStorage caches
+// (e.g. `dashboard_cache`, `token`, `login`).
+const ORG_DATA_KEY = 'merchant_org_data'
+const ORG_SESSION_KEY = 'merchant_org_session'
+const ORG_VERSION_KEY = 'merchant_org_data_version'
+
+// Legacy unprefixed keys (removed during migration) — wiped on load so stale demo data
+// from earlier builds does not linger.
+const LEGACY_ORG_KEYS = ['org_data', 'org_session', 'org_data_version']
 
 // Bump SEED_VERSION whenever SEED_ORGS changes so stored demo data is reset to the
 // fresh seed (prevents stale/conflicting demo credentials lingering in localStorage).
@@ -80,6 +87,13 @@ const SEED_ORGS: Organisation[] = [
 ]
 
 export function loadOrganisations(): Organisation[] {
+  for (const key of LEGACY_ORG_KEYS) {
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      // storage unavailable (e.g. blocked) — best effort; reseed below handles the rest
+    }
+  }
   try {
     const version = Number(localStorage.getItem(ORG_VERSION_KEY) || 0)
     if (version === SEED_VERSION) {

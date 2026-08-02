@@ -45,10 +45,10 @@ collide with real server users**:
 | Michael Owusu | Staff       | `michael.owusu@sunrise.example` / `michael` | `StaffPass@123` |
 | Rita Boateng  | Staff       | `rita.boateng@sunrise.example` / `rita` | `StaffPass@123` *(already data-blocked for demo)* |
 
-> **Reset the demo data** at any time: clear the `org_data`, `org_data_version` and
-> `org_session` keys from `localStorage` (or bump `SEED_VERSION` in
-> `src/data/organisations.ts` — the next load reseeds automatically and clears any active
-> org session).
+> **Reset the demo data** at any time: clear the `merchant_org_data`,
+> `merchant_org_data_version` and `merchant_org_session` keys from `localStorage` (or bump
+> `SEED_VERSION` in `src/data/organisations.ts` — the next load reseeds automatically and
+> clears any active org session).
 
 **Flow to try:**
 1. On the auth page (`/`), click **"Log in as an organisation"**.
@@ -67,13 +67,20 @@ collide with real server users**:
 ### 3.1 Mock data layer — `src/data/organisations.ts`
 A self-contained module that simulates the future backend:
 
-- **Seed data** (`SEED_ORGS`) is written to `localStorage` on first load (key `org_data`).
-- A `SEED_VERSION` (key `org_data_version`) guards the seed: when it is bumped, stored demo
-  data is **wiped and reseeded fresh** (and any active `org_session` is cleared), so stale
-  or conflicting demo credentials never linger.
+- **All storage is namespaced under `merchant_org_`** (`merchant_org_data`,
+  `merchant_org_data_version`, `merchant_org_session`). It can never mix with data from
+  normal (server-backed) logins, which also keep caches in `localStorage`
+  (e.g. `dashboard_cache`, `token`, `login`).
+- **Seed data** (`SEED_ORGS`) is written to `localStorage` on first load (key
+  `merchant_org_data`).
+- A `SEED_VERSION` (key `merchant_org_data_version`) guards the seed: when it is bumped,
+  stored demo data is **wiped and reseeded fresh** (and any active `merchant_org_session`
+  is cleared), so stale or conflicting demo credentials never linger.
 - All mutations (register organisation, add/update/delete members) read-modify-write the same
   array, so admin changes **persist across reloads**.
-- **Session** is stored under `org_session` (`{ orgId, orgName, member }`).
+- **Session** is stored under `merchant_org_session` (`{ orgId, orgName, member }`).
+- On load, legacy unprefixed keys (`org_data`, `org_session`, `org_data_version`) from earlier
+  builds are removed automatically.
 
 Key exports:
 
