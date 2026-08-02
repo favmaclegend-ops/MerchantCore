@@ -17,15 +17,17 @@ const Users = lazy(() => import('@/pages/users/UsersPage').then(m => ({ default:
 
 
 export default function Home() {
-    const { user, loading } = useContext(Authcontext)
+    const { user, orgUser, loading } = useContext(Authcontext)
 
     if (loading) {
         return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
     }
 
-    if (!user) {
+    if (!user && !orgUser) {
         return <Navigate to="/" replace />
     }
+
+    const canManageUsers = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
 
     return (
         <>
@@ -45,7 +47,7 @@ export default function Home() {
                                 <Route path="/customers" element={<CustomersPage />} />
                                 <Route path="/calculator" element={<CalculatorPage />} />
                                 <Route path="/settings" element={<SettingsPage />} />
-                                <Route path="/users" element={<Users />} />
+                                <Route path="/users" element={canManageUsers ? <Users /> : <Navigate to="/dashboard" replace />} />
                             </Routes>
                         </Suspense>
                     </div>

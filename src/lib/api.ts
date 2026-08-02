@@ -1,3 +1,14 @@
+import {
+  addOrgMember,
+  deleteOrgMember,
+  getSessionOrganisation,
+  loginOrganisation,
+  registerOrganisation,
+  updateOrgMember,
+  type OrgMember,
+  type OrgRegisterInput,
+} from '@/data/organisations'
+
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
 console.log(API_BASE) // debugging
 function getHeaders(): Record<string, string> {
@@ -65,4 +76,39 @@ export const api = {
   getUnreadNotificationCount: () => request<{ count: number }>('/notifications/unread-count'),
   markNotificationRead: (id: string) => request<any>(`/notifications/${id}/read`, { method: 'PATCH' }),
   markAllNotificationsRead: () => request<any>('/notifications/read-all', { method: 'PATCH' }),
+
+  // Organisation (business workspace) — mock-backed for now. See ORGANIZATION.md
+  // for the endpoints these will map to once the backend implements the feature.
+  org: {
+    register: async (data: OrgRegisterInput) => {
+      await delay(400)
+      return registerOrganisation(data)
+    },
+    login: async (orgName: string, email: string, password: string) => {
+      await delay(400)
+      return loginOrganisation(orgName, email, password)
+    },
+    getUsers: async () => {
+      await delay(200)
+      const org = getSessionOrganisation()
+      if (!org) throw new Error('No active organisation session')
+      return org.members
+    },
+    addUser: async (member: Omit<OrgMember, 'id'>) => {
+      await delay(200)
+      return addOrgMember(member)
+    },
+    updateUser: async (memberId: string, patch: Partial<OrgMember>) => {
+      await delay(200)
+      return updateOrgMember(memberId, patch)
+    },
+    deleteUser: async (memberId: string) => {
+      await delay(200)
+      deleteOrgMember(memberId)
+    },
+  },
+}
+
+function delay(ms: number) {
+  return new Promise<void>(res => setTimeout(res, ms))
 }

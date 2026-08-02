@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { Authcontext } from '@/context/auth_context'
 
 const primaryItems = [
   { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
@@ -20,11 +21,15 @@ const moreItems = [
 export function MobileNavbar() {
   const location = useLocation()
   const bp = useBreakpoint()
+  const { orgUser } = useContext(Authcontext)
   const [open, setOpen] = useState(false)
+
+  const isOrgAdmin = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
+  const visibleMoreItems = isOrgAdmin ? moreItems : moreItems.filter(i => i.path !== '/home/users')
 
   if (bp.lg) return null
 
-  const isMoreActive = open || moreItems.some(i => location.pathname === i.path)
+  const isMoreActive = open || visibleMoreItems.some(i => location.pathname === i.path)
 
   return (
     <>
@@ -34,7 +39,7 @@ export function MobileNavbar() {
           <div style={{ position: 'fixed', left: 0, right: 0, bottom: '72px', background: 'var(--bg-surface)', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', boxShadow: 'var(--shadow-menu)', zIndex: 50, padding: '8px 8px 12px' }}>
             <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'var(--border-default)', margin: '0 auto 8px' }} />
             <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em', margin: '8px 12px 4px' }}>More</p>
-            {moreItems.map(item => {
+            {visibleMoreItems.map(item => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
               return (

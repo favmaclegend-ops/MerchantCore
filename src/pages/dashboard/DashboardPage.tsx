@@ -151,7 +151,7 @@ export function DashboardPage() {
   const [txns, setTxns] = useState<Tx[]>(cacheSnapshot?.txns ?? [])
   const [alertList, setAlertList] = useState<DashboardAlert[]>(cacheSnapshot?.alertList ?? [])
   const [loading, setLoading] = useState(!cacheSnapshot)
-  const {user} = useContext(Authcontext)
+  const { user, orgUser } = useContext(Authcontext)
   
   const [chartRange, setChartRange] = useState<ChartRange>(() => {
     try {
@@ -197,16 +197,26 @@ export function DashboardPage() {
 
   const rangeChart = chartRange === '6m' ? { labels: revenueMonths, data: revenueData } : computeRangeChart(txns, chartRange)
 
+  const dataBlocked = !!orgUser && orgUser.dataBlocked
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', width: '100%', padding: '0 8px',paddingBlockEnd: '2rem', }}>
       <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-on-dark)', margin: 0 }}>{user.username}</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-on-dark)', margin: 0 }}>{orgUser?.username || user?.username || 'Dashboard'}</h1>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
           {loading ? 'Loading your data...' : "Here's what's happening with MerchantCore today."}
         </p>
       </div>
 
-      {loading ? (
+      {dataBlocked ? (
+        <div style={{ width: '100%', padding: '40px 16px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-danger)', textAlign: 'center' }}>
+          <AlertTriangle style={{ width: '28px', height: '28px', color: 'var(--text-danger)', margin: '0 auto' }} />
+          <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: '12px 0 0 0' }}>You have been blocked from seeing this data</p>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', marginBottom: 0 }}>
+            Your administrator has restricted your dashboard access. Contact them for more information.
+          </p>
+        </div>
+      ) : loading ? (
         <>
           <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px' }}>
             <SkeletonStatCard />

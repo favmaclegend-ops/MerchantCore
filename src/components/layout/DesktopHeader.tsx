@@ -21,12 +21,17 @@ export function DesktopHeader() {
   const location = useLocation()
   const navigate = useNavigate()
   const bp = useBreakpoint()
-  const { user, logout } = useContext(Authcontext)
+  const { user, orgUser, logout } = useContext(Authcontext)
   const { unreadCount } = useContext(NotificationContext)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const config = pageConfig[location.pathname] ?? { title: '' }
+
+  const displayName = orgUser?.name || user?.full_name || 'User'
+  const displayRole = orgUser
+    ? orgUser.role === 'super-admin' ? 'Super Admin' : orgUser.role === 'admin' ? 'Admin' : orgUser.jobTitle || 'Staff'
+    : 'Admin'
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -68,8 +73,8 @@ export function DesktopHeader() {
               <User style={{ width: '14px', height: '14px', color: 'var(--text-secondary)' }} />
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.3, margin: 0 }}>{user?.full_name || 'User'}</p>
-              <p style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.3, margin: 0 }}>Admin</p>
+              <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1.3, margin: 0 }}>{displayName}</p>
+              <p style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.3, margin: 0 }}>{displayRole}</p>
             </div>
           </button>
           {showUserMenu && (

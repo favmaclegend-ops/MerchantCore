@@ -2,6 +2,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Icons } from 'elk-components'
+import { useContext } from 'react'
+import { Authcontext } from '@/context/auth_context'
 
 const navItems = [
   { path: '/home/dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -17,6 +19,10 @@ export function DesktopSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const bp = useBreakpoint()
+  const { orgUser } = useContext(Authcontext)
+
+  const isOrgAdmin = !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
+  const visibleItems = navItems.filter(item => item.path !== '/home/users' || isOrgAdmin)
 
   if (!bp.lg) return null
 
@@ -35,7 +41,7 @@ export function DesktopSidebar() {
       </div>
 
       <nav style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon
           const isActive = location.pathname === item.path
           return (

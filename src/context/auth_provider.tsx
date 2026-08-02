@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Authcontext } from "./auth_context";
 import { api } from "@/lib/api";
+import { clearOrgSession, getOrgSession, setOrgSession, type OrgMember } from "@/data/organisations";
 
 interface User {
   id: string;
@@ -12,6 +13,8 @@ interface User {
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [orgUser, setOrgUser] = useState<OrgMember | null>(() => getOrgSession()?.member ?? null);
+  const [orgName, setOrgName] = useState<string | null>(() => getOrgSession()?.orgName ?? null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,14 +40,27 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setUser(profile);
   };
 
-  const logout = () => {
+  const orgLogin = async (organisationName: string, email: string, password: string) => {
+    const { org, member } = await api.org.login(organisationName, email, password);
+    setOrgSession({ orgId: org.id, orgName: org.name, member });
+    localStorage.setItem('login', 'true');
     localStorage.removeItem('token');
-    localStorage.removeItem('login');
+    setOrgUser(member);
+    setOrgName(org.name);
     setUser(null);
   };
 
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('login');
+    clearOrgSession();
+    setUser(null);
+    setOrgUser(null);
+    setOrgName(null);
+  };
+
   return (
-    <Authcontext.Provider value={{ user, loading, login, logout }}>
+    <Authcontext.Provider value={{ user, orgUser, orgName, loading, login, orgLogin, logout }}>
       {children}
     </Authcontext.Provider>
   );

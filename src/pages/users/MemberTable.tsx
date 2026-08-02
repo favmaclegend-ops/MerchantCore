@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { MoreVertical, Phone, Mail, Pencil, Ban, Power, Trash2 } from 'lucide-react'
-import { AVATAR_COLORS, initials, isSuperAdmin } from './data'
+import { MoreVertical, Phone, Mail, Pencil, Ban, Power, Trash2, EyeOff, CheckCircle } from 'lucide-react'
+import { AVATAR_COLORS, initials, isSuperAdmin, isStaffMember, roleLabel } from './data'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { Member } from './data'
 
@@ -39,9 +39,7 @@ function MenuAction({ icon, label, onClick, danger }: { icon: React.ReactNode; l
 function Avatar({ member, color, size }: { member: Member; color: string; size: number }) {
   return (
     <div style={{ width: `${size}px`, height: `${size}px`, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: color, color: '#fff', fontSize: `${Math.round(size / 3)}px`, fontWeight: 700, overflow: 'hidden', opacity: member.isActive === false ? 0.4 : 1 }}>
-      {member.avatar
-        ? <img src={member.avatar} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        : initials(member.name)}
+      {initials(member.name)}
     </div>
   )
 }
@@ -54,10 +52,11 @@ type RowProps = {
   onToggle: () => void
   onEdit: (member: Member) => void
   onToggleActive: (member: Member) => void
+  onToggleDataBlock: (member: Member) => void
   onDelete: (member: Member) => void
 }
 
-function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleActive, onDelete }: RowProps) {
+function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleActive, onToggleDataBlock, onDelete }: RowProps) {
   const inactive = member.isActive === false
   const nameColor = inactive ? 'var(--text-placeholder)' : 'var(--text-primary)'
 
@@ -69,9 +68,12 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
       <td style={tdStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <p style={{ fontSize: '13px', fontWeight: 600, color: nameColor, margin: 0 }}>{member.name}</p>
-          <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '999px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{member.role}</span>
+          <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '999px', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{roleLabel(member)}</span>
           {inactive && (
-            <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '999px', background: 'var(--bg-danger)', color: 'var(--text-danger)', whiteSpace: 'nowrap' }}>Inactive</span>
+            <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '999px', background: 'var(--bg-danger)', color: 'var(--text-danger)', whiteSpace: 'nowrap' }}>Blocked login</span>
+          )}
+          {member.dataBlocked && (
+            <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '999px', background: 'var(--bg-warning)', color: 'var(--text-warning)', whiteSpace: 'nowrap' }}>Data blocked</span>
           )}
         </div>
       </td>
@@ -95,7 +97,7 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
                 <Avatar member={member} color={color} size={36} />
                 <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '13px', fontWeight: 600, color: nameColor, margin: 0 }}>{member.name}</p>
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>{member.role}</p>
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>{roleLabel(member)}</p>
                 </div>
               </div>
 
@@ -103,17 +105,27 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
                 <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>ID: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{member.id}</span></p>
                 <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>Phone: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{member.phone}</span></p>
                 <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>Email: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{member.email}</span></p>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>Username: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{member.username}</span></p>
               </div>
 
               <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <MenuAction icon={<Phone style={{ width: '14px', height: '14px' }} />} label="Call" onClick={() => { window.location.href = `tel:${member.phone.replace(/[^+\d]/g, '')}` }} />
                 <MenuAction icon={<Mail style={{ width: '14px', height: '14px' }} />} label="Email" onClick={() => { window.location.href = `mailto:${member.email}` }} />
                 <MenuAction icon={<Pencil style={{ width: '14px', height: '14px' }} />} label="Edit" onClick={() => { onEdit(member); onToggle() }} />
-                <MenuAction
-                  icon={inactive ? <Power style={{ width: '14px', height: '14px' }} /> : <Ban style={{ width: '14px', height: '14px' }} />}
-                  label={inactive ? 'Activate' : 'Deactivate'}
-                  onClick={() => { onToggleActive(member); onToggle() }}
-                />
+                {!isSuperAdmin(member) && (
+                  <MenuAction
+                    icon={inactive ? <Power style={{ width: '14px', height: '14px' }} /> : <Ban style={{ width: '14px', height: '14px' }} />}
+                    label={inactive ? 'Allow login' : 'Block login'}
+                    onClick={() => { onToggleActive(member); onToggle() }}
+                  />
+                )}
+                {isStaffMember(member) && (
+                  <MenuAction
+                    icon={member.dataBlocked ? <CheckCircle style={{ width: '14px', height: '14px' }} /> : <EyeOff style={{ width: '14px', height: '14px' }} />}
+                    label={member.dataBlocked ? 'Allow dashboard data' : 'Block dashboard data'}
+                    onClick={() => { onToggleDataBlock(member); onToggle() }}
+                  />
+                )}
                 {!isSuperAdmin(member) && (
                   <MenuAction icon={<Trash2 style={{ width: '14px', height: '14px' }} />} label="Delete" danger onClick={() => { onDelete(member); onToggle() }} />
                 )}
@@ -130,10 +142,11 @@ type TableProps = {
   members: Member[]
   onEdit: (member: Member) => void
   onToggleActive: (member: Member) => void
+  onToggleDataBlock: (member: Member) => void
   onDelete: (member: Member) => void
 }
 
-export function MemberTable({ members, onEdit, onToggleActive, onDelete }: TableProps) {
+export function MemberTable({ members, onEdit, onToggleActive, onToggleDataBlock, onDelete }: TableProps) {
   const [openId, setOpenId] = useState<string | null>(null)
   const bp = useBreakpoint()
   const compact = !bp.sm
@@ -162,6 +175,7 @@ export function MemberTable({ members, onEdit, onToggleActive, onDelete }: Table
               onToggle={() => setOpenId(openId === member.id ? null : member.id)}
               onEdit={onEdit}
               onToggleActive={onToggleActive}
+              onToggleDataBlock={onToggleDataBlock}
               onDelete={onDelete}
             />
           ))}

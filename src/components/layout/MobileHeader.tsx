@@ -21,12 +21,15 @@ export function MobileHeader() {
   const location = useLocation()
   const navigate = useNavigate()
   const bp = useBreakpoint()
-  const { user, logout } = useContext(Authcontext)
+  const { user, orgUser, logout } = useContext(Authcontext)
   const { unreadCount } = useContext(NotificationContext)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const config = pageConfig[location.pathname] ?? { title: '' }
+
+  const displayName = orgUser?.name || user?.full_name || 'User'
+  const displayEmail = orgUser?.email || user?.email || ''
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -60,8 +63,8 @@ export function MobileHeader() {
           </button>
           {showUserMenu && (
             <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', width: '180px', background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', overflow: 'hidden', zIndex: 9999 }}>
-              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--bg-tertiary)' }}><p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{user?.full_name || 'User'}</p>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{user?.email || ''}</p>
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--bg-tertiary)' }}><p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{displayName}</p>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{displayEmail}</p>
               </div>
               <button onClick={() => { navigate('/home/settings'); setShowUserMenu(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: 'var(--text-primary)', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid var(--bg-tertiary)' }}>
                 <Settings style={{ width: '14px', height: '14px' }} />

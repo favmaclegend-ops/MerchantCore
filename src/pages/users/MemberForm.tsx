@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { MemberFormData } from './data'
+import { generateCredential, type MemberFormData } from './data'
 
 const modalBackdrop: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex',
@@ -24,12 +24,17 @@ type FormProps = {
   title: string
   submitLabel: string
   initial: MemberFormData
+  kind: 'admin' | 'staff'
   onSave: (data: MemberFormData) => void
   onClose: () => void
 }
 
-export function MemberForm({ title, submitLabel, initial, onSave, onClose }: FormProps) {
-  const [formData, setFormData] = useState<MemberFormData>(initial)
+export function MemberForm({ title, submitLabel, initial, kind, onSave, onClose }: FormProps) {
+  const [formData, setFormData] = useState<MemberFormData>(() => {
+    if (initial.username && initial.password) return initial
+    const cred = generateCredential(initial.name, initial.email)
+    return { ...initial, username: cred.username, password: cred.password }
+  })
 
   const handleSave = () => {
     if (!formData.name || !formData.email) return
@@ -48,14 +53,27 @@ export function MemberForm({ title, submitLabel, initial, onSave, onClose }: For
           <label style={labelStyle}>Email</label>
           <input type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} style={inputStyle} placeholder="email@example.com" />
         </div>
+        {kind === 'staff' && (
+          <div>
+            <label style={labelStyle}>Job Title</label>
+            <input value={formData.jobTitle} onChange={e => setFormData(p => ({ ...p, jobTitle: e.target.value }))} style={inputStyle} placeholder="e.g. Cashier, Sales" />
+          </div>
+        )}
         <div>
           <label style={labelStyle}>Phone</label>
           <input value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} style={inputStyle} placeholder="+233 20 000 0000" />
         </div>
         <div>
-          <label style={labelStyle}>Role</label>
-          <input value={formData.role} onChange={e => setFormData(p => ({ ...p, role: e.target.value }))} style={inputStyle} placeholder="e.g. Admin / Cashier" />
+          <label style={labelStyle}>Username</label>
+          <input value={formData.username} onChange={e => setFormData(p => ({ ...p, username: e.target.value }))} style={inputStyle} placeholder="Login username" />
         </div>
+        <div>
+          <label style={labelStyle}>Password</label>
+          <input value={formData.password} onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} style={inputStyle} placeholder="Login password" />
+        </div>
+        <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
+          Provide these credentials to the {kind === 'staff' ? 'staff member' : 'admin'} so they can log in with the organisation name.
+        </p>
         <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
           <button onClick={onClose} style={{ flex: 1, height: '40px', fontSize: '13px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleSave} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>{submitLabel}</button>
