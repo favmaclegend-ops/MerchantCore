@@ -1,4 +1,5 @@
 
+import { useEffect, useRef } from 'react';
 
 import {
     Chart as ChartJS,
@@ -28,12 +29,22 @@ ChartJS.register(
 
 
 export default function DLineChart({labels, datas}: {labels: string[], datas: number[]}) {
+    const scrollRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const el = scrollRef.current
+        if (el) {
+            el.scrollTop = el.scrollHeight
+            el.scrollLeft = 0
+        }
+    }, [labels, datas])
+
     // Specify 'line' in the generic type for better Autocomplete
     const data: ChartData<'line'> = {
         labels: labels,
         datasets: [
             {
-                label: 'Steps Walked',
+                label: 'Revenue',
                 data: datas,
                 borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: 'rgba(75, 192, 192, 0.5)',
@@ -44,6 +55,7 @@ export default function DLineChart({labels, datas}: {labels: string[], datas: nu
 
     const options: ChartOptions<'line'> = {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: {
                 position: 'top' as const,
@@ -51,6 +63,13 @@ export default function DLineChart({labels, datas}: {labels: string[], datas: nu
         },
     };
 
+    const minWidth = Math.max(320, datas.length * 28)
 
-    return <Line data={data} options={options} />;
+    return (
+        <div ref={scrollRef} style={{ height: 'min(600px, 65vh)', overflow: 'auto', scrollbarWidth: 'thin' }}>
+            <div style={{ height: '760px', minWidth: `${minWidth}px`, width: '100%', position: 'relative' }}>
+                <Line data={data} options={options} />
+            </div>
+        </div>
+    );
 }

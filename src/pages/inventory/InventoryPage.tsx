@@ -9,6 +9,28 @@ const inputStyle: React.CSSProperties = {
   borderRadius: '8px', fontSize: '13px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box',
 }
 
+const LOW_STOCK_THRESHOLD = 20
+
+interface Product {
+  id: string
+  name: string
+  sku: string
+  price: number
+  stock: number
+  category: string
+  status: 'in-stock' | 'low-stock' | 'out-of-stock'
+}
+
+function stockStatus(stock: number): Product['status'] {
+  if (stock <= 0) return 'out-of-stock'
+  if (stock <= LOW_STOCK_THRESHOLD) return 'low-stock'
+  return 'in-stock'
+}
+
+function normalizeProducts(products: Product[]): Product[] {
+  return products.map(p => ({ ...p, status: stockStatus(p.stock) }))
+}
+
 export function InventoryPage() {
   const bp = useBreakpoint()
   const { format, currency } = useContext(CurrencyContext)
@@ -20,10 +42,10 @@ export function InventoryPage() {
   const [formData, setFormData] = useState({ name: '', sku: '', price: '', stock: '', category: '' })
 
   useEffect(() => {
-    api.getProducts().then(p => setItems(p)).catch(() => {})
+    api.getProducts().then(p => setItems(normalizeProducts(p))).catch(() => {})
   }, [])
 
-  const loadItems = () => api.getProducts().then(p => setItems(p)).catch(() => {})
+  const loadItems = () => api.getProducts().then(p => setItems(normalizeProducts(p))).catch(() => {})
 
   const filtered = items.filter(p => {
     if (filter === 'low' && p.status !== 'low-stock') return false
@@ -56,6 +78,7 @@ export function InventoryPage() {
       price: parseFloat(formData.price) || 0,
       stock: parseInt(formData.stock) || 0,
       category: formData.category,
+      status: stockStatus(parseInt(formData.stock) || 0),
     }
     if (editItem) {
       await api.updateProduct(editItem.id, payload)

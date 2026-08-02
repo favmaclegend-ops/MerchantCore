@@ -13,12 +13,9 @@ export function SettingsPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', padding: '0 8px' }}>
-      <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-on-dark)', margin: 0 }}>Settings</h1>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>Manage your account and preferences</p>
-      </div>
+      
 
-      <div style={{ width: '100%', maxWidth: '600px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ width: '100%', marginBlockStart: '12px', maxWidth: '600px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, paddingBottom: '12px', borderBottom: '1px solid var(--bg-tertiary)' }}>Profile</h2>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

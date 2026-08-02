@@ -4,7 +4,10 @@ import { useNavigate } from 'react-router-dom'
 import DLineChart from '@/components/layout/chart'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { CurrencyContext } from '@/context/currency_context'
-import { loadDashboardCache, refreshDashboardCache, defaultStats, type Tx, type DashboardAlert } from '@/lib/dashboardCache'
+import { loadDashboardCache, saveDashboardCache, refreshDashboardCache, defaultStats, type Tx, type DashboardAlert } from '@/lib/dashboardCache'
+import { Authcontext } from '@/context'
+
+const CHART_RANGE_KEY = 'dashboard_chart_range'
 
 const RANGE_OPTIONS = [
   { id: '6m', label: 'Last 6 months' },
@@ -148,7 +151,31 @@ export function DashboardPage() {
   const [txns, setTxns] = useState<Tx[]>(cacheSnapshot?.txns ?? [])
   const [alertList, setAlertList] = useState<DashboardAlert[]>(cacheSnapshot?.alertList ?? [])
   const [loading, setLoading] = useState(!cacheSnapshot)
-  const [chartRange, setChartRange] = useState<ChartRange>('6m')
+  const {user} = useContext(Authcontext)
+  
+  const [chartRange, setChartRange] = useState<ChartRange>(() => {
+    try {
+      const saved = localStorage.getItem(CHART_RANGE_KEY)
+      if (saved && RANGE_OPTIONS.some(r => r.id === saved)) return saved as ChartRange
+    } catch {
+      return '6m'
+    }
+    return '6m'
+  })
+
+  const handleChartRange = (id: ChartRange) => {
+    setChartRange(id)
+    try {
+      localStorage.setItem(CHART_RANGE_KEY, id)
+    } catch {
+      return
+    }
+  }
+
+  const handleClearTxns = () => {
+    setTxns([])
+    saveDashboardCache({ stats, revenueMonths, revenueData, txns: [], alertList })
+  }
 
   const fetchId = useRef(0)
 
@@ -173,7 +200,7 @@ export function DashboardPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', width: '100%', padding: '0 8px',paddingBlockEnd: '2rem', }}>
       <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-on-dark)', margin: 0 }}>Dashboard</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-on-dark)', margin: 0 }}>{user.username}</h1>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
           {loading ? 'Loading your data...' : "Here's what's happening with MerchantCore today."}
         </p>
@@ -248,7 +275,7 @@ export function DashboardPage() {
                 {RANGE_OPTIONS.map((r) => (
                   <button
                     key={r.id}
-                    onClick={() => setChartRange(r.id)}
+                    onClick={() => handleChartRange(r.id)}
                     style={{
                       padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 500, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                       color: chartRange === r.id ? 'var(--text-on-dark)' : 'var(--text-muted)',
@@ -273,7 +300,10 @@ export function DashboardPage() {
             <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--bg-tertiary)' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Recent Transactions</h3>
-                <button onClick={() => navigate('/home/pos')} style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View All</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button onClick={handleClearTxns} style={{ fontSize: '10px', color: 'var(--text-danger)', background: 'none', border: '1px solid var(--border-danger)', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer', flexShrink: 0 }}>Clear</button>
+                  <button onClick={() => navigate('/home/pos')} style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View All</button>
+                </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                 {txns.slice(0, 5).map((tx) => (

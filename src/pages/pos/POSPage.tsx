@@ -13,6 +13,27 @@ interface CartItem {
   quantity: number
 }
 
+const LOW_STOCK_THRESHOLD = 20
+
+interface Product {
+  id: string
+  name: string
+  price: number
+  stock: number
+  category: string
+  status: 'in-stock' | 'low-stock' | 'out-of-stock'
+}
+
+function stockStatus(stock: number): Product['status'] {
+  if (stock <= 0) return 'out-of-stock'
+  if (stock <= LOW_STOCK_THRESHOLD) return 'low-stock'
+  return 'in-stock'
+}
+
+function normalizeProducts(products: Product[]): Product[] {
+  return products.map(p => ({ ...p, status: stockStatus(p.stock) }))
+}
+
 export function POSPage() {
   const bp = useBreakpoint()
   const { format } = useContext(CurrencyContext)
@@ -29,8 +50,10 @@ export function POSPage() {
 
 
   useEffect(() => {
-    api.getProducts().then(p => setProducts(p)).catch(() => {}).finally(() => setLoadingProducts(false))
+    api.getProducts().then(p => setProducts(normalizeProducts(p))).catch(() => {}).finally(() => setLoadingProducts(false))
   }, [])
+
+  const loadProducts = () => api.getProducts().then(p => setProducts(normalizeProducts(p))).catch(() => {})
 
   const categories = ['All Items', ...new Set(products.map(p => p.category).filter(Boolean))]
 
@@ -68,6 +91,7 @@ export function POSPage() {
       setCart([])
         setSuccessMsg(`Sale of ${format(total)} completed!`)
       refreshDashboardCache()
+      loadProducts()
       setTimeout(() => setSuccessMsg(''), 3000)
     } catch (e) {
       console.error('Checkout failed', e)
