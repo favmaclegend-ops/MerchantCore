@@ -1,0 +1,9 @@
+
+
+.spread-cell:focus {
+    border-color: green !important;
+}
+
+.bolder-formater:active {
+    background: rgba(104, 102, 102, 0.234);
+}

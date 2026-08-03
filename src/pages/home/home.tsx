@@ -22,6 +22,7 @@ const SupplyChainPage = lazy(() => import('@/pages/supply/SupplyChainPage').then
 const Users = lazy(() => import('@/pages/users/UsersPage').then(m => ({ default: m.Users })))
 const AttendancePage = lazy(() => import('@/pages/attendance/AttendancePage').then(m => ({ default: m.AttendancePage })))
 const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })))
+const SpreadSheet = lazy(() => import('@/pages/spreadsheet/SpreadSheetPage').then(m => ({default: m.SpreadSheetPage})))
 
 export default function Home() {
     const location = useLocation();
@@ -82,6 +83,7 @@ export default function Home() {
                                 <Route path="/attendance" element={orgUser ? <AttendancePage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/notifications" element={orgUser ? <NotificationsPage /> : <Navigate to="/dashboard" replace />} />
                                 <Route path="/settings" element={<SettingsPage />} />
+                                <Route path="/spreadsheet" element={<SpreadSheet />} />
                                 <Route path="/users" element={canManageUsers(orgUser) ? <Users /> : <Navigate to="/dashboard" replace />} />
                             </Routes>
                         </Suspense>

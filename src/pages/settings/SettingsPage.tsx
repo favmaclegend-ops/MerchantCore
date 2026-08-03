@@ -6,7 +6,7 @@ import { User, Mail, AtSign, DollarSign, Moon, Sun } from 'lucide-react'
 import { currencies, getCurrencyInfo } from '@/lib/currency'
 
 export function SettingsPage() {
-  const { user, logout } = useContext(Authcontext)
+  const { user, orgUser, logout } = useContext(Authcontext)
   const { currency, setCurrency, format } = useContext(CurrencyContext)
   const { theme, toggle } = useContext(ThemeContext)
   const currInfo = getCurrencyInfo(currency)
@@ -23,8 +23,8 @@ export function SettingsPage() {
             <User style={{ width: '24px', height: '24px', color: 'var(--text-secondary)' }} />
           </div>
           <div>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{user?.full_name || 'User'}</p>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{user?.username || ''}</p>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{user?.full_name || orgUser?.name || 'Unknown User'}</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{user?.username || orgUser?.role || 'unknown'}</p>
           </div>
         </div>
 
@@ -33,14 +33,14 @@ export function SettingsPage() {
             <Mail style={{ width: '16px', height: '16px', color: 'var(--text-muted)', flexShrink: 0 }} />
             <div>
               <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>Email</p>
-              <p style={{ fontSize: '13px', color: 'var(--text-primary)', margin: '2px 0 0 0' }}>{user?.email || ''}</p>
+              <p style={{ fontSize: '13px', color: 'var(--text-primary)', margin: '2px 0 0 0' }}>{user?.email || orgUser?.email || ''}</p>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
             <AtSign style={{ width: '16px', height: '16px', color: 'var(--text-muted)', flexShrink: 0 }} />
             <div>
               <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>Username</p>
-              <p style={{ fontSize: '13px', color: 'var(--text-primary)', margin: '2px 0 0 0' }}>{user?.username || ''}</p>
+              <p style={{ fontSize: '13px', color: 'var(--text-primary)', margin: '2px 0 0 0' }}>{user?.username || orgUser?.username || ''}</p>
             </div>
           </div>
         </div>

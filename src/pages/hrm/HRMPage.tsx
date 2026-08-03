@@ -422,10 +422,7 @@ export function HRMPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%', padding: '0 8px' }}>
       <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
-        <div>
-          <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Human Resources</h1>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>Employee lifecycle, payroll, time tracking, reviews &amp; benefits</p>
-        </div>
+        
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {active === 'employees' && (
             <button onClick={() => openEmployeeForm()} style={primaryBtn as React.CSSProperties}>
@@ -453,7 +450,8 @@ export function HRMPage() {
             </button>
           )}
         </div>
-      </div>
+        </div>
+      
 
       {notice && (
         <div style={{ width: '100%', padding: '10px 14px', background: 'rgba(16,185,129,0.12)', border: '1px solid var(--border-success)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-success)', fontWeight: 500 }}>

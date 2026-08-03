@@ -1,4 +1,4 @@
-import { useContext, useState, useRef, useEffect } from 'react'
+import { useContext, useState, useRef, useEffect, type ChangeEvent } from 'react'
 import { Bell, User, Search, Settings, LogOut } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
@@ -6,6 +6,9 @@ import { Authcontext } from '@/context/auth_context'
 import { NotificationContext } from '@/context/notification_context'
 import { OrgNotificationContext } from '@/context/org_notification_context'
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
+import {  useComponentData, useStore,} from 'elk-components'
+import {  type Product } from '@/data/mockData'
+import { store } from '@/context/store'
 
 const pageConfig: Record<string, { title: string; search?: string }> = {
   '/home/dashboard': { title: 'Dashboard' },
@@ -18,6 +21,10 @@ const pageConfig: Record<string, { title: string; search?: string }> = {
   '/home/supply': { title: 'Supply Chain & Logistics' },
   '/home/users': {title: 'Users' },
   '/home/settings': { title: 'Settings' },
+  '/home/attendance': { title: 'Attendance' },
+  '/home/hrm': { title: 'HRM' },
+  '/home/finance': { title: 'Finance' },
+  '/home/spreadsheet': { title: 'SpreadSheet' },
 }
 
 export function DesktopHeader() {
@@ -32,6 +39,41 @@ export function DesktopHeader() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const config = pageConfig[location.pathname] ?? { title: '' }
+
+  // =====================================================================================================
+  // POS
+  // =====================================================================================================
+  
+  useStore(store)
+  
+  const setPosProduct = useComponentData<React.Dispatch<React.SetStateAction<Product[]>>>('POS', 'setProducts')
+
+  const staticData = store.getState().staticData
+
+ 
+  /**
+   * =================================================
+   * HANDLE POS SEARCH
+   * This function handle pos search using external store name static data
+   * 
+   */
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+
+    // console.log(staticData)
+
+    const target = e.currentTarget
+    const value = target.value.trim().toLowerCase()
+
+    if (!setPosProduct) {console.log(setPosProduct); return}
+
+    if (!value) {
+      setPosProduct(staticData)
+      return
+    }
+
+    const filtered = staticData.filter(product => product?.name?.toLowerCase().includes(value))
+    setPosProduct(filtered)
+  }
 
   const displayName = orgUser?.name || user?.full_name || 'User'
   const displayRole = orgUser
@@ -59,6 +101,7 @@ export function DesktopHeader() {
               type="text"
               placeholder={config.search}
               style={{ paddingLeft: '32px', paddingRight: '12px', paddingTop: '6px', paddingBottom: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', borderRadius: '4px', fontSize: '12px', width: '192px', outline: 'none', color: 'var(--text-primary)' }}
+              onChange={(e) => handleSearch(e)}
             />
           </div>
         )}

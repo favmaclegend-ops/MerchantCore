@@ -31,7 +31,7 @@ function Stat({ label, value, sub, tone }: { label: string; value: string; sub?:
 }
 
 export function AttendancePage() {
-  const { orgUser, orgName } = useContext(Authcontext)
+  const { orgUser } = useContext(Authcontext)
   const { format } = useContext(CurrencyContext)
 
   const [employee, setEmployee] = useState<OrgEmployee | null>(null)
@@ -90,10 +90,7 @@ export function AttendancePage() {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%', padding: '0 8px' }}>
       <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>My Attendance</h1>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
-            {orgName} · Check in at the start of your shift — it records your attendance and updates the HRM view.
-          </p>
+          
         </div>
         <button
           onClick={handleCheckIn}

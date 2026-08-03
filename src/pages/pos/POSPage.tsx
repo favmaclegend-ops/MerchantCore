@@ -6,6 +6,8 @@ import { refreshDashboardCache } from '@/lib/dashboardCache'
 import { Authcontext } from '@/context'
 import Alert from '@/components/alert/alert'
 import { CurrencyContext } from '@/context/currency_context'
+import {  useDebounceEffect, useInstance,  useSetState,  } from 'elk-components'
+import { store } from '@/context/store'
 
 interface CartItem {
   id: string
@@ -35,6 +37,7 @@ function normalizeProducts(products: Product[]): Product[] {
   return products.map(p => ({ ...p, status: stockStatus(p.stock) }))
 }
 
+
 export function POSPage() {
   const bp = useBreakpoint()
   
@@ -51,7 +54,7 @@ export function POSPage() {
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [checkingOut, setCheckingOut] = useState(false)
   const [isCart, setCartView] = useState<boolean>(false)
-
+  
 
   useEffect(() => {
     posApi.getProducts().then(p => setProducts(normalizeProducts(p))).catch(() => {}).finally(() => setLoadingProducts(false))
@@ -66,6 +69,27 @@ export function POSPage() {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const tax = subtotal * 0.05
   const total = subtotal + tax
+  
+ 
+  // create an instance for users global access
+  const { setData } = useInstance('POS')
+  const c = useSetState(store);
+
+ useDebounceEffect(() => {
+
+  if (store.getState().staticData.length == 0) {
+    store.setState({staticData: products})
+  }
+
+    c({cnt: 1})
+
+    setData('setProducts', setProducts)
+    setData('products', products)
+
+     return () => c({cnt: 0}) 
+ }, 300, [products])
+
+  
 
   const updateQuantity = (id: string, delta: number) => {
     setCart(prev => prev.map(item => {

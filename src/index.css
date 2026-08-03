@@ -75,6 +75,9 @@
 
   --shadow-card: 1px 6px 3px rgba(128,128,128,0.287);
   --shadow-menu: 0 10px 25px rgba(0,0,0,0.1);
+  --default-spreadsheet-bg: white;
+  --default-spreadsheet-txt: black;
+
 }
 
 [data-theme="dark"] {
@@ -112,6 +115,9 @@
 
   --shadow-card: 1px 6px 3px rgba(0,0,0,0.5);
   --shadow-menu: 0 10px 25px rgba(0,0,0,0.55);
+  --default-spreadsheet-txt: white;
+  --default-spreadsheet-bg: black;
+
 }
 
 * {
