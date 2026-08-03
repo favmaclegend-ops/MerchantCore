@@ -1,103 +1,111 @@
+import { useStore } from "elk-components";
+import { type ChangeEvent } from "react";
 import { spreadSheetStore } from "@/context/store";
-import { PaintBucket } from "lucide-react";
 import { BoldButton } from "./spreadComponents/BoldButton";
-import type { ChangeEvent } from "react";
 import { ColorFormatButton } from "./spreadComponents/ColorFormatButton";
+import { BackgroundBucket } from "./spreadComponents/BackgroundBucket";
+import { AlignLeft } from "./spreadComponents/AlignLeft";
+import { CenterButton } from "./spreadComponents/CenterButton";
+import { AlignRightButton } from "./spreadComponents/AlignRight";
+import { ItalicButton } from "./spreadComponents/ItalicButton";
+import { UnderlineButton } from "./spreadComponents/UnderlineButton";
+import { StrikethroughButton } from "./spreadComponents/StrikethroughButton";
+import { FontSizeSelect } from "./spreadComponents/FontSizeSelect";
+import { ClearFormatButton } from "./spreadComponents/ClearFormatButton";
 
-interface SSR {
-  value: string;
-}
-export function SpreadSheetReabon({ value }: SSR) {
+export function SpreadSheetReabon() {
+  const { formularValue } = useStore(spreadSheetStore);
+
   const handleCellValueChange = (e: ChangeEvent) => {
-    const formLuarInput = e?.currentTarget as HTMLInputElement;
+    const formLuarInput = e.currentTarget as HTMLInputElement;
     spreadSheetStore.setState({ formularValue: formLuarInput.value });
   };
 
   return (
-    <>
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "1rem .5rem",
+        borderBottom: "1px solid grey",
+        gap: "1rem",
+      }}
+    >
       <div
         style={{
-          width: "100%",
           display: "flex",
-          flexDirection: "column",
-          padding: "1rem .5rem",
-          borderBottom: '1px solid grey'
+          alignItems: "center",
+          gap: "1.5rem",
+          flexWrap: "wrap",
         }}
       >
-        {/**Formatter ==================================================== */}
-        <div style={{ display: "flex", width: "100%", gap: "1rem" }}>
-          <div
+        {/** Formatter ==================================================== */}
+        <div style={{ display: "flex", alignItems: "center", gap: ".4rem" }}>
+          <BoldButton />
+          <ItalicButton />
+          <UnderlineButton />
+          <StrikethroughButton />
+          <FontSizeSelect />
+          <span
             style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: ".5rem",
-              minWidth: "5rem",
+              color: "grey",
+              fontWeight: "900",
+              fontSize: ".9rem",
+              marginInlineStart: ".5rem",
             }}
           >
-            {/** Bold Button =============================== */}
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <BoldButton />
-              <ColorFormatButton />
-
-              <div
-                className="bolder-formater"
-                style={{
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  padding: ".2rem .4rem",
-                  userSelect: "none",
-                  borderRadius: ".4rem",
-                }}
-              >
-                <PaintBucket size={20} calcMode={3} />
-                <div
-                  style={{
-                    width: "1rem",
-                    height: ".2rem",
-                    background: "black",
-                  }}
-                ></div>
-              </div>
-            </div>
-            <span
-              style={{
-                color: "grey",
-                alignSelf: "center",
-                fontWeight: "900",
-                fontSize: ".9rem",
-              }}
-            >
-              Format
-            </span>
-          </div>
+            Format
+          </span>
         </div>
 
-        <div
-          style={{ display: "flex", flexDirection: "column", width: "100%" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <span>Formular: </span>
-            <input
-              style={{
-                display: "flex",
-                alignItems: "center",
-                background: "#4e4e4e34",
-                color: "var(--default-spreadsheet-txt)",
-                outline: "none",
-                width: "50%",
-                height: "2rem",
-                padding: ".6rem",
-                border: "var(--border-input)",
-                borderRadius: ".2rem",
-              }}
-              value={value || ""}
-              onChange={(e) => e.currentTarget && handleCellValueChange(e)}
-            />
-          </div>
+        {/** Colors ==================================================== */}
+        <div style={{ display: "flex", alignItems: "center", gap: ".4rem" }}>
+          <ColorFormatButton />
+          <BackgroundBucket />
+        </div>
+
+        {/** Alignment ==================================================== */}
+        <div style={{ display: "flex", alignItems: "center", gap: ".4rem" }}>
+          <AlignLeft />
+          <CenterButton />
+          <AlignRightButton />
+          <span
+            style={{
+              color: "grey",
+              fontWeight: "900",
+              fontSize: ".9rem",
+              marginInlineStart: ".5rem",
+            }}
+          >
+            Alignment
+          </span>
+        </div>
+
+        <ClearFormatButton />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <span>Formular: </span>
+          <input
+            style={{
+              display: "flex",
+              alignItems: "center",
+              background: "#4e4e4e34",
+              color: "var(--default-spreadsheet-txt)",
+              outline: "none",
+              width: "50%",
+              height: "2rem",
+              padding: ".6rem",
+              border: "var(--border-input)",
+              borderRadius: ".2rem",
+            }}
+            value={formularValue || ""}
+            onChange={(e) => e.currentTarget && handleCellValueChange(e)}
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -3,11 +3,11 @@ import { handleCellTextColor } from "../spreadContext";
 import { ArrowDownSquare } from "lucide-react";
 
 export function ColorFormatButton() {
-  const colorPickerRef = useRef(null);
+  const colorPickerRef = useRef<HTMLInputElement>(null);
 
-    const handleColorClick = () => {
-    const colorPicker = colorPickerRef?.current as HTMLInputElement;
-    colorPicker.click();
+  const handleColorClick = () => {
+    const colorPicker = colorPickerRef?.current;
+    colorPicker?.click();
   };
 
   const handleColorChange = (e: ChangeEvent) => {
@@ -16,9 +16,9 @@ export function ColorFormatButton() {
   };
 
   const handleClickColorChange = () => {
-     const targetColor = colorPickerRef?.current as HTMLInputElement;
-    handleCellTextColor(targetColor?.value);
-  }
+    const targetColor = colorPickerRef?.current;
+    if (targetColor) handleCellTextColor(targetColor.value);
+  };
   return (
     <div
                 className="bolder-formater"

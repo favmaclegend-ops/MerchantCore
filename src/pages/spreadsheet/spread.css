@@ -1,9 +1,38 @@
-
-
 .spread-cell:focus {
     border-color: green !important;
 }
 
 .bolder-formater:active {
     background: rgba(104, 102, 102, 0.234);
+}
+
+.spread-tool-btn {
+    cursor: pointer;
+    background: none;
+    border: none;
+    border-radius: .3rem;
+    padding: .3rem .45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    color: var(--default-spreadsheet-txt);
+}
+
+.spread-tool-btn:hover {
+    background: rgba(104, 102, 102, 0.234);
+}
+
+.spread-tool-btn:active {
+    background: rgba(104, 102, 102, 0.4);
+}
+
+.spread-tool-select {
+    cursor: pointer;
+    background: var(--default-spreadsheet-bg);
+    color: var(--default-spreadsheet-txt);
+    border: 1px solid #5b5b5b39;
+    border-radius: .3rem;
+    padding: .2rem .35rem;
+    font-size: .85rem;
 }

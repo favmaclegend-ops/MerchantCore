@@ -1,7 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus, Wallet, Contact, Clock, Bell, Truck, FileSpreadsheet, UserPlusIcon } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
-import { Icons } from 'elk-components'
 import { useContext } from 'react'
 import type { ElementType } from 'react'
 import { Authcontext } from '@/context/auth_context'
