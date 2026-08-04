@@ -1,5 +1,5 @@
 import { type ChangeEvent } from "react";
-import { handleCellFontSize } from "../spreadContext";
+import { handleCellFontSize } from "../spreadSheetLogic";
 
 const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32];
 

@@ -1,5 +1,5 @@
 import { useRef, type ChangeEvent } from "react";
-import { handleCellTextColor } from "../spreadContext";
+import { handleCellTextColor } from "../spreadSheetLogic";
 import { ArrowDownSquare } from "lucide-react";
 
 export function ColorFormatButton() {

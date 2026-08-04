@@ -1,6 +1,7 @@
 import { useStore } from "elk-components";
-import { type ChangeEvent } from "react";
+import { type ChangeEvent, type KeyboardEvent } from "react";
 import { spreadSheetStore } from "@/context/store";
+import { commitFormulaBarValue, spreadsheetModel, Cells } from "./spreadSheetLogic";
 import { BoldButton } from "./spreadComponents/BoldButton";
 import { ColorFormatButton } from "./spreadComponents/ColorFormatButton";
 import { BackgroundBucket } from "./spreadComponents/BackgroundBucket";
@@ -19,6 +20,29 @@ export function SpreadSheetReabon() {
   const handleCellValueChange = (e: ChangeEvent) => {
     const formLuarInput = e.currentTarget as HTMLInputElement;
     spreadSheetStore.setState({ formularValue: formLuarInput.value });
+  };
+
+  const handleFormulaBarKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commitFormulaBarValue(input.value);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      const active = Cells.getCurrentCell();
+      spreadSheetStore.setState({
+        formularValue: active ? spreadsheetModel.getRawFromId(active.id) : "",
+      });
+    }
+  };
+
+  const handleFormulaBarBlur = () => {
+    const active = Cells.getCurrentCell();
+    if (!active) return;
+    const current = spreadSheetStore.getState().formularValue;
+    if (current !== spreadsheetModel.getRawFromId(active.id)) {
+      commitFormulaBarValue(current);
+    }
   };
 
   return (
@@ -144,6 +168,8 @@ export function SpreadSheetReabon() {
             }}
             value={formularValue || ""}
             onChange={(e) => e.currentTarget && handleCellValueChange(e)}
+            onKeyDown={handleFormulaBarKeyDown}
+            onBlur={handleFormulaBarBlur}
           />
         </div>
       </div>

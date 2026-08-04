@@ -1,5 +1,5 @@
 import { Underline } from "lucide-react";
-import { handleCellUnderline } from "../spreadContext";
+import { handleCellUnderline } from "../spreadSheetLogic";
 
 export function UnderlineButton() {
   return (

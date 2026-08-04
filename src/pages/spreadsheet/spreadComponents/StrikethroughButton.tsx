@@ -1,5 +1,5 @@
 import { Strikethrough } from "lucide-react";
-import { handleCellStrikethrough } from "../spreadContext";
+import { handleCellStrikethrough } from "../spreadSheetLogic";
 
 export function StrikethroughButton() {
   return (

@@ -1,5 +1,5 @@
 import { AlignRightIcon } from "lucide-react";
-import { alignCellTextRight } from "../spreadContext";
+import { alignCellTextRight } from "../spreadSheetLogic";
 
 export function AlignRightButton() {
   return (

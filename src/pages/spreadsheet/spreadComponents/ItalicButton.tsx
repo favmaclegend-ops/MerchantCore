@@ -1,5 +1,5 @@
 import { Italic } from "lucide-react";
-import { handleCellItalic } from "../spreadContext";
+import { handleCellItalic } from "../spreadSheetLogic";
 
 export function ItalicButton() {
   return (

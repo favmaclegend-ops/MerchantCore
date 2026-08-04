@@ -1,4 +1,4 @@
-import { handleCellBold } from "../spreadContext";
+import { handleCellBold } from "../spreadSheetLogic";
 
 export function BoldButton() {
   return (

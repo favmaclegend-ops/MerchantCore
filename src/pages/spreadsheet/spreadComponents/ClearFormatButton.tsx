@@ -1,5 +1,5 @@
 import { Eraser } from "lucide-react";
-import { handleClearFormatting } from "../spreadContext";
+import { handleClearFormatting } from "../spreadSheetLogic";
 
 export function ClearFormatButton() {
   return (

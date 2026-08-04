@@ -1,5 +1,5 @@
 import { AlignCenter,  } from "lucide-react";
-import { centerCellText } from "../spreadContext";
+import { centerCellText } from "../spreadSheetLogic";
 
 export function CenterButton() {
   return (
