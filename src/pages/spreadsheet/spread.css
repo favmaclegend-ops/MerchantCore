@@ -52,3 +52,48 @@
     padding: .2rem .35rem;
     font-size: .85rem;
 }
+
+/* =========================================================================
+   Spreadsheet workspace (ExternalSheet)
+   ========================================================================= */
+
+.workbook-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.workbook-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: left;
+    padding: 16px;
+    border: 1px solid var(--border-default, #e5e7eb);
+    border-radius: 12px;
+    background: var(--bg-surface, #fff);
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+
+.workbook-card:hover {
+    border-color: var(--bg-nav-active, #2563eb);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .08);
+    transform: translateY(-2px);
+}
+
+.workbook-card-delete {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity .15s;
+}
+
+.workbook-card:hover .workbook-card-delete {
+    opacity: 1;
+}
