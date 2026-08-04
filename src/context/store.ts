@@ -6,4 +6,5 @@ export const spreadSheetStore = createStore<{
   formularValue: string;
   currentRow: number;
   currentColumn: number;
+  
 }>({ formularValue: '', currentRow: 0, currentColumn: 0 })

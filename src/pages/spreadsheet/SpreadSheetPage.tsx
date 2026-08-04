@@ -6,9 +6,12 @@ import { SpreadSheetReabon } from "./SpreadSheetReabon";
 import {
   COLUMN_NAMES,
   ROW_NUMBERS,
+  deactivateMultiSelection,
   getCellId,
   getColumnName,
   handleCellDragEnd,
+  handleMultiSelection,
+  handleMultiSelectionActivation,
   handleSpreadCellFocus,
   handleSpreadSheetKeyDown,
   handleSpreadSheetValueChange,
@@ -27,8 +30,7 @@ const SpreadSheetTable = memo(function SpreadSheetTable() {
       <table
         style={{
           width: "100%",
-          borderTop: "1px solid red",
-          minWidth: "680px",
+          
         }}
       >
         <thead>
@@ -40,19 +42,26 @@ const SpreadSheetTable = memo(function SpreadSheetTable() {
               zIndex: "11",
             }}
           >
-            <th style={{ width: "10rem" }}>
+            <th
+              style={{
+                width: "10rem",
+                position: "sticky",
+                left: "0",
+                zIndex: "11",
+              }}
+            >
               <div style={{ width: "4rem", padding: ".5rem 1rem" }}>
                 <CellPositionBadge />
               </div>
             </th>
             {COLUMN_NAMES.map((colName, key) => (
               <th style={{}} key={key}>
-                {colName}
+                <div style={{ scrollMarginInlineEnd: "4rem" }}>{colName}</div>
               </th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody style={{scrollMarginLeft: '1rem'}}>
           {ROW_NUMBERS.map((rowNum, row) => (
             <tr key={rowNum} id={String(rowNum)}>
               <td
@@ -81,10 +90,12 @@ const SpreadSheetTable = memo(function SpreadSheetTable() {
                       border: "1px solid #5b5b5b39",
                       outline: "none",
                     }}
-                    onFocus={(e) => handleSpreadCellFocus(e, row, col)}
+                    onFocus={(e) =>{ handleSpreadCellFocus(e, row, col); handleMultiSelection()}}
                     onChange={handleSpreadSheetValueChange}
-                    onKeyDown={handleSpreadSheetKeyDown}
+                    onKeyDown={(e) => {handleSpreadSheetKeyDown(e); handleMultiSelectionActivation(e)}}
+                    onKeyUp={() => deactivateMultiSelection()}
                     onDragEnd={handleCellDragEnd}
+
                   />
                 </td>
               ))}

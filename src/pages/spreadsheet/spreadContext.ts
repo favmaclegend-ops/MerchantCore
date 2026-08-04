@@ -10,6 +10,7 @@ export const COLUMN_NAMES: string[] = Array.from(
   { length: TOTAL_COLUMNS },
   (_, i) => getColumnName(i),
 );
+
 export const ROW_NUMBERS: number[] = Array.from(
   { length: TOTAL_ROWS },
   (_, i) => i + 1,
@@ -30,12 +31,25 @@ export const getCellId = (col: number, row: number) =>
 
 export class Cells {
   static currentCell: HTMLInputElement | null = null;
+  static selectedElements: HTMLInputElement[] = [];
+  static oldSlectedElements: HTMLInputElement[] = [];
+  static oldSlectedElementsStyleBackground: string[] = [];
+  static oldSlectedElementsStyleBorder: string[] = [];
+  static oldSlectedBorderElements: HTMLInputElement[] = [];
+  static isSelectionActive: boolean = false;
+
+  static initialSelectionColumn: number;
+  static initialSelectionRow: number;
 
   static setCurrentCell = (e: FocusEvent<HTMLInputElement>) => {
     Cells.currentCell = e.currentTarget;
   };
 
   static getCurrentCell = () => Cells.currentCell;
+  static setSelection = (selection: HTMLInputElement[]) => {
+    Cells.selectedElements = selection;
+  };
+  static getSelection = () => Cells.selectedElements;
 }
 
 // =====================================================
@@ -47,6 +61,8 @@ export const handleSpreadCellFocus = (
   col: number,
 ) => {
   Cells.setCurrentCell(e);
+  Cells.setSelection([e as unknown as HTMLInputElement]);
+
   spreadSheetStore.setState({
     currentRow: row,
     currentColumn: col,
@@ -89,10 +105,12 @@ export const handleCellDragEnd = (e: DragEvent<HTMLInputElement>) => {
 // =====================================================
 //  KEYBOARD NAVIGATION + SHORTCUTS
 // =====================================================
-export const handleSpreadSheetKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+export const handleSpreadSheetKeyDown = (
+  e: KeyboardEvent<HTMLInputElement>,
+) => {
   const target = e.currentTarget;
 
-  if (e.ctrlKey) {
+  if (e.ctrlKey && !e.shiftKey) {
     switch (e.key.toLowerCase()) {
       case "b":
         e.preventDefault();
@@ -188,12 +206,10 @@ export const handleCellItalic = () => {
 export const handleCellUnderline = () => {
   const currentCell = Cells.getCurrentCell();
   if (!currentCell) return;
-  const hasUnderline = currentCell.style.textDecorationLine.includes(
-    "underline",
-  );
-  const hasStrike = currentCell.style.textDecorationLine.includes(
-    "line-through",
-  );
+  const hasUnderline =
+    currentCell.style.textDecorationLine.includes("underline");
+  const hasStrike =
+    currentCell.style.textDecorationLine.includes("line-through");
   const parts: string[] = [];
   if (hasStrike) parts.push("line-through");
   if (!hasUnderline) parts.push("underline");
@@ -204,12 +220,10 @@ export const handleCellUnderline = () => {
 export const handleCellStrikethrough = () => {
   const currentCell = Cells.getCurrentCell();
   if (!currentCell) return;
-  const hasStrike = currentCell.style.textDecorationLine.includes(
-    "line-through",
-  );
-  const hasUnderline = currentCell.style.textDecorationLine.includes(
-    "underline",
-  );
+  const hasStrike =
+    currentCell.style.textDecorationLine.includes("line-through");
+  const hasUnderline =
+    currentCell.style.textDecorationLine.includes("underline");
   const parts: string[] = [];
   if (hasUnderline) parts.push("underline");
   if (!hasStrike) parts.push("line-through");
@@ -419,3 +433,122 @@ const commitFormula = (input: HTMLInputElement) => {
     spreadSheetStore.setState({ formularValue: result });
   }
 };
+
+export function handleMultiSelectionActivation(e: KeyboardEvent) {
+  if (e.shiftKey) {
+    Cells.isSelectionActive = true;
+  }
+}
+
+export const deactivateMultiSelection = () => {
+  Cells.isSelectionActive = false;
+};
+
+/**
+ * Multi input selection
+ * Enable users to select multiple cell
+ */
+export const handleMultiSelection = () => {
+  //const target = e.currentTarget as HTMLInputElement
+  const spreadStore = spreadSheetStore.getState();
+  let seletedCell = [];
+
+  if (!Cells.isSelectionActive) {
+    Cells.initialSelectionColumn = spreadStore.currentColumn;
+    Cells.initialSelectionRow = spreadStore.currentRow;
+    seletedCell = [];
+    resetCellSelet();
+  }
+
+  if (Cells.isSelectionActive) {
+    const initCol = Cells.initialSelectionColumn;
+    const initRow = Cells.initialSelectionRow;
+    const finalColumn = spreadStore.currentColumn;
+    const finalRow = spreadStore.currentRow;
+
+    for (
+      let i = initRow;
+      initRow > finalRow ? i >= finalRow : i <= finalRow;
+      initRow > finalRow ? i-- : i++
+    ) {
+      for (
+        let j = initCol;
+        initCol > finalColumn ? j >= finalColumn : j <= finalColumn;
+        initCol > finalColumn ? j-- : j++
+      ) {
+        const columnN = getColumnName(j);
+        const id = `${columnN}${i + 1}`;
+        const el = document.getElementById(id) as HTMLInputElement;
+
+        // flip: check for backward selection
+
+        if (
+          // if initial row is greaterthan the final row
+          initRow > finalRow
+            ? // Then: we check if i is equals to the final row we set the borderTop of the cell in the finalrow which is the biginning.
+              i == finalRow
+            : // else: The inverse which is the forward selection
+              i == initRow
+        ) {
+          Cells.oldSlectedElementsStyleBorder.push(el.style.border); // Store previouse border of that cell for reseting purpose
+          Cells.oldSlectedBorderElements.push(el);
+          el.style.borderTop = "2px solid green";
+        }
+
+        if (
+          // Same Condition as previous but setting the border at the bottom
+          initRow > finalRow
+            ? // set the border at the bottom of the initRow which is the ending
+              i == initRow
+            : i == finalRow
+        ) {
+          Cells.oldSlectedElementsStyleBorder.push(el.style.border);
+          Cells.oldSlectedBorderElements.push(el);
+          el.style.borderBottom = "2px solid green";
+        }
+
+        // Same logic but for column
+        if (initCol > finalColumn ? j == finalColumn : j == initCol) {
+          Cells.oldSlectedElementsStyleBorder.push(el.style.border);
+          Cells.oldSlectedBorderElements.push(el);
+          el.style.borderLeft = "2px solid green";
+        }
+        if (initCol > finalColumn ? j == initCol : j == finalColumn) {
+          Cells.oldSlectedElementsStyleBorder.push(el.style.border);
+          Cells.oldSlectedBorderElements.push(el);
+          console.log(el.style.borderRight)
+          el.style.borderRight = "2px solid green";
+        }
+        seletedCell.push(el);
+      }
+    }
+
+    Cells.selectedElements = seletedCell;
+    resetCellSelet();
+
+    Cells.selectedElements.forEach((element) => {
+      Cells.oldSlectedElementsStyleBackground.push(element.style.background);
+      element.style.background = "#7575754e";
+      Cells.oldSlectedElements = Cells.selectedElements;
+    });
+  }
+};
+
+// reset selection
+function resetCellSelet() {
+  if (Cells.oldSlectedElements.length !== 0) {
+
+    Cells.oldSlectedElements.forEach((el, key) => {
+      el.style.background = Cells.oldSlectedElementsStyleBackground[key];
+    });
+
+    Cells.oldSlectedBorderElements.forEach((el, key) => {
+      
+      el.style.border = Cells?.oldSlectedElementsStyleBorder[key];
+    });
+    // el.style.border = Cells.oldSlectedElementsStyleBorder?.[key]
+    Cells.oldSlectedElementsStyleBackground = [];
+    Cells.oldSlectedElementsStyleBorder = [];
+    Cells.oldSlectedBorderElements = []
+  }
+}

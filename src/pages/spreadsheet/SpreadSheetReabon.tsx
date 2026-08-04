@@ -36,53 +36,94 @@ export function SpreadSheetReabon() {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "1.5rem",
+
           flexWrap: "wrap",
+          height: "4rem",
+          overflow: "hidden",
         }}
       >
         {/** Formatter ==================================================== */}
-        <div style={{ display: "flex", alignItems: "center", gap: ".4rem" }}>
-          <BoldButton />
-          <ItalicButton />
-          <UnderlineButton />
-          <StrikethroughButton />
-          <FontSizeSelect />
-          <span
-            style={{
-              color: "grey",
-              fontWeight: "900",
-              fontSize: ".9rem",
-              marginInlineStart: ".5rem",
-            }}
-          >
-            Format
-          </span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: ".4rem",
+            flexDirection: "column",
+            height: "100%",
+            paddingInline: ".5rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+              <BoldButton />
+              <ItalicButton />
+              <UnderlineButton />
+              <StrikethroughButton />
+            </div>
+          </div>
         </div>
 
         {/** Colors ==================================================== */}
-        <div style={{ display: "flex", alignItems: "center", gap: ".4rem" }}>
-          <ColorFormatButton />
-          <BackgroundBucket />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: ".4rem",
+            height: "100%",
+            borderInlineEnd: "1px solid #636363",
+            paddingInline: ".5rem",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              alignItems: "center",
+              gridTemplateColumns: "1fr 1fr",
+            }}
+          >
+            <ClearFormatButton />
+            <BackgroundBucket />
+            <FontSizeSelect />
+            <ColorFormatButton />
+          </div>
         </div>
 
         {/** Alignment ==================================================== */}
-        <div style={{ display: "flex", alignItems: "center", gap: ".4rem" }}>
-          <AlignLeft />
-          <CenterButton />
-          <AlignRightButton />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: ".4rem",
+            flexDirection: "column",
+            height: "100%",
+            justifyContent: "center",
+            borderInlineEnd: "1px solid #636363",
+            paddingInline: ".5rem",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBlockStart: "auto",
+            }}
+          >
+            <AlignLeft />
+            <CenterButton />
+            <AlignRightButton />
+          </div>
           <span
             style={{
               color: "grey",
               fontWeight: "900",
               fontSize: ".9rem",
-              marginInlineStart: ".5rem",
+              marginBlockStart: "auto",
             }}
           >
             Alignment
           </span>
         </div>
-
-        <ClearFormatButton />
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
