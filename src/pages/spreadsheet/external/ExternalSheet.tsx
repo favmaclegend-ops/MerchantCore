@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "react-router-dom";
 import { Workbook, type WorkbookInstance } from "@fortune-sheet/react";
 import type { Sheet } from "@fortune-sheet/core";
@@ -21,6 +28,9 @@ import "../spread.css";
 import { workbookStorage, type WorkbookMeta } from "./workbookStorage";
 import { createEmptyWorkbook, toExternalSheets } from "./sheetFormat";
 import { useWorkbooks } from "./useWorkbooks";
+import { addOrgNotification } from "@/data/orgNotifications";
+import { getOrgSession } from "@/data/organisations";
+import { OrgNotificationContext } from "@/context";
 
 /** Formats a millisecond timestamp as a short "time ago" label. */
 function timeAgo(ts: number): string {
@@ -82,7 +92,10 @@ function WorkbookCard({
           flexShrink: 0,
         }}
       >
-        <FileSpreadsheet size={20} style={{ color: "var(--bg-nav-active, #2563eb)" }} />
+        <FileSpreadsheet
+          size={20}
+          style={{ color: "var(--bg-nav-active, #2563eb)" }}
+        />
       </div>
 
       <div style={{ minWidth: 0, width: "100%" }}>
@@ -99,7 +112,13 @@ function WorkbookCard({
         >
           {workbook.name}
         </div>
-        <div style={{ fontSize: "12px", color: "var(--text-muted, #6b7280)", marginTop: "2px" }}>
+        <div
+          style={{
+            fontSize: "12px",
+            color: "var(--text-muted, #6b7280)",
+            marginTop: "2px",
+          }}
+        >
           {timeAgo(workbook.updatedAt)} · {workbook.sheetCount} sheet
           {workbook.sheetCount === 1 ? "" : "s"}
         </div>
@@ -180,7 +199,10 @@ function WorkbookEditor({
         updatedAt: Date.now(),
         sheets: external,
       });
-      onTouched(workbookId, { sheetCount: external.length, updatedAt: Date.now() });
+      onTouched(workbookId, {
+        sheetCount: external.length,
+        updatedAt: Date.now(),
+      });
     },
     [workbookId, onTouched],
   );
@@ -256,7 +278,10 @@ function WorkbookEditor({
 
   // Toolbar items carry stable icon/onClick references; memoizing avoids
   // re-cloning mergedSettings (and re-rendering the toolbar) on every edit.
-  const customToolbarItems = useMemo(() => [importToolBarItem(), exportToolBarItem()], []);
+  const customToolbarItems = useMemo(
+    () => [importToolBarItem(), exportToolBarItem()],
+    [],
+  );
 
   const handleImportFile = () => {
     const input = document.createElement("input");
@@ -265,7 +290,8 @@ function WorkbookEditor({
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
-      const { transformExcelToFortune } = await import("@corbe30/fortune-excel");
+      const { transformExcelToFortune } =
+        await import("@corbe30/fortune-excel");
       await transformExcelToFortune(file, handleSheetsLoad, setKey, sheetRef);
       if (workbookName === "Untitled Workbook") {
         updateWorkbookName(file.name.replace(/\.(xlsx|csv)$/i, ""));
@@ -275,7 +301,14 @@ function WorkbookEditor({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+      }}
+    >
       {/* Editor header */}
       <div
         style={{
@@ -290,7 +323,15 @@ function WorkbookEditor({
           flexWrap: "wrap",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flex: 1 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            minWidth: 0,
+            flex: 1,
+          }}
+        >
           <button
             onClick={onBack}
             title="Back to workbooks"
@@ -333,12 +374,21 @@ function WorkbookEditor({
               width: "100%",
               maxWidth: "300px",
             }}
-            onFocus={(e) => (e.currentTarget.style.background = "var(--bg-page, #f9fafb)")}
+            onFocus={(e) =>
+              (e.currentTarget.style.background = "var(--bg-page, #f9fafb)")
+            }
             onBlur={(e) => (e.currentTarget.style.background = "transparent")}
           />
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            flexShrink: 0,
+          }}
+        >
           <button
             onClick={handleImportFile}
             title="Import .xlsx or .csv"
@@ -401,7 +451,9 @@ function WorkbookEditor({
           </button>
 
           {saving && (
-            <span style={{ fontSize: "12px", color: "var(--text-muted, #6b7280)" }}>
+            <span
+              style={{ fontSize: "12px", color: "var(--text-muted, #6b7280)" }}
+            >
               Saving…
             </span>
           )}
@@ -444,7 +496,10 @@ function WorkbookEditor({
               setKey={setKey}
               setSheets={handleSheetsLoad}
               sheetRef={sheetRef}
-              config={{ import: { xlsx: true, csv: true }, export: { xlsx: true, csv: true } }}
+              config={{
+                import: { xlsx: true, csv: true },
+                export: { xlsx: true, csv: true },
+              }}
             />
             <Workbook
               key={key}
@@ -464,9 +519,23 @@ function WorkbookEditor({
 export function ExternalSheet() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeId = searchParams.get("id");
-  const { workbooks, loading, createWorkbook, deleteWorkbook, touchWorkbook } = useWorkbooks();
+  const { workbooks, loading, createWorkbook, deleteWorkbook, touchWorkbook } =
+    useWorkbooks();
 
   const meta = workbooks.find((w) => w.id === activeId);
+  const session = getOrgSession();
+  const { fetch: refreshNotifications } = useContext(OrgNotificationContext);
+
+  const handleSetNotification = () => {
+    if (session)
+      addOrgNotification(session.orgId, {
+        kind: "system",
+        title: "Workbook created",
+        message: `${session.member.name} created a new workbook`,
+        is_alert: true,
+      });
+    void refreshNotifications();
+  };
 
   // Redirect to the workspace when ?id= points at a nonexistent workbook.
   // Only runs after the list has finished loading to avoid a false redirect
@@ -525,19 +594,40 @@ export function ExternalSheet() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <FileSpreadsheet size={22} style={{ color: "var(--bg-nav-active, #2563eb)" }} />
+          <FileSpreadsheet
+            size={22}
+            style={{ color: "var(--bg-nav-active, #2563eb)" }}
+          />
           <div>
-            <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "var(--text-primary, #111827)" }}>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: "18px",
+                fontWeight: 700,
+                color: "var(--text-primary, #111827)",
+              }}
+            >
               Workbooks
             </h2>
-            <p style={{ margin: "2px 0 0", fontSize: "13px", color: "var(--text-muted, #6b7280)" }}>
+            <p
+              style={{
+                margin: "2px 0 0",
+                fontSize: "13px",
+                color: "var(--text-muted, #6b7280)",
+              }}
+            >
               Your spreadsheet workspace
             </p>
           </div>
         </div>
 
         <button
-          onClick={() => void handleNewWorkbook()}
+          onClick={() => {
+            // 613
+           
+              handleSetNotification();
+            void handleNewWorkbook();
+          }}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -579,15 +669,25 @@ export function ExternalSheet() {
               background: "var(--bg-surface, #fff)",
             }}
           >
-            <FileSpreadsheet size={48} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
-            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: "var(--text-primary, #111827)" }}>
+            <FileSpreadsheet
+              size={48}
+              style={{ margin: "0 auto 12px", opacity: 0.4 }}
+            />
+            <h3
+              style={{
+                margin: 0,
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "var(--text-primary, #111827)",
+              }}
+            >
               No workbooks yet
             </h3>
             <p style={{ margin: "6px 0 20px", fontSize: "14px" }}>
               Create your first workbook to start building spreadsheets.
             </p>
             <button
-              onClick={() => void handleNewWorkbook()}
+              onClick={() => {void handleNewWorkbook(); handleSetNotification()}}
               style={{
                 display: "inline-flex",
                 alignItems: "center",

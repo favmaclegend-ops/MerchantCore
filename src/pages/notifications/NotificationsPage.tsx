@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { AlertTriangle, Bell, CheckCheck, Clock, CreditCard, DollarSign, FileText, Package, ShieldAlert, Trash2, Wallet, type LucideIcon } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
@@ -45,10 +45,14 @@ export function NotificationsPage() {
   const { format } = useContext(CurrencyContext)
   const {
     notifications, unreadCount, loading, canDelete, settings,
-    markAsRead, markAllAsRead, deleteNotification, clearAll, setSettings,
+    markAsRead, markAllAsRead, deleteNotification, clearAll, setSettings, fetch,
   } = useContext(OrgNotificationContext)
 
   const [filter, setFilter] = useState<Filter>('all')
+
+  useEffect(() => {
+    void fetch()
+  }, [fetch])
 
   const alertCount = notifications.filter(n => n.is_alert).length
   const filtered =
