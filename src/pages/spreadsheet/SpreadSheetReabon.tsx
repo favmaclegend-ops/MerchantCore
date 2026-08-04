@@ -13,6 +13,9 @@ import { UnderlineButton } from "./spreadComponents/UnderlineButton";
 import { StrikethroughButton } from "./spreadComponents/StrikethroughButton";
 import { FontSizeSelect } from "./spreadComponents/FontSizeSelect";
 import { ClearFormatButton } from "./spreadComponents/ClearFormatButton";
+import { CopyButton } from "./spreadComponents/CopyButton";
+import { PasteButton } from "./spreadComponents/PastButton";
+import { CutButton } from "./spreadComponents/CutButton";
 
 export function SpreadSheetReabon() {
   const { formularValue } = useStore(spreadSheetStore);
@@ -66,6 +69,23 @@ export function SpreadSheetReabon() {
           overflow: "hidden",
         }}
       >
+         <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: ".4rem",
+            flexDirection: "column",
+            height: "100%",
+            paddingInline: ".5rem",
+          }}
+        >
+          <div style={{ display: "flex", gap: '1rem', alignItems: "center" }}>
+              <CutButton />
+              <CopyButton />
+              <PasteButton />
+          </div>
+        </div>
+
         {/** Formatter ==================================================== */}
         <div
           style={{

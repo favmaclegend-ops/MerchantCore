@@ -6,5 +6,6 @@ export const spreadSheetStore = createStore<{
   formularValue: string;
   currentRow: number;
   currentColumn: number;
+  isPasteButtonDissable?: boolean;
   
-}>({ formularValue: '', currentRow: 0, currentColumn: 0 })
+}>({ formularValue: '', currentRow: 0, currentColumn: 0, isPasteButtonDissable: true })

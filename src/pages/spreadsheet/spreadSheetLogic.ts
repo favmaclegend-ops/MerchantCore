@@ -1356,6 +1356,7 @@ export function copySelection(withFormat: boolean): void {
     sourceRow: rect.top,
     sourceCol: rect.left,
   };
+  spreadSheetStore.setState({ isPasteButtonDissable: false });
 }
 
 /** Copies the selection then clears the source cells. */
@@ -1366,6 +1367,7 @@ export function cutSelection(withFormat: boolean): void {
   for (let r = rect.top; r <= rect.bottom; r++) {
     for (let c = rect.left; c <= rect.right; c++) {
       spreadsheetModel.clearCellAt(r, c);
+      spreadSheetStore.setState({ isPasteButtonDissable: false });
     }
   }
 }
