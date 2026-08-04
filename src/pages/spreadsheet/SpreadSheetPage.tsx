@@ -19,6 +19,7 @@ import {
   handleSpreadSheetValueChange,
   startBlockDrag,
   stopBlockDrag,
+  clearPreview,
 } from "./spreadSheetLogic";
 import { useEffect } from "react";
 
@@ -97,6 +98,8 @@ const SpreadSheetTable = memo(function SpreadSheetTable() {
                       padding: ".5rem",
                       border: "1px solid #5b5b5b39",
                       outline: "none",
+                      height: '3rem'
+
                     }}
                     onFocus={(e) =>{ handleSpreadCellFocus(e, row, col); handleMultiSelection()}}
                     onBlur={handleSpreadCellBlur}
@@ -112,6 +115,9 @@ const SpreadSheetTable = memo(function SpreadSheetTable() {
                         e.preventDefault();
                         startBlockDrag(el, e.ctrlKey || e.metaKey ? "copy" : "move");
                       }
+                    }}
+                    onMouseUp={() => {
+                      clearPreview();
                     }}
                   />
                 </td>

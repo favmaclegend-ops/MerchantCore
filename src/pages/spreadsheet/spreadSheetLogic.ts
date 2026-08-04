@@ -1069,16 +1069,32 @@ function resetCellSelet() {
 // ===========================================================================
 //  FORMATTING HELPERS (operate on the focused cell)
 // ===========================================================================
-export const handleCellBold = () => {
-  const currentCell = Cells.getCurrentCell();
-  if (!currentCell) return;
-  const data = spreadsheetModel.requireData(currentCell.id);
-  spreadsheetModel.updateStyleId(currentCell.id, {
+
+const _bold = (elem: HTMLInputElement) => {
+  const data = spreadsheetModel.requireData(elem.id);
+  spreadsheetModel.updateStyleId(elem.id, {
     fontWeight: data.style.fontWeight === "bold" ? "" : "bold",
   });
-  currentCell.focus();
 };
 
+export const handleCellBold = () => {
+  const currentCell = Cells.getCurrentCell();
+  const selectedCells = Cells.getSelection();
+
+  if (!currentCell || selectedCells.length == 0) return;
+
+  selectedCells.forEach((cell) => {
+    if (selectedCells.length > 1) {
+      _bold(cell);
+    }
+  });
+
+  if (selectedCells.length == 1) {
+    _bold(currentCell);
+  }
+};
+
+// Handle Italic
 export const handleCellItalic = () => {
   const currentCell = Cells.getCurrentCell();
   if (!currentCell) return;
@@ -1226,20 +1242,20 @@ export const handleCellFontSize = (size: number) => {
 };
 
 export const handleClearFormatting = () => {
-   const currentCell = Cells.getCurrentCell();
+  const currentCell = Cells.getCurrentCell();
   const selectedCells = Cells.getSelection();
 
   if (!currentCell || selectedCells.length == 0) return;
 
   selectedCells.forEach((cell) => {
     if (selectedCells.length > 1) {
-      spreadsheetModel.setStyleId(cell.id, { });
+      spreadsheetModel.setStyleId(cell.id, {});
     }
   });
   if (selectedCells.length == 1) {
     spreadsheetModel.setStyleId(currentCell.id, {});
   }
- 
+
   currentCell.focus();
 };
 
@@ -1407,9 +1423,11 @@ interface BlockDragState {
 
 let blockDrag: BlockDragState | null = null;
 
-function clearPreview(): void {
+export function clearPreview(): void {
   if (!blockDrag) return;
-  for (const el of blockDrag.preview) el.style.outline = "";
+  for (const el of blockDrag.preview) {
+    el.style.outline = "none";
+  }
   blockDrag.preview = [];
 }
 
