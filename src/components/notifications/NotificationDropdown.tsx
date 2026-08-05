@@ -184,7 +184,7 @@ function OrgNotificationItem({
         padding: '12px 16px',
         cursor: 'pointer',
         borderBottom: '1px solid var(--bg-tertiary)',
-        background: isUnread ? '#f0f9ff' : 'var(--bg-surface)',
+        background: isUnread ? 'var(--bg-highlighted)' : 'var(--bg-surface)',
         transition: 'background 0.15s',
       }}
     >

@@ -54,6 +54,7 @@
   --bg-warning: #fffbeb;
   --bg-danger: #fef2f2;
   --bg-info: #f8fafc;
+  --bg-highlighted: #b6e2ffc2;
 
   --text-primary: #0f172a;
   --text-secondary: #475569;
@@ -95,6 +96,7 @@
   --bg-warning: #451a03;
   --bg-danger: #450a0a;
   --bg-info: #1e293b;
+  --bg-highlighted: #40444749;
 
   --text-primary: #f5f7fb;
   --text-secondary: #e7eef8;
