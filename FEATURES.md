@@ -41,6 +41,7 @@ permission (Super Admin / Admin / Finance Manager) · `[dev]` mock-backed until 
 | **Customers** | Directory CRUD, spending/tier, add-to-credit | `src/pages/customers/CustomersPage.tsx` |
 | **Credit Ledger** | Debtors, balances, payments, overdue/critical status | `src/pages/credit/CreditLedgerPage.tsx` |
 | **Calculator** | In-app utility | `src/pages/calculator/` |
+| **Spreadsheet (External)** | FortuneSheet workbook workspace — create, autosave, save (Ctrl+S), import/export `.xlsx`/`.csv`, deep-linked editor | `src/pages/spreadsheet/external/` |
 | **Settings** | App preferences | `src/pages/settings/` |
 
 ## 4. Finance & Accounting — `[org]` `[fin]` `[dev]`
@@ -102,6 +103,65 @@ members via the header **bell** (unread badge + dropdown) and the **Notification
   Admins when the Super Admin enables the **"Admins can delete notifications"** setting).
 - The feed auto-syncs via the API-layer emission hooks (checkout / credit / finance / payroll /
   check-in) — no UI changes needed for new activity.
+
+**Developer integration** — to emit a notification from any component:
+
+```ts
+import { addOrgNotification } from '@/data/orgNotifications';
+import { getOrgSession } from '@/data/organisations';
+import { OrgNotificationContext } from '@/context';
+
+const session = getOrgSession();
+if (session) {
+  addOrgNotification(session.orgId, { kind: 'system', title, message, is_alert: true });
+  // `addOrgNotification` writes to localStorage only — refresh the React context
+  // afterwards so the badge, dropdown and page update without a full reload.
+  const { fetch } = useContext(OrgNotificationContext);
+  void fetch();
+}
+```
+
+`addOrgNotification` (the "set" API) prepends an item to the org's feed and auto-fills the
+actor from the active session. Reading, marking read and deleting go through
+`api.org.notifications.getFeed() / markRead() / markAllRead() / deleteNotification() /
+clearAll()` (`src/lib/api.ts`) or the equivalent context helpers. The page also re-syncs from
+storage on mount, so activity emitted anywhere is visible immediately on visit.
+
+## 5d. Spreadsheet (External) — `[all users]`
+
+`src/pages/spreadsheet/external/ExternalSheet.tsx` · `sheetFormat.ts` · `useWorkbooks.ts` · `workbookStorage.ts`
+
+The production spreadsheet workspace (`/home/spreadsheet`), built on **FortuneSheet**
+(`@fortune-sheet/react` + `@fortune-sheet/core`) with Excel/CSV import-export via
+`@corbe30/fortune-excel`. It is the successor to the legacy in-house grid (see below).
+
+- **Workspace view** (`?id=` absent): cards of saved workbooks (newest first), **New Workbook**
+  button (also emits an org notification — §5c), delete-with-confirm.
+- **Editor view** (`?id=<workbookId>` deep link, fully remounts per workbook): FortuneSheet grid,
+  inline workbook rename, **autosave on every change**, explicit **Save / Ctrl+S** with a
+  "Saved" flash, **Import `.xlsx`/`.csv`**, **Export to Excel**.
+- **Persistence**: promise-based `WorkbookStorage` interface (`workbookStorage.ts`) — the UI
+  never touches localStorage directly, so a server backend can be dropped in later by
+  reimplementing one interface. The local impl keeps a metadata index (`mc_workbooks`) for the
+  grid plus one record per workbook (`mc_sheet:<id>`).
+- **Sheet data format**: FortuneSheet hands the UI an internal row×col `data` matrix in
+  `onChange` but stores/loads the compact **celldata** list. `sheetFormat.ts` owns that
+  translation so the two forms can never drift apart again (saving the matrix straight to
+  storage previously produced an empty grid on reload).
+- **What it tackles**: replaces the buggy/limited hand-rolled grid with a battle-tested
+  spreadsheet engine; adds persistence, workbook management, autosave, rename, import/export
+  and shareable deep links that the legacy editor never had.
+
+### Legacy spreadsheet — ON HOLD (in development, not production ready)
+
+`src/pages/spreadsheet/SpreadSheetPage.tsx` · `spreadSheetLogic.ts` · `spreadSheetReabon.tsx` ·
+`FillHandle.tsx` · `spreadComponents/` · `spread.css`
+
+The original in-house spreadsheet built directly on DOM tables with custom logic: formula bar
+(`SpreadSheetReabon`), fill handle, multi-select / block drag-fill, a formatting toolbar
+(`spreadComponents/`), and a shared store (`src/context/store.ts` via `elk-components`).
+It is **not routed** (`home.tsx` uses the external editor) and is **not production ready** —
+kept in the tree while the FortuneSheet-based external workbook ships.
 
 ## 6. Platform-wide
 
