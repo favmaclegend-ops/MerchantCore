@@ -27,6 +27,7 @@ export function CustomersPage() {
   const customersApi = orgUser ? api.org : api
   const [customers, setCustomers] = useState<any[]>([])
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
+  const [isSelectedCustomerCard, setCustomerCard] = useState(false);
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -124,7 +125,7 @@ export function CustomersPage() {
         style={{ width: '100%', height: '40px', padding: '0 14px', border: '1px solid var(--border-default)', borderRadius: '8px', fontSize: '13px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? '1fr 2fr' : '1fr', gap: bp.xl ? '16px' : '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: bp.xl ? '16px' : '12px' }}>
         <div>
           <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)' }}>
             <div style={{ padding: '12px', borderBottom: '1px solid var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -135,7 +136,7 @@ export function CustomersPage() {
               {filtered.map((customer: any) => {
                 const isSelected = selectedCustomer?.id === customer.id
                 return (
-                  <button key={customer.id} onClick={() => setSelectedCustomer(customer)} style={{
+                  <button key={customer.id} onClick={() => {setSelectedCustomer(customer); setCustomerCard(true)}} style={{
                     width: '100%', padding: '12px', display: 'flex', alignItems: 'center', gap: '10px',
                     textAlign: 'left', border: 'none', borderBottom: '1px solid var(--bg-secondary)',
                     background: isSelected ? 'var(--bg-secondary)' : 'transparent', cursor: 'pointer',
@@ -157,69 +158,73 @@ export function CustomersPage() {
             </div>
           </div>
         </div>
-
-        <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', overflow: 'hidden' }}>
-          {selectedCustomer ? (
-            <>
-              <div style={{ background: 'var(--bg-nav-active)', padding: '20px', color: 'var(--text-on-dark)' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
-                    <div style={{ width: '56px', height: '56px', background: 'var(--bg-surface-hover)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: '18px', fontWeight: 700 }}>{selectedCustomer.name?.substring(0, 2).toUpperCase()}</span>
+        {
+          isSelectedCustomerCard &&
+          <div onClick={(e) => e.target == e.currentTarget && setCustomerCard(false)} style={{display: 'flex', position: 'fixed', top: '0', zIndex: '111', inset: '0', background: 'rgba(23, 23, 23, 0.38)', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', overflow: 'hidden' }}>
+            {selectedCustomer ? (
+              <>
+                <div style={{ background: 'var(--bg-nav-active)', padding: '20px', color: 'var(--text-on-dark)', maxWidth: '700px'}}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                      <div style={{ width: '56px', height: '56px', background: 'var(--bg-surface-hover)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span style={{ fontSize: '18px', fontWeight: 700 }}>{selectedCustomer.name?.substring(0, 2).toUpperCase()}</span>
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <h2 style={{ fontSize: '18px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{selectedCustomer.name}</h2>
+                          <span style={{ padding: '2px 6px', fontSize: '10px', fontWeight: 500, borderRadius: '999px', whiteSpace: 'nowrap', ...tierStyle(selectedCustomer.tier || '') }}>
+                            {(selectedCustomer.tier || '').toUpperCase()}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '2px 0 0 0' }}>{selectedCustomer.company}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', fontSize: '10px', color: 'var(--text-placeholder)' }}>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>{selectedCustomer.email}</span>
+                          <span style={{ whiteSpace: 'nowrap' }}>{selectedCustomer.phone}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <h2 style={{ fontSize: '18px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{selectedCustomer.name}</h2>
-                        <span style={{ padding: '2px 6px', fontSize: '10px', fontWeight: 500, borderRadius: '999px', whiteSpace: 'nowrap', ...tierStyle(selectedCustomer.tier || '') }}>
-                          {(selectedCustomer.tier || '').toUpperCase()}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '2px 0 0 0' }}>{selectedCustomer.company}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', fontSize: '10px', color: 'var(--text-placeholder)' }}>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>{selectedCustomer.email}</span>
-                        <span style={{ whiteSpace: 'nowrap' }}>{selectedCustomer.phone}</span>
-                      </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                      <button onClick={openEdit} style={{ padding: '6px', background: 'var(--bg-surface-hover)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
+                        <Edit style={{ width: '14px', height: '14px', color: 'var(--text-on-dark)' }} />
+                      </button>
+                      <button onClick={handleAddToCredit} style={{ padding: '6px', background: 'var(--bg-surface-hover)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
+                        <CreditCard style={{ width: '14px', height: '14px', color: 'var(--text-on-dark)' }} />
+                      </button>
+                      <button onClick={() => window.location.href = `mailto:${selectedCustomer.email}`} style={{ padding: '6px', background: 'var(--bg-surface-hover)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
+                        <Mail style={{ width: '14px', height: '14px', color: 'var(--text-on-dark)' }} />
+                      </button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                    <button onClick={openEdit} style={{ padding: '6px', background: 'var(--bg-surface-hover)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
-                      <Edit style={{ width: '14px', height: '14px', color: 'var(--text-on-dark)' }} />
-                    </button>
-                    <button onClick={handleAddToCredit} style={{ padding: '6px', background: 'var(--bg-surface-hover)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
-                      <CreditCard style={{ width: '14px', height: '14px', color: 'var(--text-on-dark)' }} />
-                    </button>
-                    <button onClick={() => window.location.href = `mailto:${selectedCustomer.email}`} style={{ padding: '6px', background: 'var(--bg-surface-hover)', borderRadius: '4px', border: 'none', cursor: 'pointer' }}>
-                      <Mail style={{ width: '14px', height: '14px', color: 'var(--text-on-dark)' }} />
-                    </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid var(--bg-tertiary)' }}>
+                  <div style={{ padding: '16px', borderRight: '1px solid var(--bg-tertiary)' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Spent</span>
+                    <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', margin: '2px 0 0 0' }}>{format(selectedCustomer.total_spent || 0)}</p>
+                  </div>
+                  <div style={{ padding: '16px', borderRight: '1px solid var(--bg-tertiary)' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Credit Limit</span>
+                    <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', margin: '2px 0 0 0' }}>{format(selectedCustomer.credit_limit || 0)}</p>
+                  </div>
+                  <div style={{ padding: '16px' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Last Purchase</span>
+                    <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', margin: '2px 0 0 0' }}>{selectedCustomer.last_purchase || 'N/A'}</p>
                   </div>
                 </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid var(--bg-tertiary)' }}>
-                <div style={{ padding: '16px', borderRight: '1px solid var(--bg-tertiary)' }}>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Spent</span>
-                  <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', margin: '2px 0 0 0' }}>{format(selectedCustomer.total_spent || 0)}</p>
+                <div style={{ padding: '16px', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                  Customer since {selectedCustomer.created_at ? new Date(selectedCustomer.created_at).toLocaleDateString() : 'N/A'}
                 </div>
-                <div style={{ padding: '16px', borderRight: '1px solid var(--bg-tertiary)' }}>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Credit Limit</span>
-                  <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', margin: '2px 0 0 0' }}>{format(selectedCustomer.credit_limit || 0)}</p>
-                </div>
-                <div style={{ padding: '16px' }}>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Last Purchase</span>
-                  <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', margin: '2px 0 0 0' }}>{selectedCustomer.last_purchase || 'N/A'}</p>
-                </div>
+              </>
+            ) : (
+              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '12px' }}>
+                {loading ? 'Loading...' : 'Select a customer to view details'}
               </div>
-
-              <div style={{ padding: '16px', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
-                Customer since {selectedCustomer.created_at ? new Date(selectedCustomer.created_at).toLocaleDateString() : 'N/A'}
-              </div>
-            </>
-          ) : (
-            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '12px' }}>
-              {loading ? 'Loading...' : 'Select a customer to view details'}
-            </div>
-          )}
+            )}
+          </div>
         </div>
+      }
       </div>
 
       {showForm && (

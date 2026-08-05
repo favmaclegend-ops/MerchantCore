@@ -17,16 +17,16 @@ type NavItem = {
 const navItems: NavItem[] = [
   { path: '/home/dashboard', label: 'Dashboard', icon: LayoutGrid },
   { path: '/home/inventory', label: 'Inventory', icon: Package },
-  { path: '/home/credit', label: 'Credit Ledger', icon: CreditCard },
   { path: '/home/pos', label: 'POS', icon: ShoppingCart },
-  { path: '/home/customers', label: 'Customers', icon: Users },
   { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
   { path: '/home/hrm', label: 'HRM', icon: Contact, permission: 'hrm' },
   { path: '/home/supply', label: 'Supply Chain', icon: Truck, permission: 'supply' },
+  { path: '/home/users', label: 'Users', icon: UserPlusIcon, permission: 'users' },
+  { path: '/home/spreadsheet', label: 'SpreadSheet', icon: FileSpreadsheet },
   { path: '/home/attendance', label: 'Attendance', icon: Clock, orgMemberOnly: true },
   { path: '/home/notifications', label: 'Notifications', icon: Bell, orgMemberOnly: true },
-  { path: '/home/spreadsheet', label: 'SpreadSheet', icon: FileSpreadsheet },
-  { path: '/home/users', label: 'Users', icon: UserPlusIcon, permission: 'users' },
+  { path: '/home/customers', label: 'Customers', icon: Users },
+  { path: '/home/credit', label: 'Credit Ledger', icon: CreditCard },
   { path: '/home/calculator', label: 'Calculator', icon: Calculator },
 ]
 

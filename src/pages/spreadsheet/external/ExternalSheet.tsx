@@ -30,7 +30,7 @@ import { createEmptyWorkbook, toExternalSheets } from "./sheetFormat";
 import { useWorkbooks } from "./useWorkbooks";
 import { addOrgNotification } from "@/data/orgNotifications";
 import { getOrgSession } from "@/data/organisations";
-import { OrgNotificationContext } from "@/context";
+import {  OrgNotificationContext } from "@/context";
 
 /** Formats a millisecond timestamp as a short "time ago" label. */
 function timeAgo(ts: number): string {
@@ -56,6 +56,20 @@ function WorkbookCard({
   onOpen: () => void;
   onDelete: () => void;
 }) {
+  const session = getOrgSession();
+  // const { fetch: refreshNotifications } = useContext(OrgNotificationContext);
+
+  const handleSetNotification = () => {
+    if (session)
+      addOrgNotification(session.orgId, {
+        kind: "system",
+        title: "Workbook Deleted",
+        message: `${session.member.name} Deleted ${workbook.name}`,
+        is_alert: true,
+      });
+   // void refreshNotifications();
+  };
+
   return (
     <div
       className="workbook-card"
@@ -75,6 +89,7 @@ function WorkbookCard({
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
+          handleSetNotification()
         }}
       >
         <Trash2 size={15} />
@@ -506,6 +521,7 @@ function WorkbookEditor({
               data={sheets}
               ref={sheetRef}
               row={100}
+              
               onChange={handleSheetsChange}
               customToolbarItems={customToolbarItems}
             />

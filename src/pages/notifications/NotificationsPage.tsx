@@ -200,7 +200,7 @@ function NotificationRow({
 }) {
   const cfg = kindConfig[n.kind] || kindConfig.system
   const Icon = cfg.icon
-
+  const {orgUser} = useContext(Authcontext)
   return (
     <div
       onClick={() => !read && onMarkRead(n.id)}
@@ -238,7 +238,9 @@ function NotificationRow({
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0, gap: '6px' }}>
         {n.amount > 0 && (
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-success)', whiteSpace: 'nowrap' }}>{format(n.amount)}</span>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-success)', whiteSpace: 'nowrap' }}>
+            {orgUser!.role != 'super-admin' && orgUser!.role != 'admin' && orgUser!.role != 'hrm-manager' ? '': format(n.amount)}
+          </span>
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {!read && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text-info)' }} />}

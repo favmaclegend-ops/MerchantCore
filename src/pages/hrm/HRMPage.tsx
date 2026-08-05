@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext,  useState, type ChangeEvent, } from 'react'
 import {
   Plus, X, Contact, Wallet, ShieldCheck, Clock, Star, DollarSign, CheckCircle2,
 } from 'lucide-react'
@@ -22,6 +22,8 @@ import {
   type OrgReviewInput,
   type OrgTimeInput,
 } from '@/data/orgHRM'
+import { useMountEffect } from 'elk-components'
+
 
 type TabId = 'overview' | 'employees' | 'payroll' | 'attendance' | 'performance' | 'benefits'
 
@@ -167,49 +169,7 @@ export function HRMPage() {
     employee_id: '', period: 'H2 2026', score: '', notes: '',
   })
 
-  const reload = () => {
-    api.org.hrm.getState()
-      .then(s => setState(s))
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load HR data'))
-    api.org.hrm.getBenefits()
-      .then(setBenefits)
-      .catch(() => {})
-    api.org.hrm.getAttendance()
-      .then(setAttendance)
-      .catch(() => {})
-    api.org.hrm.getSummary()
-      .then(setSummary)
-      .catch(() => {})
-  }
-
-  useEffect(() => {
-    api.org.hrm.getState()
-      .then(s => setState(s))
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load HR data'))
-      .finally(() => setLoading(false))
-    api.org.hrm.getBenefits()
-      .then(setBenefits)
-      .catch(() => {})
-    api.org.hrm.getAttendance()
-      .then(setAttendance)
-      .catch(() => {})
-    api.org.hrm.getSummary()
-      .then(setSummary)
-      .catch(() => {})
-  }, [])
-
-  if (!canManageHRM(orgUser)) {
-    return (
-      <div style={{ width: '100%', padding: '40px 16px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', textAlign: 'center' }}>
-        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Restricted area</p>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', marginBottom: 0 }}>
-          You do not have permission to view Human Resources. This area is only available to organisation admins and HRM managers.
-        </p>
-      </div>
-    )
-  }
-
-  const employees = state ? state.employees : []
+   const employees = state ? state.employees : []
   const payrollRuns = state ? state.payrollRuns : []
   const timeEntries = state ? state.timeEntries : []
   const reviews = state ? state.reviews : []
@@ -226,7 +186,77 @@ export function HRMPage() {
   const presentToday = attendance.filter(a => a.date === today && a.status === 'present').length
   const summaryByEmp = new Map(summary.map(s => [s.employee_id, s]))
   const todayByEmp = new Map(attendance.filter(a => a.date === today).map(a => [a.employee_id, a]))
-  const rosterEmployees = employees.filter(e => e.status === 'active' || e.status === 'probation')
+  const rosterEmployees = employees.filter(e => e.status === 'active' || e.status === 'probation') 
+  const [rosterEmployeesFilter, setRosterEmployeeFilter] = useState<OrgEmployee[]>(rosterEmployees);
+  const [sumaryEmployees, setSummaryEmployees] = useState(summary)
+  const [timeEntriesFilter, setTimeEntriesFilter] = useState(timeEntries)
+
+  const handleAttendanceFilter = (e: ChangeEvent) => {
+    const target = e.currentTarget as HTMLInputElement
+    console.log(target)
+    if (target?.value == '') {
+      setRosterEmployeeFilter(rosterEmployees);
+      setSummaryEmployees(summary);
+      setTimeEntriesFilter(timeEntries);
+      return;
+    }
+    setRosterEmployeeFilter(rosterEmployees.filter(x => x.name?.toLowerCase()?.includes(target?.value?.toLowerCase())  ))
+    setSummaryEmployees(summary.filter(x => x.employee_name?.toLowerCase()?.includes(target?.value.toLowerCase())))
+    setTimeEntriesFilter(timeEntries.filter(t => t.employee_name?.toLowerCase()?.includes(target?.value?.toLowerCase())))
+  }
+
+  const reload = () => {
+    api.org.hrm.getState()
+      .then(s => {
+        setState(s); 
+        setRosterEmployeeFilter(s.employees.filter(e => e.status == 'active' || e.status == 'probation'))
+        setTimeEntriesFilter(s.timeEntries)
+      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load HR data'))
+    api.org.hrm.getBenefits()
+      .then(setBenefits)
+      .catch(() => {})
+    api.org.hrm.getAttendance()
+      .then(setAttendance)
+      .catch(() => {})
+    api.org.hrm.getSummary()
+      .then((data) => {setSummary(data); setSummaryEmployees(data)})
+      .catch(() => {})
+  }
+
+  useMountEffect(() => {
+    api.org.hrm.getState()
+      .then(s => {
+        setState(s); 
+        setRosterEmployeeFilter(s.employees.filter(e => e.status == 'active' || e.status == 'probation'))
+        setTimeEntriesFilter(s.timeEntries)
+      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load HR data'))
+      .finally(() => setLoading(false))
+    api.org.hrm.getBenefits()
+      .then(setBenefits)
+      .catch(() => {})
+    api.org.hrm.getAttendance()
+      .then(setAttendance)
+      .catch(() => {})
+    api.org.hrm.getSummary()
+      .then((data) => {setSummary(data); setSummaryEmployees(data)})
+      .catch(() => {})
+  })
+
+  if (!canManageHRM(orgUser)) {
+    return (
+      <div style={{ width: '100%', padding: '40px 16px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', textAlign: 'center' }}>
+        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Restricted area</p>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', marginBottom: 0 }}>
+          You do not have permission to view Human Resources. This area is only available to organisation admins and HRM managers.
+        </p>
+      </div>
+    )
+  }
+
+ 
+
 
   const openEmployeeForm = (employee?: OrgEmployee) => {
     setEditingEmployee(employee ?? null)
@@ -402,7 +432,7 @@ export function HRMPage() {
   const submitBtn = { flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' } as React.CSSProperties
 
   const tabBar = (
-    <div style={{ width: '100%', display: 'flex', gap: '4px', padding: '6px', borderRadius: '12px', background: 'transparent', overflowX: 'auto' }}>
+    <div style={{ width: 'auto', display: 'flex', gap: '4px', padding: '6px', borderRadius: '12px', background: 'transparent', overflowX: 'auto' }}>
       {TABS.map(t => (
         <button
           key={t.id}
@@ -421,7 +451,8 @@ export function HRMPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%', padding: '0 8px' }}>
-      <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+      <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',  }}>
+        {tabBar}
         
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {active === 'employees' && (
@@ -459,7 +490,7 @@ export function HRMPage() {
         </div>
       )}
 
-      {tabBar}
+      
 
       {loading ? (
         <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', padding: '24px' }}>Loading HR data...</p>
@@ -628,10 +659,18 @@ export function HRMPage() {
             </div>
           )}
 
+          {/**Attendance */}
           {active === 'attendance' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+              <div style={{display: 'flex', flexDirection: 'column',   marginInlineStart: 'auto', width: '100%' }}> 
+                  <input onChange={handleAttendanceFilter} placeholder='Search Attendence...' style={{width: '100%', borderRadius: '.3rem', padding: '.5rem .5rem', height: '100%', border: '1px solid var(--border-default)', outline: 'none', background: 'var(--bg-surface)', }}/>
+                </div>
+
               <div style={panelStyle}>
-                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 12px 0' }}>Today's attendance</h3>
+                <div style={{display: 'flex', alignItems: 'center', width: '100%',}}>
+                  <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 12px 0' }}>Today's attendance</h3>
+                  
+                </div>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '480px' }}>
                     <thead>
@@ -641,7 +680,7 @@ export function HRMPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {rosterEmployees.map(employee => {
+                      {rosterEmployeesFilter.map(employee => {
                         const record = todayByEmp.get(employee.id)
                         return (
                           <tr key={employee.id}>
@@ -654,7 +693,7 @@ export function HRMPage() {
                           </tr>
                         )
                       })}
-                      {rosterEmployees.length === 0 && (
+                      {rosterEmployeesFilter.length === 0 && (
                         <tr><td colSpan={2} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-placeholder)' }}>No active staff</td></tr>
                       )}
                     </tbody>
@@ -679,7 +718,7 @@ export function HRMPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {summary.map(row => (
+                      {sumaryEmployees.map(row => (
                         <tr key={row.employee_id}>
                           <td style={{ ...tdStyle, fontWeight: 600 }}>{row.employee_name}</td>
                           <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>{row.scheduled_days}</td>
@@ -697,7 +736,7 @@ export function HRMPage() {
                           </td>
                         </tr>
                       ))}
-                      {summary.length === 0 && (
+                      {sumaryEmployees.length === 0 && (
                         <tr><td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-placeholder)' }}>No attendance data yet</td></tr>
                       )}
                     </tbody>
@@ -718,7 +757,7 @@ export function HRMPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {timeEntries.map(entry => (
+                      {timeEntriesFilter.map(entry => (
                         <tr key={entry.id}>
                           <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{formatDate(entry.date)}</td>
                           <td style={{ ...tdStyle, fontWeight: 600 }}>{entry.employee_name}</td>
@@ -726,7 +765,7 @@ export function HRMPage() {
                           <td style={{ ...tdStyle, textAlign: 'right', color: entry.overtime_hours > 0 ? '#fbbf24' : 'var(--text-muted)' }}>{entry.overtime_hours}</td>
                         </tr>
                       ))}
-                      {timeEntries.length === 0 && (
+                      {timeEntriesFilter.length === 0 && (
                         <tr><td colSpan={4} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-placeholder)' }}>No time entries yet</td></tr>
                       )}
                     </tbody>
