@@ -1,21 +1,37 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Package, Search, ShoppingCart, Star } from "lucide-react";
+import { Package, Plus, Search, ShoppingCart, Star } from "lucide-react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useStore } from "elk-components";
 import { marketStore } from "../demoMarketStore";
 import type { MarketStoreProduct } from "../demoMarketStore";
 import { valueFormater } from "../market";
+import { addToMarketCart } from "../cart";
 import { ProductInfoPanel } from "./ProductInfoPanel";
+import { UploadToShopModal } from "./UploadToShopModal";
+import { useShopOwner } from "../useShopOwner";
+import Alert from "@/components/alert/alert";
 
 export function Products() {
   const params = useParams();
   const bp = useBreakpoint();
-  const { shops, products } = marketStore.getSnapshot();
+  const { shops, products } = useStore(marketStore);
   const shop = shops[params.id ?? ""];
+  const { isOwner } = useShopOwner();
   const [query, setQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<MarketStoreProduct | null>(null);
+  const [alert, setAlert] = useState<{ message: string; type: string } | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
   if (!shop) return null;
+
+  const handleAddToCart = (product: MarketStoreProduct) => {
+    if (addToMarketCart(product)) {
+      setAlert({ message: `${product.product_name} added to cart`, type: "success" });
+    } else {
+      setAlert({ message: `${product.product_name} is out of stock`, type: "error" });
+    }
+  };
 
   const shopProducts = products.filter(
     (p) => p.group_id === shop.shop_id || p.group_id === shop.product_id,
@@ -73,6 +89,31 @@ export function Products() {
             {shopProducts.length}
           </span>
         </div>
+
+        {isOwner(shop) && (
+          <button
+            className="click"
+            onClick={() => setShowUpload(true)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: ".35rem",
+              padding: ".5rem .9rem",
+              borderRadius: "3rem",
+              cursor: "pointer",
+              background: "var(--bg-nav-active)",
+              border: "none",
+              color: "var(--bg-surface)",
+              fontSize: ".8rem",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
+            <Plus size={16} color="var(--bg-surface)" />
+            Add new items
+          </button>
+        )}
 
         <div
           style={{
@@ -256,6 +297,10 @@ export function Products() {
               <button
                 className="click"
                 disabled={!product.inStock}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart(product);
+                }}
                 style={{
                   width: "100%",
                   padding: ".6rem",
@@ -286,6 +331,10 @@ export function Products() {
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
         />
+      )}
+      {alert && <Alert message={alert.message} type={alert.type} />}
+      {showUpload && (
+        <UploadToShopModal onClose={() => setShowUpload(false)} />
       )}
     </div>
   );

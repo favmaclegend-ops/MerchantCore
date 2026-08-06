@@ -7,6 +7,7 @@ import {
   Wallet,
   History,
   CheckCircle,
+  Store,
 } from "lucide-react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { api } from "@/lib/api";
@@ -16,6 +17,7 @@ import Alert from "@/components/alert/alert";
 import { CurrencyContext } from "@/context/currency_context";
 import { useDebounceEffect, useInstance, useSetState } from "elk-components";
 import { store } from "@/context/store";
+import { UploadToShopModal } from "@/pages/market/components/UploadToShopModal";
 
 interface CartItem {
   id: string;
@@ -29,10 +31,20 @@ const LOW_STOCK_THRESHOLD = 20;
 interface Product {
   id: string;
   name: string;
+  sku: string;
   price: number;
   stock: number;
   category: string;
   status: "in-stock" | "low-stock" | "out-of-stock";
+}
+
+interface Transaction {
+  id: string;
+  type: string;
+  amount: number;
+  customer_name?: string;
+  created_at?: string;
+  status: string;
 }
 
 function stockStatus(stock: number): Product["status"] {
@@ -51,16 +63,17 @@ export function POSPage() {
   const { format } = useContext(CurrencyContext);
   const { orgUser } = useContext(Authcontext);
   const posApi = orgUser ? api.org : api;
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [category, setCategory] = useState("All Items");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [showLog, setShowLog] = useState(false);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [successMsg, setSuccessMsg] = useState("");
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
   const [isCart, setCartView] = useState<boolean>(false);
+  const [showUpload, setShowUpload] = useState(false);
 
   
   const [searchedItems, setSearchedItems] = useState(products);
@@ -271,6 +284,27 @@ export function POSPage() {
               >
                 POS Terminal
               </h1>
+              <button
+                onClick={() => setShowUpload(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: ".35rem",
+                  padding: ".4rem .9rem",
+                  borderRadius: "4rem",
+                  border: "1px solid var(--border-default)",
+                  cursor: "pointer",
+                  background: "var(--bg-nav-active)",
+                  color: "var(--bg-surface)",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                }}
+                title="Upload items to your market shop"
+              >
+                <Store style={{ width: "14px", height: "14px" }} />
+                Upload to shop
+              </button>
               {!bp.xl && (
                 <button
                   onClick={() => setCartView(!isCart)}
@@ -956,7 +990,7 @@ export function POSPage() {
                   No transactions yet
                 </p>
               )}
-              {transactions.slice(0, 20).map((tx: any) => (
+              {transactions.slice(0, 20).map((tx: Transaction) => (
                 <div
                   key={tx.id}
                   style={{
@@ -1008,6 +1042,10 @@ export function POSPage() {
           </div>
         )}
       </div>
+
+      {showUpload && (
+        <UploadToShopModal onClose={() => setShowUpload(false)} />
+      )}
 
       {isAlert.isAlert && (
         <Alert message={isAlert.message} type={isAlert.type} />

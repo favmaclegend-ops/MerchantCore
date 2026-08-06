@@ -12,7 +12,7 @@ A modern, responsive React dashboard application for merchant management. Built 
 - **Spreadsheet** - FortuneSheet-powered workbook workspace with autosave, rename, import/export (`.xlsx`/`.csv`), and shareable deep links
 - **Organisation Workspace** - Multi-role business workspace (users, finance, HRM, supply chain, attendance, notifications) — see `ORGANIZATION.md`
 - **Notifications & Alerts** - Org-wide activity feed with unread badge, per-member read state, and permission-gated delete
-- **Market & Billboard Ads** - Shop browsing plus an in-app billboard of video adverts (muted/autoplay/looping, click-through to `visitLink`) — see "Market & Billboard Ads" below
+- **Market & Billboard Ads** - Shop browsing, product catalog, cart & checkout (orders routed to the owning shops) plus an in-app billboard of video adverts (muted/autoplay/looping, click-through to `visitLink`) — see "Market & Billboard Ads" below
 
 > **Feature status**: the external spreadsheet (`src/pages/spreadsheet/external/`) is the
 > active production editor. The legacy in-house spreadsheet
@@ -122,10 +122,61 @@ interface MarketStoreAdvert {
 | `fetchProducts()` | `GET /market/products` |
 | `fetchCategories()` | `GET /market/categories` |
 | `fetchAdverts()` | `GET /market/adverts` |
+| `submitMarketOrder(input)` | `POST /market/orders` (checkout) |
 
 > **Server-integration checklist**: keep the promise-based signatures in `marketApi.ts`, resolve
 > `videoUrl`/`visitLink` to absolute URLs, and ensure advert IDs stay unique. Shop ids contain
 > `@` (e.g. `sunrise_mart@123456`) — valid URL segments, keep them unencoded in links.
+
+### Cart & checkout
+
+`src/pages/market/cart.ts` — cart state + pure logic, backed by an `elk-components` store so the
+cart panel in `MarketPage.tsx` and every product grid share one source of truth:
+
+- **Add to cart** — `addToMarketCart(product)` (used by `Markets.tsx`, `Products.tsx` and the
+  `ProductInfoPanel`). Adds the product, increments quantity on repeat clicks, and rejects
+  out-of-stock items. Each cart line carries its owning `shop_id`/`shop_name` (resolved via
+  `resolveShopForProduct`), which checkout uses to route alerts.
+- **Manage** — `updateMarketCartQuantity(id, delta)` (±, auto-removes at zero),
+  `removeFromMarketCart(id)`, `clearMarketCart()`, and `getMarketCartTotals(items)` (subtotal,
+  5% tax, total). `MarketPage.tsx` renders the live panel on desktop and a slide-up overlay on
+  mobile.
+- **Checkout** — the panel sends the cart through `submitMarketOrder({ items, payment_method })`
+  (demo API in `marketApi.ts`, latency + deep-clone like the fetchers). The order is grouped per
+  owning shop, an **alert is dispatched to every shop that owns a cart item** (message, owner,
+  amount), and the completed order is prepended to `marketOrdersStore` for the **Log** modal.
+  Checkout is disabled for an empty cart; a success banner and an "Order sent to shops" dialog
+  list the alerted shops. Swap `submitMarketOrder` for `POST /market/orders` when the backend ships.
+
+### Shop creation & item upload
+
+`src/pages/market/marketUpload.ts` — a localStorage-backed data layer (keys `mc_market_user_shops`
+and `mc_market_user_products`) that lets users open their own shop and upload their POS items to it:
+
+- **Owner identity** — `getOwnerKey(user, orgUser, orgId)` returns `org:<orgId>` for organisation
+  members (the whole org shares one shop) or `user:<id|email|guest>` for personal logins.
+- **Create shop** — `createMarketShop(ownerKey, input)` generates `shop_id`/`product_id` ids
+  (`mc_<slug>@<timestamp>`) and defaults (image, rating `"0"`, location). Shops are per-owner;
+  `getMyShop(ownerKey)` returns the first shop the user owns.
+- **Upload items** — `uploadProductsToShop(ownerKey, sourceProducts)` maps POS products (id, name,
+  price, stock, category) into `MarketStoreProduct`s under the user's shop, converting stock to
+  `inStock`. Already-uploaded sources are skipped (`getUploadedSourceIds`) so the same POS item can
+  never be double-added to a shop.
+- **Sync** — `mergeUserMarketData(base)` folds user shops/products into the seeded market bundle;
+  `fetchMarketData()` applies it when hydrating, and `syncUserMarketData()` pushes it into
+  `marketStore` immediately so the hub, shop pages and billboards update without a reload.
+
+**UI entry points** — the same **Upload to shop** button lives in the POS page header and under
+Settings. If the user has no shop yet it shows a create-shop panel; otherwise it lists the POS
+items with **All items** / **Selected items** modes, highlighting items already uploaded. On a shop
+page, the owner sees an **Add new items** button (hidden for non-owners) that opens the same panel
+scoped to that shop.
+
+| Existing mock | Future endpoint |
+|---|---|
+| `createMarketShop(ownerKey, input)` | `POST /market/shops` |
+| `uploadProductsToShop(ownerKey, items)` | `POST /market/items` |
+| `mergeUserMarketData(base)` / `syncUserMarketData()` | server-side merge in `GET /market` |
 
 ## Getting Started
 
@@ -184,7 +235,7 @@ merchant-core/
 │   │   ├── credit/          # CreditLedgerPage
 │   │   ├── customers/       # CustomersPage
 │   │   ├── notifications/   # NotificationsPage
-│   │   ├── market/          # Market hub + billboard ads (MarketPage, Markets, ShopPage, billboard.ts, marketApi.ts, components/)
+│   │   ├── market/          # Market hub + billboard ads + cart/checkout (MarketPage, Markets, ShopPage, billboard.ts, cart.ts, marketApi.ts, components/)
 │   │   └── spreadsheet/
 │   │       ├── external/    # ExternalSheet (active) + sheetFormat/useWorkbooks/workbookStorage
 │   │       └── ...          # Legacy spreadsheet (on hold, not production ready)

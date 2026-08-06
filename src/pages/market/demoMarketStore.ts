@@ -10,6 +10,7 @@ export interface MarketStoreShop {
   rating?: string;
   description?: string;
   createdAt?: string;
+  ownerKey?: string;
   location?: {
     lat: number;
     lng: number;

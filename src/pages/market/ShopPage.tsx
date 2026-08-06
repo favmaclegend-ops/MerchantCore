@@ -1,6 +1,7 @@
 import { ArrowLeft, MessageCircle, Star } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useStore } from "elk-components";
 import { marketStore } from "./demoMarketStore";
 import { useMarketData } from "./useMarketData";
 import { valueFormater } from "./market";
@@ -17,7 +18,7 @@ export function ShopPage () {
     const bp = useBreakpoint();
     const { loading } = useMarketData();
     
-    const shop = marketStore.getSnapshot().shops[params.id ?? ""] 
+    const shop = useStore(marketStore).shops[params.id ?? ""]
     if (loading) {
         return (
             <div style={{display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>

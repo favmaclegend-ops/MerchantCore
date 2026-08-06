@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ShoppingCart,
   Star,
   Store,
   X,
@@ -17,6 +18,7 @@ import {
   resolveShopForProduct,
   valueFormater,
 } from "../market";
+import { addToMarketCart } from "../cart";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 export function ProductInfoPanel({
@@ -31,6 +33,7 @@ export function ProductInfoPanel({
   const images = useMemo(() => getProductImages(product), [product]);
   const [index, setIndex] = useState(0);
   const [touchX, setTouchX] = useState<number | null>(null);
+  const [added, setAdded] = useState(false);
 
   const safeIndex = images.length ? index % images.length : 0;
 
@@ -66,6 +69,12 @@ export function ProductInfoPanel({
     if (!shop) return;
     onClose();
     navigate(`/home/market/${shop.shop_id}`);
+  };
+
+  const handleAddToCart = () => {
+    if (!addToMarketCart(product)) return;
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
   };
 
   return (
@@ -430,6 +439,36 @@ export function ProductInfoPanel({
               ))}
             </div>
           </div>
+
+          <button
+            className="click"
+            onClick={handleAddToCart}
+            disabled={!product.inStock}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: ".5rem",
+              width: "100%",
+              padding: ".85rem",
+              borderRadius: "1rem",
+              cursor: product.inStock ? "pointer" : "not-allowed",
+              background: product.inStock
+                ? "var(--bg-nav-active)"
+                : "var(--text-placeholder)",
+              border: "none",
+              opacity: product.inStock ? 1 : 0.5,
+            }}
+          >
+            <ShoppingCart size={18} color="var(--bg-surface)" />
+            <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
+              {added
+                ? "Added to Cart"
+                : product.inStock
+                  ? "Add to Cart"
+                  : "Sold out"}
+            </span>
+          </button>
 
           <button
             className="click"

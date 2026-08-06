@@ -1,12 +1,14 @@
 import { useStore } from "elk-components";
 import { marketStore } from "./demoMarketStore";
 import type { MarketStoreProduct } from "./demoMarketStore";
+import { addToMarketCart } from "./cart";
 import { Bilboards } from "./components/Bilboards";
 import { MarketLoading } from "./components/MarketLoading";
 import { ProductInfoPanel } from "./components/ProductInfoPanel";
 import { useMarketData } from "./useMarketData";
 import { useState, type ChangeEvent, useRef, useEffect } from "react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import Alert from "@/components/alert/alert";
 
 type formatValue = string;
 
@@ -30,6 +32,7 @@ export function Markets() {
   const [activeCat, setActiveCat] = useState(0);
   const [query, setQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<MarketStoreProduct | null>(null);
+  const [alert, setAlert] = useState<{ message: string; type: string } | null>(null);
   const bp = useBreakpoint();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -49,6 +52,20 @@ export function Markets() {
   const handleScroll = () => {
     if (scrollRef.current) {
       sessionStorage.setItem(SCROLL_KEY, String(scrollRef.current.scrollTop));
+    }
+  };
+
+  useEffect(() => {
+    if (!alert) return;
+    const id = setTimeout(() => setAlert(null), 2000);
+    return () => clearTimeout(id);
+  }, [alert]);
+
+  const handleAddToCart = (product: MarketStoreProduct) => {
+    if (addToMarketCart(product)) {
+      setAlert({ message: `${product.product_name} added to cart`, type: "success" });
+    } else {
+      setAlert({ message: `${product.product_name} is out of stock`, type: "error" });
     }
   };
 
@@ -245,17 +262,23 @@ export function Markets() {
               </div>
               <div>
                 <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(product);
+                  }}
                   style={{
                     width: "100%",
                     padding: ".4rem",
                     borderRadius: ".5rem",
                     background: "var(--bg-nav-active)",
-                    cursor: "pointer",
+                    cursor: product.inStock ? "pointer" : "not-allowed",
+                    opacity: product.inStock ? 1 : 0.5,
+                    border: "none",
                   }}
                   className="click"
                 >
                   <span style={{ color: "var(--bg-surface)" }}>
-                    Add to Cart
+                    {product.inStock ? "Add to Cart" : "Sold out"}
                   </span>
                 </button>
               </div>
@@ -269,6 +292,7 @@ export function Markets() {
           onClose={() => setSelectedProduct(null)}
         />
       )}
+      {alert && <Alert message={alert.message} type={alert.type} />}
     </>
   );
 }

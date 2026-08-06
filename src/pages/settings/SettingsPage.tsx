@@ -1,15 +1,17 @@
-import { useContext } from 'react'
+import { useContext, useState } from 'react'
 import { Authcontext } from '@/context/auth_context'
 import { CurrencyContext } from '@/context/currency_context'
 import { ThemeContext } from '@/context/theme_context'
-import { User, Mail, AtSign, DollarSign, Moon, Sun } from 'lucide-react'
+import { User, Mail, AtSign, DollarSign, Moon, Sun, Store } from 'lucide-react'
 import { currencies, getCurrencyInfo } from '@/lib/currency'
+import { UploadToShopModal } from '@/pages/market/components/UploadToShopModal'
 
 export function SettingsPage() {
   const { user, orgUser, logout } = useContext(Authcontext)
   const { currency, setCurrency, format } = useContext(CurrencyContext)
   const { theme, toggle } = useContext(ThemeContext)
   const currInfo = getCurrencyInfo(currency)
+  const [showUpload, setShowUpload] = useState(false)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', padding: '0 8px' }}>
@@ -100,6 +102,24 @@ export function SettingsPage() {
         </div>
       </div>
 
+      <div style={{ width: '100%', maxWidth: '600px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, paddingBottom: '12px', borderBottom: '1px solid var(--bg-tertiary)' }}>Market Shop</h2>
+        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+          Open a shop on the market or upload your POS items so customers can find and buy them online.
+        </p>
+        <button
+          onClick={() => setShowUpload(true)}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            padding: '12px', background: 'var(--bg-nav-active)', color: 'var(--bg-surface)',
+            fontSize: '13px', fontWeight: 600, borderRadius: '8px', border: 'none', cursor: 'pointer',
+          }}
+        >
+          <Store style={{ width: '16px', height: '16px' }} />
+          Upload items to shop
+        </button>
+      </div>
+
       <div style={{ width: '100%', maxWidth: '600px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ paddingTop: '0', borderTop: 'none' }}>
           <button
@@ -110,6 +130,10 @@ export function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {showUpload && (
+        <UploadToShopModal onClose={() => setShowUpload(false)} />
+      )}
     </div>
   )
 }

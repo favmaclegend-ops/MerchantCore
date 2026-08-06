@@ -41,7 +41,7 @@ permission (Super Admin / Admin / Finance Manager) · `[dev]` mock-backed until 
 | **Customers** | Directory CRUD, spending/tier, add-to-credit | `src/pages/customers/CustomersPage.tsx` |
 | **Credit Ledger** | Debtors, balances, payments, overdue/critical status | `src/pages/credit/CreditLedgerPage.tsx` |
 | **Calculator** | In-app utility | `src/pages/calculator/` |
-| **Market** | Shop browsing, product catalog & billboard ads | `src/pages/market/` (see §5e) |
+| **Market** | Shop browsing, product catalog, cart & checkout with per-shop order alerts, billboard ads | `src/pages/market/` (see §5e) |
 | **Spreadsheet (External)** | FortuneSheet workbook workspace — create, autosave, save (Ctrl+S), import/export `.xlsx`/`.csv`, deep-linked editor | `src/pages/spreadsheet/external/` |
 | **Settings** | App preferences | `src/pages/settings/` |
 
@@ -166,7 +166,7 @@ kept in the tree while the FortuneSheet-based external workbook ships.
 
 ## 5e. Market & Billboard Ads — `[all users]` `[dev]`
 
-`src/pages/market/` · `billboard.ts` · `demoMarketStore.ts` · `marketApi.ts` · `useMarketData.ts`
+`src/pages/market/` · `billboard.ts` · `demoMarketStore.ts` · `marketApi.ts` · `marketUpload.ts` · `useMarketData.ts`
 
 The marketplace hub (`/home/market`) where shoppers browse shops and their products, plus an
 in-app **billboard** that plays short video adverts.
@@ -179,6 +179,23 @@ in-app **billboard** that plays short video adverts.
   exposes promise-based fetchers (`fetchMarketData`, `fetchShops`, `fetchShop`, `fetchProducts`,
   `fetchTopRatedShops`, `fetchAdverts`, `fetchCategories`) with simulated latency; `useMarketData()`
   hydrates the store once per session. Swap the fetchers for HTTP calls when the backend ships.
+- **Cart & checkout** (`cart.ts` + `MarketPage.tsx`): shoppers add products to the cart from the
+  product grids (`Markets.tsx`, `Products.tsx`) or the product detail panel. The cart panel
+  (desktop side column / mobile slide-up overlay) supports quantity ±, remove, and shows
+  subtotal, 5% tax and total. Checkout (`submitMarketOrder` in `marketApi.ts`) groups the cart by
+  owning shop and **dispatches an order alert to every shop that owns a selected product**; the
+  completed order is stored in `marketOrdersStore` and shown in the **Log** modal. See `README.md`
+  → "Market & Billboard Ads" → "Cart & checkout".
+- **Shop creation & item upload** (`marketUpload.ts` + `components/UploadToShopModal.tsx`): a
+  **Upload to shop** button in the POS page header and under **Settings** opens a panel — a
+  create-shop form when the user owns no shop yet, otherwise a POS item picker with **All items** /
+  **Selected items** modes that highlights items already uploaded (deduped by `sourceId`) so they
+  can't be double-added. User shops/products persist in localStorage (`mc_market_user_shops` /
+  `mc_market_user_products`), keyed by `getOwnerKey` (`org:<orgId>` for org members, `user:<id>`
+  for personal logins). `mergeUserMarketData` folds them into the seeded market bundle and
+  `syncUserMarketData()` pushes them into `marketStore` immediately. On a shop page the owner sees
+  an **Add new items** button (`useShopOwner` guard) that opens the same panel scoped to that shop.
+  Maps to `POST /market/shops` and `POST /market/items` when the backend ships.
 - **Billboard** (`components/Bilboards.tsx`): a **single large billboard** that cycles through
   **exactly three** randomly-selected ads (chosen per user/mount by `pickBillboardAds` — Fisher–
   Yates shuffle, count `BILLBOARD_AD_COUNT = 3`). Ads play **one at a time**: each advert is a
