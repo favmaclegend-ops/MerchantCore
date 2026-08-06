@@ -8,6 +8,14 @@ export interface MarketStoreShop {
   shopProfileImage?: string;
   shopProfileImagebg?: string;
   rating?: string;
+  description?: string;
+  createdAt?: string;
+  location?: {
+    lat: number;
+    lng: number;
+    address: string;
+    city?: string;
+  };
 }
 
 export interface MarketStoreProduct {
@@ -54,6 +62,14 @@ export const marketStore = createStore<MarketStore>({
       shopProfileImage: "/img1.png",
       shopProfileImagebg: '',
       rating: "204000",
+      description: "Your neighbourhood one-stop grocery destination. From farm-fresh produce to everyday essentials, Sunrise Mart brings quality, convenience and warm service to every doorstep.",
+      createdAt: "2019-03-12",
+      location: {
+        lat: 5.6037,
+        lng: -0.187,
+        address: "12 Independence Avenue, Osu",
+        city: "Accra, Ghana"
+      },
     },
     'elfridas_kitchen@990451': {
       shop_id: "elfridas_kitchen@990451",
@@ -62,7 +78,15 @@ export const marketStore = createStore<MarketStore>({
       product_id: "mc_elfirdas_kitchen@123456",
       shopProfileImage: "/img2.png",
       rating: "345000",
-      shopProfileImagebg: ''
+      shopProfileImagebg: '',
+      description: "Authentic homemade flavours crafted with love. Elfrida's Kitchen serves hearty, made-from-scratch meals inspired by generations of family recipes.",
+      createdAt: "2020-07-21",
+      location: {
+        lat: 5.615,
+        lng: -0.172,
+        address: "4 Oxford Street, Osu",
+        city: "Accra, Ghana"
+      },
     },
     'bugger_bug@20045': {
       shop_id: "bugger_bug@20045",
@@ -71,7 +95,15 @@ export const marketStore = createStore<MarketStore>({
       product_id: "mc_bugger_bug@200451",
       shopProfileImage: "/img3.png",
       rating: "20000",
-      shopProfileImagebg: ''
+      shopProfileImagebg: '',
+      description: "Luxury timepieces and statement accessories for the modern connoisseur. Discover premium watches, jewellery and more — carefully curated and guaranteed authentic.",
+      createdAt: "2018-11-05",
+      location: {
+        lat: 5.6504,
+        lng: -0.1874,
+        address: "88 Spintex Road, Community 11",
+        city: "Tema, Ghana"
+      },
     },
     'Kolay@00021': {
       shop_id: "Kolay@00021",
@@ -80,7 +112,15 @@ export const marketStore = createStore<MarketStore>({
       product_id: "mc_kolay@200451",
       shopProfileImage: "/img4.png",
       rating: "15000",
-      shopProfileImagebg: ''
+      shopProfileImagebg: '',
+      description: "Kolay is a boutique marketplace for refined everyday goods. Expect curated quality, honest pricing and an effortless shopping experience.",
+      createdAt: "2021-01-30",
+      location: {
+        lat: 5.5907,
+        lng: -0.21,
+        address: "23 Ring Road Central, Adabraka",
+        city: "Accra, Ghana"
+      },
     },
   },
 

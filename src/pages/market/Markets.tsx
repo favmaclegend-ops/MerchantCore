@@ -138,8 +138,9 @@ export function Markets() {
                 padding: "1rem",
                 background: "var(--bg-nav)",
                 border: "var(--border-default)",
-                borderRadius: ".5rem",
+                borderRadius: "1rem",
                 gap: ".5rem",
+              
 
               }}
             >
