@@ -21,6 +21,8 @@ interface Product {
   stock: number
   category: string
   status: 'in-stock' | 'low-stock' | 'out-of-stock'
+  image?: string
+  rating?: number
 }
 
 function stockStatus(stock: number): Product['status'] {
@@ -41,12 +43,13 @@ export function InventoryPage() {
   // Only the head of the Supply Chain department and the Super Admin may add/edit/delete
   // products in an organisation workspace. Normal (personal) logins keep full control.
   const canEdit = orgUser ? canEditInventory(orgUser) : true
-  const [items, setItems] = useState<any[]>([])
+  const [items, setItems] = useState<Product[]>([])
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [editItem, setEditItem] = useState<any | null>(null)
-  const [formData, setFormData] = useState({ name: '', sku: '', price: '', stock: '', category: '' })
+  const [editItem, setEditItem] = useState<Product | null>(null)
+  const [formData, setFormData] = useState({ name: '', sku: '', price: '', stock: '', category: '', image: '', rating: '5' })
+  const [formError, setFormError] = useState('')
 
   useEffect(() => {
     productsApi.getProducts().then(p => setItems(normalizeProducts(p))).catch(() => {})
@@ -67,24 +70,41 @@ export function InventoryPage() {
 
   const openAdd = () => {
     setEditItem(null)
-    setFormData({ name: '', sku: '', price: '', stock: '', category: '' })
+    setFormData({ name: '', sku: '', price: '', stock: '', category: '', image: '', rating: '5' })
+    setFormError('')
     setShowForm(true)
   }
 
-  const openEdit = (p: any) => {
+  const openEdit = (p: Product) => {
     setEditItem(p)
-    setFormData({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category })
+    setFormData({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, image: p.image || '', rating: p.rating != null ? String(p.rating) : '5' })
+    setFormError('')
     setShowForm(true)
   }
 
   const handleSave = async () => {
-    if (!formData.name || !formData.sku || !formData.price || !formData.category) return
+    if (!formData.name || !formData.sku || !formData.price || !formData.category) {
+      setFormError('Name, SKU, price and category are required')
+      return
+    }
+    const image = formData.image.trim()
+    if (!image) {
+      setFormError('A product image is required')
+      return
+    }
+    const rating = formData.rating === '' ? 5 : Number(formData.rating)
+    if (Number.isNaN(rating) || rating < 0 || rating > 5) {
+      setFormError('Rating must be a number between 0 and 5')
+      return
+    }
     const payload = {
       name: formData.name,
       sku: formData.sku,
       price: parseFloat(formData.price) || 0,
       stock: parseInt(formData.stock) || 0,
       category: formData.category,
+      image,
+      rating,
       status: stockStatus(parseInt(formData.stock) || 0),
     }
     if (editItem) {
@@ -174,10 +194,14 @@ export function InventoryPage() {
         </div>
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-          {filtered.map((product: any) => (
+          {filtered.map((product: Product) => (
             <div key={product.id} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: 'var(--bg-surface)', display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '10px', flexShrink: 0 }}>
-                <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-muted)' }}>{product.name.substring(0, 1)}</span>
+              <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '10px', flexShrink: 0, overflow: 'hidden' }}>
+                {product.image ? (
+                  <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-muted)' }}>{product.name.substring(0, 1)}</span>
+                )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -239,10 +263,31 @@ export function InventoryPage() {
                 <input value={formData.stock} onChange={e => setFormData(p => ({ ...p, stock: e.target.value }))} style={inputStyle} placeholder="0" type="number" min="0" />
               </div>
             </div>
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Category</label>
-              <input value={formData.category} onChange={e => setFormData(p => ({ ...p, category: e.target.value }))} style={inputStyle} placeholder="e.g. Beverages, Snacks" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Initial Rating</label>
+                <input value={formData.rating} onChange={e => setFormData(p => ({ ...p, rating: e.target.value }))} style={inputStyle} placeholder="0-5" type="number" min="0" max="5" step="0.1" />
+              </div>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Category</label>
+                <input value={formData.category} onChange={e => setFormData(p => ({ ...p, category: e.target.value }))} style={inputStyle} placeholder="e.g. Beverages, Snacks" />
+              </div>
             </div>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Product Image *</label>
+              <input value={formData.image} onChange={e => setFormData(p => ({ ...p, image: e.target.value }))} style={inputStyle} placeholder="https://... or /path/to/image.png" />
+              {formData.image.trim() ? (
+                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <img src={formData.image.trim()} alt="preview" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-default)', background: 'var(--bg-tertiary)' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Image preview. Products without an image cannot be saved.</span>
+                </div>
+              ) : (
+                <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'var(--text-warning)' }}>A product image is required.</p>
+              )}
+            </div>
+            {formError && (
+              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-danger)', background: 'var(--bg-danger)', padding: '8px 10px', borderRadius: '6px' }}>{formError}</p>
+            )}
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
               <button onClick={() => setShowForm(false)} style={{ flex: 1, height: '40px', fontSize: '13px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
               <button onClick={handleSave} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>{editItem ? 'Update' : 'Create'}</button>

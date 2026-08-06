@@ -321,6 +321,11 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
             price: Number((p as { price?: unknown }).price ?? 0),
             stock: Number((p as { stock?: unknown }).stock ?? 0),
             category: String((p as { category?: unknown }).category ?? ""),
+            image: String((p as { image?: unknown }).image ?? ""),
+            rating:
+              (p as { rating?: unknown }).rating != null
+                ? Number((p as { rating?: unknown }).rating)
+                : undefined,
           })),
         );
       })
@@ -493,6 +498,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
               selectable={mode === "selected"}
               checked={selected.has(p.id)}
               uploaded={false}
+              image={p.image}
               onToggle={() => toggle(p.id)}
               compact={bp.sm}
             />
@@ -506,6 +512,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
               selectable={false}
               checked={false}
               uploaded
+              image={p.image}
               onToggle={() => {}}
               compact={bp.sm}
             />
@@ -606,6 +613,7 @@ function ItemRow({
   selectable,
   checked,
   uploaded,
+  image,
   onToggle,
   compact,
 }: {
@@ -615,6 +623,7 @@ function ItemRow({
   selectable: boolean;
   checked: boolean;
   uploaded: boolean;
+  image?: string;
   onToggle: () => void;
   compact: boolean;
 }) {
@@ -660,6 +669,38 @@ function ItemRow({
         </button>
       ) : (
         <Check size={14} color="var(--text-success)" style={{ flexShrink: 0 }} />
+      )}
+      {image ? (
+        <img
+          src={image}
+          alt={name}
+          style={{
+            width: "28px",
+            height: "28px",
+            flexShrink: 0,
+            borderRadius: "6px",
+            objectFit: "cover",
+            border: "1px solid var(--border-default)",
+            background: "var(--bg-tertiary)",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            width: "28px",
+            height: "28px",
+            flexShrink: 0,
+            borderRadius: "6px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--bg-tertiary)",
+          }}
+        >
+          <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)" }}>
+            {name[0]}
+          </span>
+        </div>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <p

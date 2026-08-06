@@ -79,6 +79,23 @@ describe('orgCommerce (mock data layer)', () => {
       expect(getOrgProducts(ORG)).toHaveLength(49)
     })
 
+    it('persists the product image and initial rating', () => {
+      const created = createOrgProduct(ORG, { name: 'New Snack', sku: 'NEW-001', price: 5, stock: 0, category: 'Snacks', image: '  https://img/x.png  ', rating: 4.5 })
+      expect(created.image).toBe('https://img/x.png')
+      expect(created.rating).toBe(4.5)
+      const stored = getOrgProducts(ORG).find(p => p.id === created.id)
+      expect(stored?.image).toBe('https://img/x.png')
+      expect(stored?.rating).toBe(4.5)
+    })
+
+    it('keeps the image and rating when updating unrelated fields', () => {
+      const created = createOrgProduct(ORG, { name: 'New Snack', sku: 'NEW-001', price: 5, stock: 0, category: 'Snacks', image: 'https://img/x.png', rating: 3 })
+      updateOrgProduct(ORG, created.id, { stock: 10 })
+      const stored = getOrgProducts(ORG).find(p => p.id === created.id)
+      expect(stored?.image).toBe('https://img/x.png')
+      expect(stored?.rating).toBe(3)
+    })
+
     it('recomputes status and throws for unknown products on update', () => {
       const product = updateOrgProduct(ORG, 'PRD-001', { stock: 0 })
       expect(product.status).toBe('out-of-stock')

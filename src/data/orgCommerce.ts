@@ -22,6 +22,8 @@ export interface OrgProduct {
   stock: number
   category: string
   status: OrgProductStatus
+  image?: string
+  rating?: number
 }
 
 export interface OrgProductInput {
@@ -30,6 +32,8 @@ export interface OrgProductInput {
   price: number
   stock: number
   category: string
+  image?: string
+  rating?: number
 }
 
 export interface OrgCustomer {
@@ -251,6 +255,8 @@ export function createOrgProduct(orgId: string, input: OrgProductInput): OrgProd
     stock: input.stock || 0,
     category: input.category.trim(),
     status: stockStatus(input.stock || 0),
+    image: input.image?.trim() || undefined,
+    rating: input.rating,
   }
   state.products.push(product)
   saveCommerceState(orgId, state)
@@ -261,9 +267,12 @@ export function updateOrgProduct(orgId: string, productId: string, patch: Partia
   const state = loadCommerceState(orgId)
   const product = state.products.find(p => p.id === productId)
   if (!product) throw new Error('Product not found')
-  const merged = { ...product, ...patch }
+  const { image, rating, ...rest } = patch
+  const merged = { ...product, ...rest }
   if (patch.price !== undefined) merged.price = patch.price || 0
   if (patch.stock !== undefined) merged.stock = patch.stock || 0
+  if (image !== undefined) merged.image = image.trim() || undefined
+  if (rating !== undefined) merged.rating = rating
   merged.status = stockStatus(merged.stock)
   Object.assign(product, merged)
   saveCommerceState(orgId, state)

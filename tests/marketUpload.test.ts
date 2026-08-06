@@ -110,6 +110,16 @@ describe('uploadProductsToShop', () => {
     expect(added[1].inStock).toBe(false)
   })
 
+  it('carries the product image and initial rating into the market item', () => {
+    createMarketShop(OWNER, shopInput)
+    const added = uploadProductsToShop(OWNER, [
+      { id: 'img1', name: 'Sugar', price: 15, stock: 10, category: 'Groceries', image: 'https://img/x.png', rating: 4.2 },
+    ])
+    expect(added[0].productImageUrl).toBe('https://img/x.png')
+    expect(added[0].product_rating).toBe('4.2')
+    expect(added[0].inStock).toBe(true)
+  })
+
   it('dedupes by sourceId so a second upload adds nothing', () => {
     createMarketShop(OWNER, shopInput)
     uploadProductsToShop(OWNER, posItems)

@@ -15,6 +15,8 @@ export interface PosSourceProduct {
   price: number;
   stock: number;
   category: string;
+  image?: string;
+  rating?: number;
 }
 
 export interface MarketShopInput {
@@ -134,12 +136,13 @@ export const uploadProductsToShop = (
       group_id: shop.product_id,
       product_id: `mc_up_${Date.now()}_${index}`,
       product_name: source.name,
-      product_rating: "0",
+      product_rating: String(source.rating ?? 0),
       inStock: source.stock > 0,
       shop_name: shop.shop_name,
       product_price: String(source.price),
       category: source.category?.trim() || "General",
       keywords: [source.name.toLowerCase()],
+      productImageUrl: source.image?.trim() || undefined,
       uploadedAt: new Date().toISOString().slice(0, 10),
     };
     products.push(product);
