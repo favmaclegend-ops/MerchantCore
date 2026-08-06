@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 
 const queries = {
-  sm: '(min-width: 640px)',
+  xxsm: '(max-width: 340px)',
+  sm: '(max-width: 640px)',
+  xsm: '(min-width: 650px',
   md: '(min-width: 768px)',
+  avg: '(min-width: 920px',
   lg: '(min-width: 1024px)',
+  mlg: '(min-width: 1200px)',
   xl: '(min-width: 1280px)',
 } as const
 

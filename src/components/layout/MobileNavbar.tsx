@@ -8,10 +8,10 @@ import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
 
 const primaryItems = [
   { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
+  { path: '/home/market', label: 'Market', icon: ShoppingCart, },
   { path: '/home/inventory', label: 'Stock', icon: Package },
   { path: '/home/pos', label: 'POS', icon: ShoppingCart },
   { path: '/home/credit', label: 'Credit', icon: CreditCard },
-  { path: '/home/calculator', label: 'Calc', icon: Calculator },
 ]
 
 type MoreItem = { path: string; label: string; icon: ElementType; permission?: OrgPermissions; orgMemberOnly?: boolean }
@@ -24,6 +24,7 @@ const moreItems: MoreItem[] = [
   { path: '/home/attendance', label: 'Attendance', icon: Clock, orgMemberOnly: true },
   { path: '/home/spreadsheet', label: 'SpreadSheet', icon: FileSpreadsheet },
   { path: '/home/users', label: 'Users', icon: UserCog, permission: 'users' },
+  { path: '/home/calculator', label: 'Calc', icon: Calculator },
   { path: '/home/settings', label: 'Settings', icon: Settings },
 ]
 

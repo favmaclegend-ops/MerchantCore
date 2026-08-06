@@ -166,8 +166,8 @@ export function MemberTable({ members, onEdit, onToggleActive, onToggleDataBlock
   const compact = !bp.sm
 
   return (
-    <div style={{ width: '100%', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', overflow: 'visible' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <div style={{ display: 'flex',  width: '100%', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse',  }}>
         <thead>
           <tr>
             <th style={thStyle}>Profile</th>

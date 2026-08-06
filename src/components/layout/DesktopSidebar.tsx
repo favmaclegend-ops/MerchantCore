@@ -21,6 +21,7 @@ const navItems: NavItem[] = [
   { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
   { path: '/home/hrm', label: 'HRM', icon: Contact, permission: 'hrm' },
   { path: '/home/supply', label: 'Supply Chain', icon: Truck, permission: 'supply' },
+  { path: '/home/market', label: 'Market', icon: ShoppingCart, },
   { path: '/home/users', label: 'Users', icon: UserPlusIcon, permission: 'users' },
   { path: '/home/spreadsheet', label: 'SpreadSheet', icon: FileSpreadsheet },
   { path: '/home/attendance', label: 'Attendance', icon: Clock, orgMemberOnly: true },
@@ -66,12 +67,13 @@ export function DesktopSidebar() {
           const isActive = location.pathname === item.path
           return (
             <Link
+              className='page-link'
               key={item.path}
               to={item.path}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
                 borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none',
-                color: isActive ? 'var(--bg-surface)' : 'var(--text-secondary)',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                 background: isActive ? 'var(--bg-nav-active)' : 'transparent',
                 marginBottom: '2px',
               }}

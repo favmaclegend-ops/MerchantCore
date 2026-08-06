@@ -55,7 +55,8 @@
   --bg-danger: #fef2f2;
   --bg-info: #f8fafc;
   --bg-highlighted: #b6e2ffc2;
-
+  --bg-scroll-thumb: #01070a3a;
+  
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-secondary-b: #ffffff;
@@ -97,6 +98,8 @@
   --bg-danger: #450a0a;
   --bg-info: #1e293b;
   --bg-highlighted: #40444749;
+  --bg-scroll-thumb: #00a2ff2f;
+
 
   --text-primary: #f5f7fb;
   --text-secondary: #e7eef8;
@@ -138,4 +141,92 @@ body {
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+*::-webkit-scrollbar {
+  display: flex;
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--bg-scroll-thumb);
+  border-radius: 1rem;
+  cursor: pointer;
+}
+.page-link {
+  background: var(--bg-nav-active);
+  color: var(--text-secondary) !important;
+
+}
+.page-link:hover {
+  background: var(--bg-highlighted) !important;
+  color: var(--text-primary) !important;
+}
+
+.luckysheet-cell-input {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+}
+
+.fortune-container {
+  background: var(--bg-surface);
+}
+
+
+.fortune-workarea {
+  background: var(--bg-surface) !important;
+}
+
+.fortune-toolbar {
+  background: transparent !important;
+}
+
+.fortune-fx-input {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+.fortune-name-box-container {
+  background: var(--bg-surface) !important;
+}
+
+.fortune-name-box {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+.fortune-container * {
+  border-color: var(--border-default) !important;
+}
+
+
+
+.fortune-col-header * {
+  color: white !important;
+}
+.luckysheet-cell-sheettable {
+  background: transparent !important;
+}
+.luckysheet-cell-flow-col {
+  background: transparent !important;
+}
+
+.luckysheet-cell-flow-clip {
+  background: transparent !important;
+}
+
+
+.fortune-fx-icon svg {
+  fill: var(--text-primary);
+}
+
+
+
+.click {
+  transform: scale(1);
+  transition: transform .4s ease;
+}
+
+.click:active {
+  transform: scale(.9);
 }

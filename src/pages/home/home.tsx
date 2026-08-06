@@ -24,6 +24,7 @@ const AttendancePage = lazy(() => import('@/pages/attendance/AttendancePage').th
 const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })))
 //LAGACY: const SpreadSheet = lazy(() => import('@/pages/spreadsheet/SpreadSheetPage').then(m => ({default: m.SpreadSheetPage})))
 const ExternalSheet = lazy(() => import('@/pages/spreadsheet/external/ExternalSheet').then(m => ({default: m.ExternalSheet})))
+const MarketPage = lazy(() => import('@/pages/market/MarketPage').then(m => ({default: m.MarketPage})))
 
 export default function Home() {
     const location = useLocation();
@@ -86,6 +87,7 @@ export default function Home() {
                                 <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/spreadsheet" element={<ExternalSheet />} />
                                 <Route path="/users" element={canManageUsers(orgUser) ? <Users /> : <Navigate to="/dashboard" replace />} />
+                                <Route path='/market/*' element={<MarketPage />}/>
                             </Routes>
                         </Suspense>
                     </div>
