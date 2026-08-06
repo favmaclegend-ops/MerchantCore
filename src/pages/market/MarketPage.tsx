@@ -8,7 +8,7 @@ import { ShopPage } from "./ShopPage";
 
 export function MarketPage() {
   const bp = useBreakpoint();
-  const cart = [];
+  const cart: { id: string; name: string; price: string; quantity: number }[] = [];
   const paymentButtons = [
     { label: "Cash", icon: Wallet },
     { label: "Card", icon: CreditCard },
@@ -215,7 +215,7 @@ export function MarketPage() {
                         textAlign: "right",
                       }}
                     >
-                      {valueFormater((item.price * item.quantity).toString())}
+                      {valueFormater((parseFloat(item.price) * item.quantity).toString())}
                     </p>
                     <button
                       style={{

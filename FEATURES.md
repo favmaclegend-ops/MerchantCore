@@ -41,6 +41,7 @@ permission (Super Admin / Admin / Finance Manager) · `[dev]` mock-backed until 
 | **Customers** | Directory CRUD, spending/tier, add-to-credit | `src/pages/customers/CustomersPage.tsx` |
 | **Credit Ledger** | Debtors, balances, payments, overdue/critical status | `src/pages/credit/CreditLedgerPage.tsx` |
 | **Calculator** | In-app utility | `src/pages/calculator/` |
+| **Market** | Shop browsing, product catalog & billboard ads | `src/pages/market/` (see §5e) |
 | **Spreadsheet (External)** | FortuneSheet workbook workspace — create, autosave, save (Ctrl+S), import/export `.xlsx`/`.csv`, deep-linked editor | `src/pages/spreadsheet/external/` |
 | **Settings** | App preferences | `src/pages/settings/` |
 
@@ -162,6 +163,43 @@ The original in-house spreadsheet built directly on DOM tables with custom logic
 (`spreadComponents/`), and a shared store (`src/context/store.ts` via `elk-components`).
 It is **not routed** (`home.tsx` uses the external editor) and is **not production ready** —
 kept in the tree while the FortuneSheet-based external workbook ships.
+
+## 5e. Market & Billboard Ads — `[all users]` `[dev]`
+
+`src/pages/market/` · `billboard.ts` · `demoMarketStore.ts` · `marketApi.ts` · `useMarketData.ts`
+
+The marketplace hub (`/home/market`) where shoppers browse shops and their products, plus an
+in-app **billboard** that plays short video adverts.
+
+- **Shop browsing**: `/home/market` lists shops and products; `/home/market/<shopId>` (e.g.
+  `sunrise_mart@123456`) opens a shop profile (overview map, products, ratings) — see
+  `ShopPage.tsx`, `OverView.tsx`, `Products.tsx`.
+- **Data layer**: `demoMarketStore.ts` defines `MarketStore`, `MarketStoreShop`,
+  `MarketStoreProduct` and `MarketStoreAdvert` and seeds an `elk-components` store. `marketApi.ts`
+  exposes promise-based fetchers (`fetchMarketData`, `fetchShops`, `fetchShop`, `fetchProducts`,
+  `fetchTopRatedShops`, `fetchAdverts`, `fetchCategories`) with simulated latency; `useMarketData()`
+  hydrates the store once per session. Swap the fetchers for HTTP calls when the backend ships.
+- **Billboard** (`components/Bilboards.tsx`): a **single large billboard** that cycles through
+  **exactly three** randomly-selected ads (chosen per user/mount by `pickBillboardAds` — Fisher–
+  Yates shuffle, count `BILLBOARD_AD_COUNT = 3`). Ads play **one at a time**: each advert is a
+  **muted, autoplaying video with no controls** (`components/BillboardVideo.tsx`); when a clip
+  ends the next advert plays, looping over and over. `useBillboardPlayer` owns the sequence and
+  advances on the video's `onEnded`. Adverts without a `videoUrl` fall back to the `advertUrl`
+  poster image and auto-advance after a fixed timeout. Clicking an ad opens `visitLink` in a new
+  tab.
+- **Advert shape (future server contract)**:
+
+  ```ts
+  interface MarketStoreAdvert {
+    id: string;        // unique advert id
+    title?: string;    // display title (falls back to id)
+    advertUrl: string; // poster / fallback image
+    videoUrl?: string; // short muted looping clip (no controls)
+    visitLink: string; // target URL opened on click
+  }
+  ```
+
+  See `README.md` → "Market & Billboard Ads" for the endpoint mapping and integration checklist.
 
 ## 6. Platform-wide
 

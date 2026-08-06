@@ -28,12 +28,18 @@ export interface MarketStoreProduct {
   product_price: string;
   category: string
   keywords?: string[]
+  productImageUrl?: string
+  productImages?: string[]
+  description?: string
+  uploadedAt?: string
 }
 
 export interface MarketStoreAdvert {
-    id: string,
-    advertUrl: string,
-    visitLink: string,
+  id: string;
+  title?: string;
+  advertUrl: string;
+  videoUrl?: string;
+  visitLink: string;
 }
 
 export interface MarketStore extends Record<string, unknown> {
@@ -47,7 +53,7 @@ export interface MarketStore extends Record<string, unknown> {
 
 
 
-export const marketStore = createStore<MarketStore>({
+export const marketData: MarketStore = {
 
     catergories: [
         'All', 'Beverages', 'Dairy', 'Electronics', 'Watch', 'Car', 'Perfume', 'Wine'
@@ -161,25 +167,58 @@ export const marketStore = createStore<MarketStore>({
 
   advert: [
     {
-        id: `mc_sunrisemart-${Math.floor(Math.random() * 999999999)}`,
-        advertUrl: '/img1.png',
-        visitLink: ''
+      id: `mc_ad-sunrisemart-${Math.floor(Math.random() * 999999999)}`,
+      title: "Sunrise Mart — Fresh Daily",
+      advertUrl:
+        "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80",
+      videoUrl:
+        "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4",
+      visitLink: "https://www.google.com",
     },
     {
-        id: `mc_sunrisemart-${Math.floor(Math.random() * 999999999)}`,
-        advertUrl: '/img2.png',
-        visitLink: ''
+      id: `mc_ad-elfirdas-${Math.floor(Math.random() * 999999999)}`,
+      title: "Elfrida's Kitchen — Home Made",
+      advertUrl:
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80",
+      videoUrl:
+        "https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4",
+      visitLink: "https://www.wikipedia.org",
     },
     {
-        id: `mc_sunrisemart-${Math.floor(Math.random() * 999999999)}`,
-        advertUrl: '/img3.png',
-        visitLink: ''
+      id: `mc_ad-buggerbug-${Math.floor(Math.random() * 999999999)}`,
+      title: "Bugger Bug — Luxury Watches",
+      advertUrl:
+        "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80",
+      videoUrl:
+        "https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4",
+      visitLink: "https://github.com",
     },
     {
-        id: `mc_sunrisemart-${Math.floor(Math.random() * 999999999)}`,
-        advertUrl: '/img4.png',
-        visitLink: ''
-    }
+      id: `mc_ad-kolay-${Math.floor(Math.random() * 999999999)}`,
+      title: "Kolay — Curated Goods",
+      advertUrl:
+        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=80",
+      videoUrl:
+        "https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_1MB.mp4",
+      visitLink: "https://www.mozilla.org",
+    },
+    {
+      id: `mc_ad-pureheaven-${Math.floor(Math.random() * 999999999)}`,
+      title: "Pure Heaven — Fine Wine",
+      advertUrl:
+        "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80",
+      videoUrl:
+        "https://mdn.github.io/learning-area/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4",
+      visitLink: "https://www.openstreetmap.org",
+    },
+    {
+      id: `mc_ad-sunrisedelivery-${Math.floor(Math.random() * 999999999)}`,
+      title: "Sunrise Mart — Groceries Delivered",
+      advertUrl:
+        "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80",
+      videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      visitLink: "https://www.youtube.com",
+    },
   ],
   products: [
     {
@@ -191,7 +230,15 @@ export const marketStore = createStore<MarketStore>({
       inStock: true,
       product_price: "2.99",
       category: 'Diary',
-      keywords: ['Milk', 'fresh', 'drink', 'liquid', 'water']
+      keywords: ['Milk', 'fresh', 'drink', 'liquid', 'water'],
+      productImageUrl: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80",
+      productImages: [
+        "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=900&q=80",
+      ],
+      description: "Farm-fresh whole milk, chilled daily and packed with natural goodness. Perfect for your morning cereal, coffee, or a glass straight up.",
+      uploadedAt: "2026-01-14",
     },
     {
       group_id: "Kolay@00021",
@@ -203,6 +250,14 @@ export const marketStore = createStore<MarketStore>({
       product_price: "15",
       category: 'Beverages',
       keywords: ['malt', 'mega', 'fresh', 'drink', 'liquid', 'water'],
+      productImageUrl: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=600&q=80",
+      productImages: [
+        "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=900&q=80",
+      ],
+      description: "A rich, malty non-alcoholic drink with a satisfyingly bold taste. Chilled perfection in every bottle.",
+      uploadedAt: "2026-02-03",
 
     },
     {
@@ -214,7 +269,15 @@ export const marketStore = createStore<MarketStore>({
       shop_name: "Sunrise Mart",
       product_price: "150",
       category: 'Wine',
-      keywords: ['pure', 'heaven', 'expensive', 'drink', 'wine', 'liquid', 'water']
+      keywords: ['pure', 'heaven', 'expensive', 'drink', 'wine', 'liquid', 'water'],
+      productImageUrl: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=600&q=80",
+      productImages: [
+        "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1528823872057-9c018a7a7553?auto=format&fit=crop&w=900&q=80",
+      ],
+      description: "A refined wine with a smooth, velvety finish. Pure Heaven is crafted for special moments and quiet evenings.",
+      uploadedAt: "2025-12-19",
     },
     {
       group_id: "elfridas_kitchen@990451",
@@ -225,7 +288,15 @@ export const marketStore = createStore<MarketStore>({
       shop_name: "Elfirida's Kitchen",
       product_price: "12",
       category: 'Gadgets',
-      keywords: ['glass', 'time', 'chanted']
+      keywords: ['glass', 'time', 'chanted'],
+      productImageUrl: "https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?auto=format&fit=crop&w=600&q=80",
+      productImages: [
+        "https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1510672981848-a1c4f1cb5abf?auto=format&fit=crop&w=900&q=80",
+      ],
+      description: "An elegant hourglass that brings timeless charm to any desk. A perfect gift for the thinker and the dreamer.",
+      uploadedAt: "2026-01-28",
     },
     {
       group_id: "bugger_bug@20045",
@@ -236,7 +307,15 @@ export const marketStore = createStore<MarketStore>({
       shop_name: "Bugger Bug",
       product_price: "1000000",
       category: 'Watch',
-      keywords: ['rolex', 'expensive', 'silver', 'gold', 'watch', 'diamond']
+      keywords: ['rolex', 'expensive', 'silver', 'gold', 'watch', 'diamond'],
+      productImageUrl: "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=600&q=80",
+      productImages: [
+        "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1547996160-81dfa63595aa?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80",
+      ],
+      description: "A statement timepiece set with brilliant stones on a premium bracelet. Engineered for those who value precision and style.",
+      uploadedAt: "2025-11-08",
 
     },
     {
@@ -248,7 +327,15 @@ export const marketStore = createStore<MarketStore>({
       shop_name: "Sunrise Mart",
       product_price: "1000000",
       category: 'Watch',
-      keywords: ['watch', 'rolex']
+      keywords: ['watch', 'rolex'],
+      productImageUrl: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=600&q=80",
+      productImages: [
+        "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1547996160-81dfa63595aa?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80",
+      ],
+      description: "The iconic timepiece of legends. Swiss precision, timeless design, and unmistakable presence on the wrist.",
+      uploadedAt: "2026-03-02",
     },
     {
       group_id: "sunrise_mart_product1234",
@@ -259,9 +346,19 @@ export const marketStore = createStore<MarketStore>({
       shop_name: "Sunrise Mart",
       product_price: "1200",
       category: 'Perfume',
-      keywords: ['air', 'fresh', 'sweet', 'perfume', 'night', 'attractive']
+      keywords: ['air', 'fresh', 'sweet', 'perfume', 'night', 'attractive'],
+      productImageUrl: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80",
+      productImages: [
+        "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1587017539504-67cfbddac569?auto=format&fit=crop&w=900&q=80",
+      ],
+      description: "A bold, magnetic fragrance that lingers through the night. Sweet, fresh, and irresistibly confident.",
+      uploadedAt: "2026-02-21",
     },
   ],
-});
+};
+
+export const marketStore = createStore<MarketStore>(marketData);
 
 

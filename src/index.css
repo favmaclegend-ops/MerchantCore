@@ -143,6 +143,10 @@ body {
   100% { background-position: -200% 0; }
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 *::-webkit-scrollbar {
   display: flex;
   background: transparent;

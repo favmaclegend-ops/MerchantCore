@@ -1,7 +1,11 @@
 import { useStore } from "elk-components";
 import { marketStore } from "./demoMarketStore";
+import type { MarketStoreProduct } from "./demoMarketStore";
 import { Bilboards } from "./components/Bilboards";
-import { useState, type ChangeEvent } from "react";
+import { MarketLoading } from "./components/MarketLoading";
+import { ProductInfoPanel } from "./components/ProductInfoPanel";
+import { useMarketData } from "./useMarketData";
+import { useState, type ChangeEvent, useRef, useEffect } from "react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 type formatValue = string;
@@ -19,46 +23,78 @@ const valueFormater = (value: formatValue, fixed: number = 2) => {
 };
 
 export function Markets() {
-  useStore(marketStore);
-  const products = marketStore.getState().products;
-  const categories = marketStore.getState().catergories;
+  const { loading } = useMarketData();
+  const state = useStore(marketStore);
+  const products = state.products;
+  const categories = state.catergories ?? [];
   const [activeCat, setActiveCat] = useState(0);
+  const [query, setQuery] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<MarketStoreProduct | null>(null);
   const bp = useBreakpoint();
 
-  const [filterProduct, setFilterProduct] = useState(products);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const SCROLL_KEY = "markets-scroll";
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem(SCROLL_KEY);
+    if (saved && scrollRef.current) {
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = parseInt(saved, 10) || 0;
+        }
+      });
+    }
+  }, []);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      sessionStorage.setItem(SCROLL_KEY, String(scrollRef.current.scrollTop));
+    }
+  };
+
+  const baseProducts =
+    categories[activeCat] === "All"
+      ? products
+      : products.filter((p) => p.category === categories[activeCat]);
+
+  const filterProduct =
+    query.trim() === ""
+      ? baseProducts
+      : baseProducts.filter(
+          (p) =>
+            p.product_name.toLowerCase().includes(query.toLowerCase()) ||
+            p.category.toLowerCase().includes(query.toLowerCase()) ||
+            (p.keywords?.includes(query.toLowerCase()) ?? false),
+        );
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          height: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <MarketLoading />
+      </div>
+    );
+  }
 
   const handleActiveCat = (idx: number) => {
     setActiveCat(idx);
-    setFilterProduct(
-      categories[idx] == "All"
-        ? products
-        : products.filter((p) => p.category == categories[idx]),
-    );
   };
 
   const handleSearch = (e: ChangeEvent) => {
-    const target = e.currentTarget as HTMLInputElement;
-    const query = target?.value;
-
-    if (query == "") {
-      setFilterProduct(
-        categories[activeCat] == "All"
-          ? products
-          : products.filter((p) => p.category == categories[activeCat]),
-      );
-      return;
-    }
-    setFilterProduct(
-      products.filter(
-        (p) =>
-          p?.product_name.toLowerCase().includes(query?.toLowerCase()) ||
-          p?.category.toLowerCase().includes(query?.toLowerCase()) || p.keywords.includes(query.toLocaleLowerCase()),
-      ),
-    );
+    setQuery((e.currentTarget as HTMLInputElement).value ?? "");
   };
   return (
     <>
       <div
+        ref={scrollRef}
+        onScroll={handleScroll}
         style={{
           display: "flex",
           width: "100%",
@@ -129,6 +165,8 @@ export function Markets() {
           {filterProduct.map((product) => (
             <div
               key={product.product_id}
+              className="click"
+              onClick={() => setSelectedProduct(product)}
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -140,7 +178,7 @@ export function Markets() {
                 border: "var(--border-default)",
                 borderRadius: "1rem",
                 gap: ".5rem",
-              
+                cursor: "pointer",
 
               }}
             >
@@ -150,10 +188,46 @@ export function Markets() {
                   borderRadius: ".5rem",
                   background: "#7878786b",
                   height: "8rem",
-                  cursor: "pointer",
+                  overflow: "hidden",
+                  position: "relative",
                 }}
               >
-                {/* {<img style={{objectFit: 'cover', borderRadius: '.5rem'}}/>} */}
+                {product.productImageUrl ? (
+                  <img
+                    src={product.productImageUrl}
+                    alt={product.product_name}
+                    draggable={false}
+                    style={{
+                      objectFit: "cover",
+                      borderRadius: ".5rem",
+                      width: "100%",
+                      height: "100%",
+                    }}
+                  />
+                ) : (
+                  <div style={{ width: "100%", height: "100%" }} />
+                )}
+                <span
+                  style={{
+                    position: "absolute",
+                    top: ".5rem",
+                    left: ".5rem",
+                    fontSize: ".7rem",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: ".04em",
+                    padding: ".2rem .6rem",
+                    borderRadius: "3rem",
+                    background: product.inStock
+                      ? "var(--bg-success)"
+                      : "var(--bg-danger)",
+                    color: product.inStock
+                      ? "var(--text-success)"
+                      : "var(--text-danger)",
+                  }}
+                >
+                  {product.inStock ? "In stock" : "Sold out"}
+                </span>
               </div>
 
               <div>
@@ -189,6 +263,12 @@ export function Markets() {
           ))}
         </div>
       </div>
+      {selectedProduct && (
+        <ProductInfoPanel
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </>
   );
 }
