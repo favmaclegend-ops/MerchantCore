@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useStore } from "elk-components";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { marketStore } from "../demoMarketStore";
 import { valueFormater } from "../market";
-import { isShopVerified } from "../verification";
+import { isShopVerified, getShopPopularity } from "../verification";
 import { geocodeAddress, type GeoCoords } from "../geocode";
 import { GracefulImage } from "@/components/GracefulImage";
 import {
@@ -43,7 +44,7 @@ const formatDate = (date?: string) => {
 export function OverView() {
   const params = useParams();
   const bp = useBreakpoint();
-  const { shops, products } = marketStore.getSnapshot();
+  const { shops, products } = useStore(marketStore);
   const shop = shops[params.id!];
 
   const location = shop?.location;
@@ -78,7 +79,7 @@ export function OverView() {
   const productCount = products.filter((p) => p.shop_name === shop.shop_name).length;
   const verified = isShopVerified(shop, products);
   const stats = [
-    { label: "Rating", value: valueFormater(shop.rating ?? "0"), icon: BadgeCheck },
+    { label: "Rating", value: valueFormater(String(getShopPopularity(shop, products))), icon: BadgeCheck },
     { label: "Products", value: `${productCount}`, icon: Package },
     { label: "Member since", value: formatDate(shop.createdAt), icon: CalendarDays },
     { label: "Verified", value: verified ? "Verified" : "Not Verified", icon: ShieldCheck },

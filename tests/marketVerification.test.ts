@@ -81,6 +81,15 @@ describe("verification", () => {
     expect(isShopVerified(old, products)).toBe(true);
   });
 
+  it("reflects a fresh product rating in the shop popularity immediately", () => {
+    const products = [makeProduct("p1")];
+    expect(getShopPopularity(shop, products)).toBe(0);
+    setProductRating(products[0].product_id, "user:1", 4);
+    expect(getShopPopularity(shop, products)).toBe(1);
+    setProductRating(products[0].product_id, "user:2", 5);
+    expect(getShopPopularity(shop, products)).toBe(2);
+  });
+
   it("requires at least 5 months of history", () => {
     const young = { ...shop, createdAt: withAge(2) };
     const mature = { ...shop, createdAt: withAge(8) };

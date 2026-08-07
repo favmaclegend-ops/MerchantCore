@@ -5,7 +5,7 @@ import { useStore } from "elk-components";
 import { marketStore } from "./demoMarketStore";
 import { useMarketData } from "./useMarketData";
 import { valueFormater } from "./market";
-import { isShopVerified } from "./verification";
+import { isShopVerified, getShopPopularity } from "./verification";
 import { ShopPageReabon } from "./components/ShopPageReabon";
 import { OverView } from "./components/OverView";
 import { Products } from "./components/Products";
@@ -83,7 +83,7 @@ export function ShopPage () {
                             </h1>
                             <div style={{display: 'flex', alignItems: 'center', gap: '.3rem', marginTop: '.25rem'}}>
                                 <Star color="gold" size={bp.sm ? 14 : 16}/>
-                                <strong style={{margin: 0, fontSize: bp.sm ? '.85rem' : '.95rem', color: 'var(--text-muted)', textWrap: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden'}}>{valueFormater(shop.rating ?? "0")}</strong>
+                                <strong style={{margin: 0, fontSize: bp.sm ? '.85rem' : '.95rem', color: 'var(--text-muted)', textWrap: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden'}}>{valueFormater(String(getShopPopularity(shop, products)))}</strong>
                             </div>
                         </div>
 
