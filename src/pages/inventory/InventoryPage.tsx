@@ -1,10 +1,20 @@
 import { useEffect, useState, useContext } from 'react'
-import { Plus, Edit2, Trash2, Lock } from 'lucide-react'
+import { Plus, Edit2, Trash2, Lock, Store, ShoppingCart } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context'
 import { CurrencyContext } from '@/context/currency_context'
 import { canEditInventory } from '@/lib/orgAccess'
+import { useShopOwner } from '@/pages/market/useShopOwner'
+import {
+  
+  getMyShop,
+  getUploadedSourceIds,
+  removeProductFromMarket,
+  updateMarketProductFromInventory,
+} from '@/pages/market/marketUpload'
+import { syncUserMarketData } from '@/pages/market/marketApi'
+import { Link } from 'react-router-dom'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', height: '40px', padding: '0 12px', border: '1px solid var(--border-input)',
@@ -43,13 +53,21 @@ export function InventoryPage() {
   // Only the head of the Supply Chain department and the Super Admin may add/edit/delete
   // products in an organisation workspace. Normal (personal) logins keep full control.
   const canEdit = orgUser ? canEditInventory(orgUser) : true
+  const { ownerKey } = useShopOwner()
   const [items, setItems] = useState<Product[]>([])
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editItem, setEditItem] = useState<Product | null>(null)
-  const [formData, setFormData] = useState({ name: '', sku: '', price: '', stock: '', category: '', image: '', rating: '5' })
+  const [formData, setFormData] = useState({ name: '', sku: '', price: '', stock: '', category: '', image: '', rating: '0' })
   const [formError, setFormError] = useState('')
+  const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(
+    () => new Set(getUploadedSourceIds(ownerKey)),
+  )
+  const [marketMsg, setMarketMsg] = useState('')
+  const shopId = getMyShop(ownerKey)?.shop_id
+  const refreshUploaded = () =>
+    setUploadedSourceIds(new Set(getUploadedSourceIds(ownerKey)))
 
   useEffect(() => {
     productsApi.getProducts().then(p => setItems(normalizeProducts(p))).catch(() => {})
@@ -109,11 +127,32 @@ export function InventoryPage() {
     }
     if (editItem) {
       await productsApi.updateProduct(editItem.id, payload)
+      if (uploadedSourceIds.has(editItem.id)) {
+        updateMarketProductFromInventory(ownerKey, editItem.id, {
+          name: payload.name,
+          price: payload.price,
+          stock: payload.stock,
+          category: payload.category,
+          image: payload.image,
+          rating: payload.rating,
+        })
+        syncUserMarketData()
+      }
     } else {
       await productsApi.createProduct(payload)
     }
     setShowForm(false)
     loadItems()
+  }
+
+  const handleRemoveFromMarket = (product: Product) => {
+    if (!window.confirm(`Remove "${product.name}" from the market? It stays in your inventory.`)) return
+    if (removeProductFromMarket(ownerKey, product.id)) {
+      syncUserMarketData()
+      refreshUploaded()
+      setMarketMsg(`"${product.name}" removed from the market`)
+      window.setTimeout(() => setMarketMsg(''), 4000)
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -139,10 +178,18 @@ export function InventoryPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           {canEdit ? (
+            <>
             <button onClick={openAdd} style={{ display: 'flex', padding: '6px 12px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary-b)', background: 'var(--bg-nav-active)', borderRadius: '8px', border: 'none', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
               <Plus style={{ width: '14px', height: '14px' }} />
               Add Item
             </button>
+            {
+              shopId &&
+              <Link to={`/home/market/${shopId}`} style={{ display: 'flex', padding: '6px 12px', fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary-b)', background: 'var(--bg-nav-active)', borderRadius: '8px', border: 'none', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <ShoppingCart  style={{ width: '14px', height: '14px' }}  />
+              Shop
+            </Link>}
+            </>
           ) : (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '12px', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
               <Lock style={{ width: '13px', height: '13px' }} />
@@ -194,8 +241,15 @@ export function InventoryPage() {
         </div>
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-          {filtered.map((product: Product) => (
-            <div key={product.id} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: 'var(--bg-surface)', display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {marketMsg && (
+            <div style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, color: 'var(--text-success)', background: 'var(--bg-success)' }}>
+              {marketMsg}
+            </div>
+          )}
+          {filtered.map((product: Product) => {
+            const uploaded = uploadedSourceIds.has(product.id)
+            return (
+            <div key={product.id} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: 'var(--bg-surface)', display: 'flex', gap: '12px', alignItems: 'center', border: uploaded ? '1px solid var(--border-info)' : '1px solid transparent', boxShadow: 'var(--shadow-card)' }}>
               <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '10px', flexShrink: 0, overflow: 'hidden' }}>
                 {product.image ? (
                   <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -214,6 +268,12 @@ export function InventoryPage() {
                   }}>
                     {product.status === 'in-stock' ? 'In Stock' : product.status === 'low-stock' ? 'Low' : 'Out'}
                   </span>
+                  {uploaded && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 6px', fontSize: '10px', fontWeight: 600, borderRadius: '4px', color: 'var(--text-info)', background: 'var(--bg-info)' }}>
+                      <Store style={{ width: '10px', height: '10px' }} />
+                      On market
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '16px', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
                   <span>SKU: {product.sku}</span>
@@ -224,6 +284,16 @@ export function InventoryPage() {
                 <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{format(product.price)}</p>
               </div>
               <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                {uploaded && (
+                  <button
+                    onClick={() => handleRemoveFromMarket(product)}
+                    title="Remove from market"
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 8px', fontSize: '11px', fontWeight: 500, color: 'var(--text-danger)', background: 'var(--bg-danger)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+                  >
+                    <Store style={{ width: '13px', height: '13px' }} />
+                    Remove from market
+                  </button>
+                )}
                 {canEdit ? (
                   <>
                     <button onClick={() => openEdit(product)} style={{ padding: '6px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
@@ -236,7 +306,8 @@ export function InventoryPage() {
                 ) : null}
               </div>
             </div>
-          ))}
+            )
+          })}
           {filtered.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', padding: '24px' }}>No items found</p>}
         </div>
       </div>
@@ -266,7 +337,7 @@ export function InventoryPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Initial Rating</label>
-                <input value={formData.rating} onChange={e => setFormData(p => ({ ...p, rating: e.target.value }))} style={inputStyle} placeholder="0-5" type="number" min="0" max="5" step="0.1" />
+                <input value={formData.rating}  onChange={e => setFormData(p => ({ ...p, rating: e.target.value }))} style={inputStyle} placeholder="0-5" type="number" min="0" max="5" step="0.1" />
               </div>
               <div>
                 <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Category</label>

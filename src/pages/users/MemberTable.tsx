@@ -63,7 +63,7 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
   const nameColor = disabled || inactive ? 'var(--text-placeholder)' : 'var(--text-primary)'
 
   return (
-    <tr style={{ opacity: 1 }}>
+    <tr style={{ opacity: 1,    }} >
       <td style={tdStyle}>
         <Avatar member={member} color={color} size={36} />
       </td>
@@ -96,8 +96,8 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
 
         {open && (
           <>
-            <div onClick={onToggle} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
-            <div style={{ position: 'absolute', right: '8px', top: 'calc(100% - 4px)', width: '260px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '12px', boxShadow: 'var(--shadow-menu)', zIndex: 50, overflow: 'hidden', textAlign: 'left' }}>
+            <div onClick={onToggle} style={{ position: 'fixed', inset: 0, zIndex: 40,  }} />
+            <div style={{ position: 'absolute', right: '8px', top: 'calc(100% - 4px)',  width: '260px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '12px', boxShadow: 'var(--shadow-menu)', zIndex: 50, overflow: 'hidden', textAlign: 'left' }}>
               <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--bg-tertiary)' }}>
                 <Avatar member={member} color={color} size={36} />
                 <div style={{ minWidth: 0 }}>
@@ -113,7 +113,7 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
                 <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>Username: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{member.username}</span></p>
               </div>
 
-              <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px', }}>
                 <MenuAction icon={<Phone style={{ width: '14px', height: '14px' }} />} label="Call" onClick={() => { window.location.href = `tel:${member.phone.replace(/[^+\d]/g, '')}` }} />
                 <MenuAction icon={<Mail style={{ width: '14px', height: '14px' }} />} label="Email" onClick={() => { window.location.href = `mailto:${member.email}` }} />
                 <MenuAction icon={<Pencil style={{ width: '14px', height: '14px' }} />} label="Edit" onClick={() => { onEdit(member); onToggle() }} />
@@ -166,7 +166,7 @@ export function MemberTable({ members, onEdit, onToggleActive, onToggleDataBlock
   const compact = !bp.sm
 
   return (
-    <div style={{ display: 'flex',  width: '100%', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', overflowX: 'auto' }}>
+    <div style={{ display: 'flex',borderBlock: '1px solid red', width: '100%', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)',   overflowX: 'auto', position: 'relative'  }}>
       <table style={{ width: '100%', borderCollapse: 'collapse',  }}>
         <thead>
           <tr>

@@ -159,23 +159,41 @@ and `mc_market_user_products`) that lets users open their own shop and upload th
   (`mc_<slug>@<timestamp>`) and defaults (image, rating `"0"`, location). Shops are per-owner;
   `getMyShop(ownerKey)` returns the first shop the user owns.
 - **Upload items** — `uploadProductsToShop(ownerKey, sourceProducts)` maps POS products (id, name,
-  price, stock, category) into `MarketStoreProduct`s under the user's shop, converting stock to
-  `inStock`. Already-uploaded sources are skipped (`getUploadedSourceIds`) so the same POS item can
-  never be double-added to a shop.
+  price, stock, category, image, rating) into `MarketStoreProduct`s under the user's shop, converting
+  stock to `inStock` and carrying the image into `productImageUrl` / `product_rating`. Already-uploaded
+  sources are skipped (`getUploadedSourceIds`) so the same POS item can never be double-added to a shop.
+- **Remove from market** — `removeProductFromMarket(ownerKey, sourceId)` deletes an uploaded item, but
+  only when both the owner key and the inventory `sourceId` match. Other shops' uploads and the seeded
+  demo items are never affected, and removal is simply the product's absence from
+  `mc_market_user_products` (no tombstones).
+- **Inventory sync** — `updateMarketProductFromInventory(ownerKey, sourceId, changes)` propagates
+  inventory edits (name, price, stock, category, image, rating) into the uploaded market copy, with
+  `inStock` derived from the new stock count. It leaves `product_id` and `group_id` untouched so carts
+  keep resolving correctly.
 - **Sync** — `mergeUserMarketData(base)` folds user shops/products into the seeded market bundle;
   `fetchMarketData()` applies it when hydrating, and `syncUserMarketData()` pushes it into
   `marketStore` immediately so the hub, shop pages and billboards update without a reload.
 
 **UI entry points** — the same **Upload to shop** button lives in the POS page header and under
 Settings. If the user has no shop yet it shows a create-shop panel; otherwise it lists the POS
-items with **All items** / **Selected items** modes, highlighting items already uploaded. On a shop
-page, the owner sees an **Add new items** button (hidden for non-owners) that opens the same panel
-scoped to that shop.
+items with **All items** / **Selected items** modes, highlighting items already uploaded. Already-
+uploaded rows offer a **Remove from market** action right in that panel. On a shop page, the owner
+sees an **Add new items** button (hidden for non-owners) that opens the same panel scoped to that
+shop.
+
+**Removing products** — there is no delete control on the market hub or shop grids. Removal is
+owner-scoped and lives where you manage inventory instead: the Inventory page and the Supply Chain
+inventory tracker mark items that are listed on the market ("On market" / "Listed") and expose a
+**Remove from market** button for them (`removeProductFromMarket`). Editing any of those inventory
+fields propagates live to the market copy via `updateMarketProductFromInventory` +
+`syncUserMarketData()`, so the marketplace always mirrors the inventory.
 
 | Existing mock | Future endpoint |
 |---|---|
 | `createMarketShop(ownerKey, input)` | `POST /market/shops` |
 | `uploadProductsToShop(ownerKey, items)` | `POST /market/items` |
+| `removeProductFromMarket(ownerKey, sourceId)` | `DELETE /market/items/:id` |
+| `updateMarketProductFromInventory(ownerKey, sourceId, changes)` | `PATCH /market/items/:id` |
 | `mergeUserMarketData(base)` / `syncUserMarketData()` | server-side merge in `GET /market` |
 
 ## Getting Started

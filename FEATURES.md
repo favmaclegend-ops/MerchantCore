@@ -196,6 +196,12 @@ in-app **billboard** that plays short video adverts.
   `syncUserMarketData()` pushes them into `marketStore` immediately. On a shop page the owner sees
   an **Add new items** button (`useShopOwner` guard) that opens the same panel scoped to that shop.
   Maps to `POST /market/shops` and `POST /market/items` when the backend ships.
+- **Product moderation** (`components/ProductDeleteButton.tsx`): a trash button on market product
+  cards (hub and shop page) lets **admins remove products from the marketplace** — reserved for org
+  `admin`/`super-admin` roles (`canManageMarket` in `src/lib/orgAccess.ts`); personal logins can
+  only delete items they uploaded themselves. `deleteMarketProduct` tombstones the id in
+  `mc_market_deleted_products` so the removal survives reloads (`mergeUserMarketData` filters
+  tombstones). Maps to `DELETE /market/items/:id`.
 - **Billboard** (`components/Bilboards.tsx`): a **single large billboard** that cycles through
   **exactly three** randomly-selected ads (chosen per user/mount by `pickBillboardAds` — Fisher–
   Yates shuffle, count `BILLBOARD_AD_COUNT = 3`). Ads play **one at a time**: each advert is a

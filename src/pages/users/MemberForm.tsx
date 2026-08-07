@@ -44,7 +44,7 @@ export function MemberForm({ title, submitLabel, initial, kind, lockRole, onSave
   }
 
   return (
-    <div style={modalBackdrop} onClick={onClose}>
+    <div style={modalBackdrop} onClick={onClose} >
       <div style={modalCard} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{title}</h3>
         <div>

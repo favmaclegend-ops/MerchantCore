@@ -152,7 +152,7 @@ export function Users() {
       {loading ? (
         <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', padding: '24px' }}>Loading members...</p>
       ) : (
-        <div style={{ width: '100%',}}>
+        <div style={{ width: '100%', }}>
           <MemberTable
             members={filtered}
             onEdit={openEdit}

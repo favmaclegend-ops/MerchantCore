@@ -33,6 +33,8 @@ export interface MarketStoreProduct {
   productImages?: string[]
   description?: string
   uploadedAt?: string
+  ownerKey?: string
+  sourceId?: string
 }
 
 export interface MarketStoreAdvert {

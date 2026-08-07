@@ -17,11 +17,17 @@ import {
   createMarketShop,
   getMyShop,
   getUploadedSourceIds,
+  removeProductFromMarket,
   uploadProductsToShop,
   type PosSourceProduct,
 } from "../marketUpload";
 import { syncUserMarketData } from "../marketApi";
 import { valueFormater } from "../market";
+import { geocodeAddress } from "../geocode";
+import {
+  LocationAutocomplete,
+  type LocationSelection,
+} from "./LocationAutocomplete";
 
 export function UploadToShopModal({ onClose }: { onClose: () => void }) {
   const bp = useBreakpoint();
@@ -145,6 +151,9 @@ function CreateShopForm({
   const [image, setImage] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
+  const [addressSelection, setAddressSelection] = useState<LocationSelection | null>(null);
+  const [citySelection, setCitySelection] = useState<LocationSelection | null>(null);
+  const [locationNote, setLocationNote] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -159,12 +168,35 @@ function CreateShopForm({
     outline: "none",
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!name.trim()) {
       setError("Shop name is required.");
       return;
     }
     setBusy(true);
+    setError("");
+    setLocationNote("");
+    let lat: number | undefined;
+    let lng: number | undefined;
+    const picked = addressSelection ?? citySelection;
+    if (picked) {
+      lat = picked.lat;
+      lng = picked.lng;
+      setLocationNote("Location set from the suggested address.");
+    } else if (address.trim() || city.trim()) {
+      const resolved = await geocodeAddress(
+        [address.trim(), city.trim()].filter(Boolean).join(", "),
+      );
+      if (resolved) {
+        lat = resolved.lat;
+        lng = resolved.lng;
+        setLocationNote("Location set from your typed address.");
+      } else {
+        setLocationNote(
+          "Could not pinpoint the address — the shop will appear with no map pin.",
+        );
+      }
+    }
     const shop = createMarketShop(ownerKey, {
       shop_name: name,
       owner,
@@ -172,6 +204,8 @@ function CreateShopForm({
       shopProfileImage: image,
       address,
       city,
+      lat,
+      lng,
     });
     setBusy(false);
     onCreated(shop);
@@ -233,25 +267,37 @@ function CreateShopForm({
       </label>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: ".75rem" }}>
-        <label style={labelStyle}>
-          Address
-          <input
-            placeholder="Street address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            style={fieldStyle}
-          />
-        </label>
-        <label style={labelStyle}>
-          City
-          <input
-            placeholder="City"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            style={fieldStyle}
-          />
-        </label>
+        <LocationAutocomplete
+          label="Address"
+          placeholder="Street address"
+          value={address}
+          onChange={setAddress}
+          onSelectionChange={setAddressSelection}
+        />
+        <LocationAutocomplete
+          label="City"
+          placeholder="City"
+          value={city}
+          onChange={setCity}
+          onSelectionChange={setCitySelection}
+          cityMode
+        />
       </div>
+
+      {locationNote && (
+        <p
+          style={{
+            margin: 0,
+            fontSize: ".78rem",
+            color:
+              locationNote.startsWith("Could not")
+                ? "var(--text-warning)"
+                : "var(--text-success)",
+          }}
+        >
+          {locationNote}
+        </p>
+      )}
 
       {error && (
         <p
@@ -363,6 +409,24 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
       );
     } finally {
       setBusy(false);
+    }
+  };
+
+  const doRemove = (product: PosSourceProduct) => {
+    if (
+      !window.confirm(
+        `Remove "${product.name}" from ${shop.shop_name}? It stays in your POS inventory.`,
+      )
+    )
+      return;
+    setError("");
+    if (removeProductFromMarket(ownerKey, product.id)) {
+      syncUserMarketData();
+      setUploadedIds(getUploadedSourceIds(ownerKey));
+      setSuccess(`"${product.name}" removed from ${shop.shop_name}.`);
+      setTimeout(() => setSuccess(""), 4000);
+    } else {
+      setError(`Could not remove "${product.name}" — it is not your upload.`);
     }
   };
 
@@ -514,6 +578,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
               uploaded
               image={p.image}
               onToggle={() => {}}
+              onRemove={() => doRemove(p)}
               compact={bp.sm}
             />
           ))}
@@ -615,6 +680,7 @@ function ItemRow({
   uploaded,
   image,
   onToggle,
+  onRemove,
   compact,
 }: {
   name: string;
@@ -625,6 +691,7 @@ function ItemRow({
   uploaded: boolean;
   image?: string;
   onToggle: () => void;
+  onRemove?: () => void;
   compact: boolean;
 }) {
   return (
@@ -735,6 +802,32 @@ function ItemRow({
       >
         NLE{valueFormater(String(price))}
       </span>
+      {uploaded && onRemove && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          title="Remove from market"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: ".3rem",
+            padding: ".35rem .6rem",
+            borderRadius: ".5rem",
+            cursor: "pointer",
+            border: "1px solid var(--border-danger)",
+            background: "var(--bg-danger)",
+            color: "var(--text-danger)",
+            fontSize: ".72rem",
+            fontWeight: 600,
+            flexShrink: 0,
+          }}
+        >
+          <Store size={12} />
+          Remove from market
+        </button>
+      )}
     </div>
   );
 }

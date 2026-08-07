@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import L from "leaflet";
@@ -5,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { marketStore } from "../demoMarketStore";
 import { valueFormater } from "../market";
+import { geocodeAddress, type GeoCoords } from "../geocode";
 import {
   BadgeCheck,
   CalendarDays,
@@ -42,10 +44,36 @@ export function OverView() {
   const { shops, products } = marketStore.getSnapshot();
   const shop = shops[params.id!];
 
+  const location = shop?.location;
+  const hasCoords =
+    !!location &&
+    Number.isFinite(location.lat) &&
+    Number.isFinite(location.lng) &&
+    (location.lat !== 0 || location.lng !== 0);
+
+  const [resolvedCoords, setResolvedCoords] = useState<GeoCoords | null>(null);
+  const [geoFailed, setGeoFailed] = useState(false);
+
+  useEffect(() => {
+    if (hasCoords || !location) return;
+    let cancelled = false;
+    const query = [location.address, location.city].filter(Boolean).join(", ");
+    geocodeAddress(query).then((coords) => {
+      if (cancelled) return;
+      if (coords) setResolvedCoords(coords);
+      else setGeoFailed(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [location, hasCoords]);
+
   if (!shop) return null;
 
+  const mapCoords =
+    hasCoords && location ? { lat: location.lat, lng: location.lng } : resolvedCoords;
+
   const productCount = products.filter((p) => p.shop_name === shop.shop_name).length;
-  const location = shop.location;
   const stats = [
     { label: "Rating", value: valueFormater(shop.rating ?? "0"), icon: BadgeCheck },
     { label: "Products", value: `${productCount}`, icon: Package },
@@ -353,24 +381,43 @@ export function OverView() {
           {location ? (
             <>
               <div style={{ height: "14rem", position: "relative", zIndex: 0 }}>
-                <MapContainer
-                  center={[location.lat, location.lng]}
-                  zoom={15}
-                  scrollWheelZoom={false}
-                  style={{ height: "100%", width: "100%" }}
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <Marker position={[location.lat, location.lng]} icon={shopMarker}>
-                    <Popup>
-                      <strong>{shop.shop_name}</strong>
-                      <br />
-                      {location.address}
-                    </Popup>
-                  </Marker>
-                </MapContainer>
+                {mapCoords ? (
+                  <MapContainer
+                    center={[mapCoords.lat, mapCoords.lng]}
+                    zoom={15}
+                    scrollWheelZoom={false}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker position={[mapCoords.lat, mapCoords.lng]} icon={shopMarker}>
+                      <Popup>
+                        <strong>{shop.shop_name}</strong>
+                        <br />
+                        {location.address}
+                      </Popup>
+                    </Marker>
+                  </MapContainer>
+                ) : (
+                  <div
+                    style={{
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: ".4rem",
+                      background: "var(--bg-secondary)",
+                      color: "var(--text-muted)",
+                      fontSize: ".85rem",
+                    }}
+                  >
+                    {geoFailed
+                      ? "No map pin for this address yet."
+                      : "Resolving location…"}
+                  </div>
+                )}
               </div>
               <div
                 style={{

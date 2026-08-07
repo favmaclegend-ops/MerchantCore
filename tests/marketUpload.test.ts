@@ -7,6 +7,8 @@ import {
   loadUserProducts,
   loadUserShops,
   mergeUserMarketData,
+  removeProductFromMarket,
+  updateMarketProductFromInventory,
   uploadProductsToShop,
   type MarketShopInput,
   type PosSourceProduct,
@@ -152,6 +154,92 @@ describe('mergeUserMarketData', () => {
     const uploaded = merged.products.find((p) => p.sourceId === 'p1')
     expect(uploaded?.shop_name).toBe("Kofi's Corner")
     expect(merged.products[marketData.products.length].sourceId).toBe('p1')
+  })
+})
+
+describe('removeProductFromMarket', () => {
+  it('removes an uploaded product for the owner by sourceId', () => {
+    createMarketShop(OWNER, shopInput)
+    const [added] = uploadProductsToShop(OWNER, [posItems[0]])
+    expect(removeProductFromMarket(OWNER, added.sourceId)).toBe(true)
+    expect(loadUserProducts()).toHaveLength(0)
+    expect(getUploadedSourceIds(OWNER)).toEqual([])
+  })
+
+  it('never removes another owner uploads or unknown ids', () => {
+    createMarketShop(OWNER, shopInput)
+    uploadProductsToShop(OWNER, [posItems[0]])
+    createMarketShop('user:other', { shop_name: 'B' })
+    uploadProductsToShop('user:other', [posItems[1]])
+    expect(removeProductFromMarket('user:other', posItems[0].id)).toBe(false)
+    expect(removeProductFromMarket(OWNER, 'nope')).toBe(false)
+    expect(loadUserProducts().map((p) => p.sourceId)).toEqual(['p1', 'p2'])
+  })
+
+  it('does not touch seeded demo products', () => {
+    const seeded = marketData.products[0]
+    expect(removeProductFromMarket(OWNER, seeded.product_id)).toBe(false)
+    const merged = mergeUserMarketData(marketData)
+    expect(merged.products.find((p) => p.product_id === seeded.product_id)).toBeDefined()
+  })
+
+  it('keeps unrelated uploads in the merged market after a removal', () => {
+    createMarketShop(OWNER, shopInput)
+    uploadProductsToShop(OWNER, [posItems[0], posItems[2]])
+    removeProductFromMarket(OWNER, posItems[0].id)
+    const merged = mergeUserMarketData(marketData)
+    expect(merged.products.length).toBe(marketData.products.length + 1)
+    expect(merged.products.find((p) => p.sourceId === 'p3')).toBeDefined()
+    expect(merged.products.find((p) => p.sourceId === 'p1')).toBeUndefined()
+  })
+})
+
+describe('updateMarketProductFromInventory', () => {
+  it('mirrors inventory edits into the uploaded market copy', () => {
+    createMarketShop(OWNER, shopInput)
+    const [added] = uploadProductsToShop(OWNER, [posItems[0]])
+    const ok = updateMarketProductFromInventory(OWNER, added.sourceId, {
+      name: 'Sugar 2kg',
+      price: 28,
+      stock: 3,
+      category: 'Groceries',
+      image: 'https://img/new.png',
+      rating: 4.7,
+    })
+    expect(ok).toBe(true)
+    const stored = loadUserProducts()[0]
+    expect(stored.product_name).toBe('Sugar 2kg')
+    expect(stored.product_price).toBe('28')
+    expect(stored.inStock).toBe(true)
+    expect(stored.category).toBe('Groceries')
+    expect(stored.productImageUrl).toBe('https://img/new.png')
+    expect(stored.product_rating).toBe('4.7')
+    expect(stored.product_id).toBe(added.product_id)
+  })
+
+  it('flips inStock off when stock hits zero', () => {
+    createMarketShop(OWNER, shopInput)
+    const [added] = uploadProductsToShop(OWNER, [posItems[0]])
+    updateMarketProductFromInventory(OWNER, added.sourceId, {
+      name: added.product_name,
+      price: Number(added.product_price),
+      stock: 0,
+      category: added.category,
+    })
+    expect(loadUserProducts()[0].inStock).toBe(false)
+  })
+
+  it('returns false for products the owner never uploaded', () => {
+    createMarketShop(OWNER, shopInput)
+    uploadProductsToShop(OWNER, [posItems[0]])
+    expect(
+      updateMarketProductFromInventory(OWNER, 'p_other', {
+        name: 'x',
+        price: 1,
+        stock: 1,
+        category: 'y',
+      }),
+    ).toBe(false)
   })
 })
 

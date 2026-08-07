@@ -26,6 +26,8 @@ export interface MarketShopInput {
   shopProfileImage?: string;
   address?: string;
   city?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface UploadedMarketProduct extends MarketStoreProduct {
@@ -100,8 +102,8 @@ export const createMarketShop = (
     location:
       input.address?.trim() || input.city?.trim()
         ? {
-            lat: 0,
-            lng: 0,
+            lat: Number.isFinite(input.lat) ? (input.lat as number) : 0,
+            lng: Number.isFinite(input.lng) ? (input.lng as number) : 0,
             address: input.address?.trim() || "",
             city: input.city?.trim(),
           }
@@ -118,6 +120,51 @@ export const getUploadedSourceIds = (ownerKey: string): string[] =>
   loadUserProducts()
     .filter((product) => product.ownerKey === ownerKey)
     .map((product) => product.sourceId);
+
+// Removes one of YOUR uploaded products from the market (matched by ownerKey + the
+// inventory source id). Other shops' products and the seeded demo items are never touched.
+export const removeProductFromMarket = (
+  ownerKey: string,
+  sourceId: string,
+): boolean => {
+  const products = loadUserProducts();
+  const remaining = products.filter(
+    (product) => !(product.ownerKey === ownerKey && product.sourceId === sourceId),
+  );
+  if (remaining.length === products.length) return false;
+  writeStore(USER_PRODUCTS_KEY, remaining);
+  return true;
+};
+
+// Propagates inventory edits (name / price / stock / category / image / rating) to the
+// uploaded market copy so the marketplace always mirrors the inventory.
+export const updateMarketProductFromInventory = (
+  ownerKey: string,
+  sourceId: string,
+  changes: {
+    name: string;
+    price: number;
+    stock: number;
+    category: string;
+    image?: string;
+    rating?: number;
+  },
+): boolean => {
+  const products = loadUserProducts();
+  let updated = false;
+  for (const product of products) {
+    if (product.ownerKey !== ownerKey || product.sourceId !== sourceId) continue;
+    product.product_name = changes.name;
+    product.product_price = String(changes.price);
+    product.inStock = changes.stock > 0;
+    product.category = changes.category?.trim() || "General";
+    product.productImageUrl = changes.image?.trim() || undefined;
+    product.product_rating = String(changes.rating ?? 0);
+    updated = true;
+  }
+  if (updated) writeStore(USER_PRODUCTS_KEY, products);
+  return updated;
+};
 
 export const uploadProductsToShop = (
   ownerKey: string,

@@ -6,6 +6,7 @@ import { Bilboards } from "./components/Bilboards";
 import { MarketLoading } from "./components/MarketLoading";
 import { ProductInfoPanel } from "./components/ProductInfoPanel";
 import { useMarketData } from "./useMarketData";
+import { useShopOwner } from "./useShopOwner";
 import { useState, type ChangeEvent, useRef, useEffect } from "react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import Alert from "@/components/alert/alert";
@@ -29,6 +30,7 @@ export function Markets() {
   const state = useStore(marketStore);
   const products = state.products;
   const categories = state.catergories ?? [];
+  const { isMyInventoryProduct } = useShopOwner();
   const [activeCat, setActiveCat] = useState(0);
   const [query, setQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<MarketStoreProduct | null>(null);
@@ -245,6 +247,26 @@ export function Markets() {
                 >
                   {product.inStock ? "In stock" : "Sold out"}
                 </span>
+                {isMyInventoryProduct(product) && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      bottom: ".5rem",
+                      left: ".5rem",
+                      fontSize: ".65rem",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: ".04em",
+                      padding: ".2rem .6rem",
+                      borderRadius: "3rem",
+                      background: "rgba(2,6,23,.55)",
+                      color: "var(--text-info)",
+                      backdropFilter: "blur(4px)",
+                    }}
+                  >
+                    Your inventory
+                  </span>
+                )}
               </div>
 
               <div>

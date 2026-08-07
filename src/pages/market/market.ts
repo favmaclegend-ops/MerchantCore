@@ -2,7 +2,7 @@ import type { MarketStoreProduct, MarketStoreShop } from "./demoMarketStore";
 
 export const valueFormater = (value: string, fixed: number = 2) => {
   const parseValue = parseFloat(value);
-  if (!parseValue) return "NAN";
+  if (!parseValue) return "0";
   if (parseValue >= 1000000000000)
     return `${(parseValue / 1000000000).toFixed(fixed)}T`;
   if (parseValue >= 1000000000)

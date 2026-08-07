@@ -1,11 +1,18 @@
 import { useMemo, useState } from 'react'
-import { Plus, Edit2, Trash2, Search, Lock, Package } from 'lucide-react'
+import { Plus, Edit2, Trash2, Search, Lock, Package, Store } from 'lucide-react'
 import { api } from '@/lib/api'
 import { canEditInventory } from '@/lib/orgAccess'
 import type { OrgMember } from '@/data/organisations'
 import type { OrgProduct } from '@/data/orgCommerce'
 import { Modal, FormButtons, StatusBadge, PageNotice } from './components'
 import { inputStyle, selectStyle, thStyle, tdStyle, panelStyle, primaryBtn, labelStyle, fieldRow, field } from './styles'
+import { useShopOwner } from '@/pages/market/useShopOwner'
+import {
+  getUploadedSourceIds,
+  removeProductFromMarket,
+  updateMarketProductFromInventory,
+} from '@/pages/market/marketUpload'
+import { syncUserMarketData } from '@/pages/market/marketApi'
 
 type ProductForm = {
   name: string
@@ -21,6 +28,10 @@ const emptyProductForm: ProductForm = { name: '', sku: '', category: '', price: 
 
 export function InventoryTracking({ products, reload, notify, orgUser }: { products: OrgProduct[]; reload: () => void; notify: (msg: string) => void; orgUser: OrgMember }) {
   const canEdit = canEditInventory(orgUser)
+  const { ownerKey } = useShopOwner()
+  const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(
+    () => new Set(getUploadedSourceIds(ownerKey)),
+  )
   const [query, setQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<OrgProduct | null>(null)
@@ -88,6 +99,17 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
       const payload = { name: form.name.trim(), sku: form.sku.trim(), category: form.category, price, stock, image, rating }
       if (editing) {
         await api.org.updateProduct(editing.id, payload)
+        if (uploadedSourceIds.has(editing.id)) {
+          updateMarketProductFromInventory(ownerKey, editing.id, {
+            name: payload.name,
+            price: payload.price,
+            stock: payload.stock,
+            category: payload.category,
+            image: payload.image,
+            rating: payload.rating,
+          })
+          syncUserMarketData()
+        }
         notify(`${form.name.trim()} was updated`)
       } else {
         await api.org.createProduct(payload)
@@ -99,6 +121,15 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const removeFromMarket = (product: OrgProduct) => {
+    if (!window.confirm(`Remove ${product.name} from the market? It stays in your inventory.`)) return
+    if (removeProductFromMarket(ownerKey, product.id)) {
+      syncUserMarketData()
+      setUploadedSourceIds(new Set(getUploadedSourceIds(ownerKey)))
+      notify(`${product.name} removed from the market`)
     }
   }
 
@@ -147,13 +178,14 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
               <th style={thStyle}>Unit Price</th>
               <th style={thStyle}>Stock</th>
               <th style={thStyle}>Status</th>
+              <th style={thStyle}>Market</th>
               {canEdit && <th style={thStyle}>Actions</th>}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={canEdit ? 6 : 5} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)' }}>
+                <td colSpan={canEdit ? 7 : 6} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)' }}>
                   <Package size={18} style={{ display: 'inline', marginRight: 6, verticalAlign: '-3px' }} />
                   No products match.
                 </td>
@@ -178,6 +210,31 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
                   <td style={tdStyle}>{p.price.toFixed(2)}</td>
                   <td style={tdStyle}>{p.stock}</td>
                   <td style={tdStyle}><StatusBadge label={p.status} tone={p.status === 'in-stock' ? 'green' : p.status === 'low-stock' ? 'amber' : 'red'} /></td>
+                  {(() => {
+                    const uploaded = uploadedSourceIds.has(p.id)
+                    return (
+                      <td style={tdStyle}>
+                        {uploaded ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '10px', fontWeight: 600, color: 'var(--text-info)', background: 'var(--bg-info)', padding: '2px 6px', borderRadius: 4 }}>
+                              <Store size={10} />
+                              Listed
+                            </span>
+                            <button
+                              onClick={() => removeFromMarket(p)}
+                              title="Remove from market"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '10px', fontWeight: 500, color: 'var(--text-danger)', background: 'var(--bg-danger)', padding: '2px 6px', borderRadius: 4, border: 'none', cursor: 'pointer' }}
+                            >
+                              <Store size={10} />
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>—</span>
+                        )}
+                      </td>
+                    )
+                  })()}
                   {canEdit && (
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', gap: '4px' }}>
