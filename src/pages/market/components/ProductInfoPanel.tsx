@@ -14,10 +14,15 @@ import { marketStore } from "../demoMarketStore";
 import {
   formatDate,
   getProductImages,
-  getRatingBreakdown,
   resolveShopForProduct,
   valueFormater,
 } from "../market";
+import {
+  getProductRatings,
+  setProductRating,
+  type StarRating,
+} from "../productRatings";
+import { useShopOwner } from "../useShopOwner";
 import { addToMarketCart } from "../cart";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { GracefulImage } from "@/components/GracefulImage";
@@ -31,10 +36,15 @@ export function ProductInfoPanel({
 }) {
   const bp = useBreakpoint();
   const navigate = useNavigate();
+  const { ownerKey } = useShopOwner();
   const images = useMemo(() => getProductImages(product), [product]);
   const [index, setIndex] = useState(0);
   const [touchX, setTouchX] = useState<number | null>(null);
   const [added, setAdded] = useState(false);
+  const [ratings, setRatings] = useState(() =>
+    getProductRatings(product, ownerKey),
+  );
+  const [hovered, setHovered] = useState<StarRating | null>(null);
 
   const safeIndex = images.length ? index % images.length : 0;
 
@@ -43,12 +53,13 @@ export function ProductInfoPanel({
     [product],
   );
 
-  const rating = useMemo(
-    () => getRatingBreakdown(product.product_rating, product.product_id),
-    [product],
-  );
+  const maxCount = Math.max(...ratings.levels.map((l) => l.count), 1);
 
-  const maxCount = Math.max(...rating.levels.map((l) => l.count), 1);
+  const handleRate = (star: StarRating) => {
+    setProductRating(product.product_id, ownerKey, star);
+    setRatings(getProductRatings(product, ownerKey));
+    setHovered(null);
+  };
 
   const go = useCallback(
     (dir: 1 | -1) => {
@@ -363,6 +374,17 @@ export function ProductInfoPanel({
               borderRadius: "1rem",
             }}
           >
+            <h3
+              style={{
+                margin: 0,
+                fontSize: ".85rem",
+                fontWeight: "bold",
+                color: "var(--text-primary)",
+              }}
+            >
+              Ratings & reviews
+            </h3>
+
             <div
               style={{
                 display: "flex",
@@ -371,23 +393,68 @@ export function ProductInfoPanel({
                 gap: "1rem",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: ".3rem" }}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    size={18}
-                    color="gold"
-                    fill={star <= Math.round(rating.average) ? "gold" : "none"}
-                  />
-                ))}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: ".2rem",
+                }}
+                role="radiogroup"
+                aria-label="Rate this product"
+              >
+                {([1, 2, 3, 4, 5] as StarRating[]).map((star) => {
+                  const active = (hovered ?? ratings.userRating ?? 0) >= star;
+                  return (
+                    <button
+                      key={star}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      aria-label={`Rate ${star} star${star === 1 ? "" : "s"}`}
+                      onMouseEnter={() => setHovered(star)}
+                      onMouseLeave={() => setHovered(null)}
+                      onClick={() => handleRate(star)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: "0 .1rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        color: "gold",
+                        transform: hovered === star ? "scale(1.1)" : "scale(1)",
+                        transition: "transform .15s ease",
+                      }}
+                    >
+                      <Star
+                        size={22}
+                        strokeWidth={active ? 0 : 2}
+                        fill={active ? "gold" : "none"}
+                      />
+                    </button>
+                  );
+                })}
               </div>
               <strong style={{ fontSize: ".95rem", color: "var(--text-primary)" }}>
-                {rating.average.toFixed(1)} / 5
+                {ratings.count > 0
+                  ? `${ratings.average.toFixed(1)} / 5`
+                  : "No ratings yet"}
               </strong>
             </div>
 
+            <span
+              style={{
+                fontSize: ".8rem",
+                color: "var(--text-muted)",
+              }}
+            >
+              {ratings.userRating
+                ? `Your rating: ${ratings.userRating} / 5`
+                : "Tap a star to rate this product"}
+            </span>
+
             <div style={{ display: "flex", flexDirection: "column", gap: ".35rem" }}>
-              {rating.levels.map((level) => (
+              {ratings.levels.map((level) => (
                 <div
                   key={level.star}
                   style={{

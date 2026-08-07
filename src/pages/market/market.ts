@@ -40,30 +40,3 @@ export const resolveShopForProduct = (
   );
 };
 
-export interface RatingLevel {
-  star: number;
-  count: number;
-}
-
-export const getRatingBreakdown = (
-  rating: string,
-  seed: string,
-): { levels: RatingLevel[]; average: number } => {
-  const total = Math.max(0, parseInt(rating, 10) || 0);
-  let h = seed.split("").reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) >>> 0, 7);
-  const weights = Array.from({ length: 5 }, () => {
-    h = (h * 9301 + 49297) % 233280;
-    return (h % 100) + 10;
-  });
-  const sum = weights.reduce((a, b) => a + b, 0);
-  const counts = weights.map((w) => Math.round((w / sum) * total));
-  const levels: RatingLevel[] = [5, 4, 3, 2, 1].map((star, i) => ({
-    star,
-    count: counts[i],
-  }));
-  const counted = counts.reduce((a, b) => a + b, 0) || 1;
-  const average =
-    levels.reduce((acc, l) => acc + l.star * l.count, 0) / counted || 0;
-  return { levels, average };
-};
-

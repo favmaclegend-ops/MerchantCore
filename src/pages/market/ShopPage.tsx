@@ -1,10 +1,11 @@
-import { ArrowLeft, MessageCircle, Star } from "lucide-react";
+import { ArrowLeft, BadgeCheck, MessageCircle, Star } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useStore } from "elk-components";
 import { marketStore } from "./demoMarketStore";
 import { useMarketData } from "./useMarketData";
 import { valueFormater } from "./market";
+import { isShopVerified } from "./verification";
 import { ShopPageReabon } from "./components/ShopPageReabon";
 import { OverView } from "./components/OverView";
 import { Products } from "./components/Products";
@@ -17,8 +18,8 @@ export function ShopPage () {
     const navigate = useNavigate();
     const bp = useBreakpoint();
     const { loading } = useMarketData();
-    
-    const shop = useStore(marketStore).shops[params.id ?? ""]
+    const { shops, products } = useStore(marketStore);
+    const shop = shops[params.id ?? ""]
     if (loading) {
         return (
             <div style={{display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center'}}>
@@ -33,6 +34,8 @@ export function ShopPage () {
             </div>
         )
     }
+
+    const verified = isShopVerified(shop, products);
 
 
     return (
@@ -74,8 +77,9 @@ export function ShopPage () {
                         </div>
                     
                         <div style={{display: 'flex', flexDirection: 'column', minWidth: '0', overflow: 'hidden'}}>
-                            <h1 style={{display: 'block', fontWeight: 'bolder', fontSize: bp.sm ? '1.1rem' : '1.5rem', lineHeight: 1.2, textWrap: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', width: '100%'}}>
+                            <h1 style={{display: 'flex', alignItems: 'center', gap: '.4rem', fontWeight: 'bolder', fontSize: bp.sm ? '1.1rem' : '1.5rem', lineHeight: 1.2, textWrap: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', width: '100%'}}>
                                 {shop.shop_name}
+                                {verified && <BadgeCheck size={bp.sm ? 18 : 22} color="var(--text-info)" aria-label="Verified business" style={{flexShrink: 0}}/>}
                             </h1>
                             <div style={{display: 'flex', alignItems: 'center', gap: '.3rem', marginTop: '.25rem'}}>
                                 <Star color="gold" size={bp.sm ? 14 : 16}/>

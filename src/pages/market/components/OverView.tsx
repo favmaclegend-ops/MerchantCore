@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { marketStore } from "../demoMarketStore";
 import { valueFormater } from "../market";
+import { isShopVerified } from "../verification";
 import { geocodeAddress, type GeoCoords } from "../geocode";
 import { GracefulImage } from "@/components/GracefulImage";
 import {
@@ -75,11 +76,12 @@ export function OverView() {
     hasCoords && location ? { lat: location.lat, lng: location.lng } : resolvedCoords;
 
   const productCount = products.filter((p) => p.shop_name === shop.shop_name).length;
+  const verified = isShopVerified(shop, products);
   const stats = [
     { label: "Rating", value: valueFormater(shop.rating ?? "0"), icon: BadgeCheck },
     { label: "Products", value: `${productCount}`, icon: Package },
     { label: "Member since", value: formatDate(shop.createdAt), icon: CalendarDays },
-    { label: "Verified", value: "Business", icon: ShieldCheck },
+    { label: "Verified", value: verified ? "Verified" : "Not Verified", icon: ShieldCheck },
   ];
 
   return (
@@ -234,6 +236,9 @@ export function OverView() {
                 <div style={{ minWidth: "0", zIndex: '1' }}>
                   <h2
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: ".4rem",
                       fontSize: "1.25rem",
                       fontWeight: "bolder",
                       color: "var(--text-primary)",
@@ -243,6 +248,13 @@ export function OverView() {
                     }}
                   >
                     About {shop.shop_name}
+                    {verified && (
+                      <BadgeCheck
+                        size={20}
+                        color="var(--text-info)"
+                        aria-label="Verified business"
+                      />
+                    )}
                   </h2>
                   <span
                     style={{
@@ -250,10 +262,11 @@ export function OverView() {
                       alignItems: "center",
                       gap: ".3rem",
                       fontSize: ".85rem",
-                      color: "var(--text-success)",
+                      color: verified ? "var(--text-info)" : "var(--text-muted)",
                     }}
                   >
-                    <Store size={14} /> Active shop
+                    <Store size={14} />
+                    {verified ? "Verified business" : "Active shop"}
                   </span>
                 </div>
               </div>
