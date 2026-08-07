@@ -1,4 +1,9 @@
-import type { MarketStore, MarketStoreProduct, MarketStoreShop } from "./demoMarketStore";
+import type {
+  MarketProductVariant,
+  MarketStore,
+  MarketStoreProduct,
+  MarketStoreShop,
+} from "./demoMarketStore";
 
 // User-owned market shops and uploaded items are kept in localStorage (like the other
 // `merchant_*` mock stores) so they survive reloads. `mergeUserMarketData` folds them into
@@ -17,6 +22,7 @@ export interface PosSourceProduct {
   category: string;
   image?: string;
   rating?: number;
+  variants?: MarketProductVariant[];
 }
 
 export interface MarketShopInput {
@@ -136,8 +142,9 @@ export const removeProductFromMarket = (
   return true;
 };
 
-// Propagates inventory edits (name / price / stock / category / image / rating) to the
-// uploaded market copy so the marketplace always mirrors the inventory.
+// Propagates inventory edits (name / price / stock / category / image) to the uploaded
+// market copy so the marketplace always mirrors the inventory. Product ratings are left
+// alone — they are earned only through the market's rate button, not the inventory form.
 export const updateMarketProductFromInventory = (
   ownerKey: string,
   sourceId: string,
@@ -147,7 +154,6 @@ export const updateMarketProductFromInventory = (
     stock: number;
     category: string;
     image?: string;
-    rating?: number;
   },
 ): boolean => {
   const products = loadUserProducts();
@@ -159,12 +165,23 @@ export const updateMarketProductFromInventory = (
     product.inStock = changes.stock > 0;
     product.category = changes.category?.trim() || "General";
     product.productImageUrl = changes.image?.trim() || undefined;
-    product.product_rating = String(changes.rating ?? 0);
     updated = true;
   }
   if (updated) writeStore(USER_PRODUCTS_KEY, products);
   return updated;
 };
+
+const sanitizeVariants = (
+  variants: MarketProductVariant[],
+): MarketProductVariant[] =>
+  variants
+    .map((v) => ({
+      image: v.image?.trim() || undefined,
+      size: v.size?.trim() || undefined,
+      color: v.color?.trim() || undefined,
+      shape: v.shape?.trim() || undefined,
+    }))
+    .filter((v) => !!(v.image || v.size || v.color || v.shape));
 
 export const uploadProductsToShop = (
   ownerKey: string,
@@ -197,6 +214,9 @@ export const uploadProductsToShop = (
       category: source.category?.trim() || "General",
       keywords: [source.name.toLowerCase()],
       productImageUrl: source.image?.trim() || undefined,
+      variants: source.variants
+        ? sanitizeVariants(source.variants)
+        : undefined,
       uploadedAt: new Date().toISOString().slice(0, 10),
     };
     products.push(product);

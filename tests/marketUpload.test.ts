@@ -145,6 +145,40 @@ describe('uploadProductsToShop', () => {
     expect(valueFormater(added[0].product_rating)).not.toBe('NAN')
   })
 
+  it('stores sanitized variants with the uploaded product', () => {
+    createMarketShop(OWNER, shopInput)
+    const added = uploadProductsToShop(OWNER, [
+      {
+        id: 'vr1',
+        name: 'T-Shirt',
+        price: 40,
+        stock: 10,
+        category: 'Fashion',
+        image: 'https://img/tshirt.png',
+        variants: [
+          { size: 'M', color: 'Red', image: 'https://img/tshirt-red.png' },
+          { size: 'L', color: 'Blue' },
+          { size: '  ', color: '', shape: '' },
+          { size: 'XL' },
+        ],
+      },
+    ])
+    expect(added[0].variants).toHaveLength(3)
+    expect(added[0].variants?.[0]).toEqual({
+      size: 'M',
+      color: 'Red',
+      image: 'https://img/tshirt-red.png',
+    })
+    expect(added[0].variants?.[1]).toEqual({ size: 'L', color: 'Blue' })
+    expect(added[0].variants?.[2]).toEqual({ size: 'XL' })
+  })
+
+  it('omits variants when none are provided', () => {
+    createMarketShop(OWNER, shopInput)
+    const added = uploadProductsToShop(OWNER, [posItems[0]])
+    expect(added[0].variants).toBeUndefined()
+  })
+
   it('dedupes by sourceId so a second upload adds nothing', () => {
     createMarketShop(OWNER, shopInput)
     uploadProductsToShop(OWNER, posItems)
@@ -227,7 +261,6 @@ describe('updateMarketProductFromInventory', () => {
       stock: 3,
       category: 'Groceries',
       image: 'https://img/new.png',
-      rating: 4.7,
     })
     expect(ok).toBe(true)
     const stored = loadUserProducts()[0]
@@ -236,8 +269,19 @@ describe('updateMarketProductFromInventory', () => {
     expect(stored.inStock).toBe(true)
     expect(stored.category).toBe('Groceries')
     expect(stored.productImageUrl).toBe('https://img/new.png')
-    expect(stored.product_rating).toBe('4.7')
     expect(stored.product_id).toBe(added.product_id)
+  })
+
+  it('never clobbers the market rating when inventory edits happen', () => {
+    createMarketShop(OWNER, shopInput)
+    uploadProductsToShop(OWNER, [posItems[0]])
+    updateMarketProductFromInventory(OWNER, posItems[0].id, {
+      name: posItems[0].name,
+      price: posItems[0].price,
+      stock: 10,
+      category: posItems[0].category,
+    })
+    expect(loadUserProducts()[0].product_rating).toBe('0')
   })
 
   it('flips inStock off when stock hits zero', () => {

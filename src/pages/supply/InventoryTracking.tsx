@@ -21,10 +21,9 @@ type ProductForm = {
   price: string
   stock: string
   image: string
-  rating: string
 }
 
-const emptyProductForm: ProductForm = { name: '', sku: '', category: '', price: '', stock: '', image: '', rating: '5' }
+const emptyProductForm: ProductForm = { name: '', sku: '', category: '', price: '', stock: '', image: '' }
 
 export function InventoryTracking({ products, reload, notify, orgUser }: { products: OrgProduct[]; reload: () => void; notify: (msg: string) => void; orgUser: OrgMember }) {
   const canEdit = canEditInventory(orgUser)
@@ -63,7 +62,6 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
       price: String(product.price),
       stock: String(product.stock),
       image: product.image || '',
-      rating: product.rating != null ? String(product.rating) : '5',
     })
     setError('')
     setShowForm(true)
@@ -89,14 +87,9 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
       setError('A product image is required')
       return
     }
-    const rating = form.rating === '' ? 5 : Number(form.rating)
-    if (Number.isNaN(rating) || rating < 0 || rating > 5) {
-      setError('Rating must be a number between 0 and 5')
-      return
-    }
     setSubmitting(true)
     try {
-      const payload = { name: form.name.trim(), sku: form.sku.trim(), category: form.category, price, stock, image, rating }
+      const payload = { name: form.name.trim(), sku: form.sku.trim(), category: form.category, price, stock, image }
       if (editing) {
         await api.org.updateProduct(editing.id, payload)
         if (uploadedSourceIds.has(editing.id)) {
@@ -106,7 +99,6 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
             stock: payload.stock,
             category: payload.category,
             image: payload.image,
-            rating: payload.rating,
           })
           syncUserMarketData()
         }
@@ -286,12 +278,6 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
             <div style={field}>
               <label style={labelStyle}>Stock</label>
               <input type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} style={inputStyle} placeholder="0" />
-            </div>
-          </div>
-          <div style={fieldRow}>
-            <div style={field}>
-              <label style={labelStyle}>Initial Rating</label>
-              <input type="number" min="0" max="5" step="0.1" value={form.rating} onChange={e => setForm({ ...form, rating: e.target.value })} style={inputStyle} placeholder="0-5" />
             </div>
           </div>
           <div>

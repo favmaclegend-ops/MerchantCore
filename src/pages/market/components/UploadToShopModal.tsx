@@ -1,17 +1,20 @@
-import { useContext, useEffect, useState, type CSSProperties } from "react";
+import { Fragment, useContext, useEffect, useState, type CSSProperties } from "react";
 import {
   Check,
   CheckSquare,
+  Layers,
   Loader2,
   Package,
+  Plus,
   Store,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
 import { Authcontext } from "@/context/auth_context";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { api } from "@/lib/api";
-import type { MarketStoreShop } from "../demoMarketStore";
+import type { MarketProductVariant, MarketStoreShop } from "../demoMarketStore";
 import { useShopOwner } from "../useShopOwner";
 import {
   createMarketShop,
@@ -353,6 +356,8 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
   );
   const [success, setSuccess] = useState("");
   const [busy, setBusy] = useState(false);
+  const [openVariants, setOpenVariants] = useState<string | null>(null);
+  const [variantDrafts, setVariantDrafts] = useState<Record<string, VariantDraft[]>>({});
 
   useEffect(() => {
     let mounted = true;
@@ -405,7 +410,8 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
     setBusy(true);
     setError("");
     try {
-      const added = uploadProductsToShop(ownerKey, list);
+      const withVariants = list.map((p) => ({ ...p, variants: toVariantInput(p) }));
+      const added = uploadProductsToShop(ownerKey, withVariants);
       syncUserMarketData();
       setUploadedIds(getUploadedSourceIds(ownerKey));
       setSelected(new Set());
@@ -447,6 +453,29 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
       else next.add(id);
       return next;
     });
+  };
+
+  const toggleVariants = (id: string) =>
+    setOpenVariants((prev) => (prev === id ? null : id));
+
+  const setDraftsFor =
+    (id: string) => (next: VariantDraft[]) =>
+      setVariantDrafts((prev) => ({ ...prev, [id]: next }));
+
+  const toVariantInput = (
+    p: PosSourceProduct,
+  ): MarketProductVariant[] | undefined => {
+    const drafts = variantDrafts[p.id];
+    if (!drafts || drafts.length === 0) return undefined;
+    const cleaned = drafts
+      .map((d) => ({
+        image: d.image.trim() || undefined,
+        size: d.size.trim() || undefined,
+        color: d.color.trim() || undefined,
+        shape: d.shape.trim() || undefined,
+      }))
+      .filter((v) => !!(v.image || v.size || v.color || v.shape));
+    return cleaned.length ? cleaned : undefined;
   };
 
   if (products === null && !error) {
@@ -563,20 +592,35 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
             gap: ".5rem",
           }}
         >
-          {available.map((p) => (
-            <ItemRow
-              key={p.id}
-              name={p.name}
-              price={p.price}
-              inStock={p.stock > 0}
-              selectable={mode === "selected"}
-              checked={selected.has(p.id)}
-              uploaded={false}
-              image={p.image}
-              onToggle={() => toggle(p.id)}
-              compact={bp.sm}
-            />
-          ))}
+          {available.map((p) => {
+            const drafts = variantDrafts[p.id] ?? [];
+            const filledDrafts = drafts.filter(
+              (d) => d.image || d.size || d.color || d.shape,
+            );
+            return (
+              <Fragment key={p.id}>
+                <ItemRow
+                  name={p.name}
+                  price={p.price}
+                  inStock={p.stock > 0}
+                  selectable={mode === "selected"}
+                  checked={selected.has(p.id)}
+                  uploaded={false}
+                  image={p.image}
+                  onToggle={() => toggle(p.id)}
+                  compact={bp.sm}
+                  onToggleVariants={() => toggleVariants(p.id)}
+                  variantCount={filledDrafts.length}
+                />
+                {openVariants === p.id && (
+                  <VariantEditor
+                    drafts={drafts}
+                    onChange={setDraftsFor(p.id)}
+                  />
+                )}
+              </Fragment>
+            );
+          })}
           {alreadyUploaded.map((p) => (
             <ItemRow
               key={p.id}
@@ -692,6 +736,8 @@ function ItemRow({
   onToggle,
   onRemove,
   compact,
+  onToggleVariants,
+  variantCount,
 }: {
   name: string;
   price: number;
@@ -703,6 +749,8 @@ function ItemRow({
   onToggle: () => void;
   onRemove?: () => void;
   compact: boolean;
+  onToggleVariants?: () => void;
+  variantCount?: number;
 }) {
   return (
     <div
@@ -799,6 +847,32 @@ function ItemRow({
       >
         NLE{valueFormater(String(price))}
       </span>
+      {onToggleVariants && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleVariants();
+          }}
+          title="Edit variants"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: ".3rem",
+            padding: ".35rem .6rem",
+            borderRadius: ".5rem",
+            cursor: "pointer",
+            border: "1px solid var(--border-default)",
+            background: variantCount ? "var(--bg-nav)" : "var(--bg-tertiary)",
+            color: variantCount ? "var(--text-info)" : "var(--text-secondary)",
+            fontSize: ".72rem",
+            fontWeight: 600,
+            flexShrink: 0,
+          }}
+        >
+          <Layers size={12} />
+          {variantCount ? `Variants · ${variantCount}` : "Variants"}
+        </button>
+      )}
       {uploaded && onRemove && (
         <button
           onClick={(e) => {
@@ -839,3 +913,166 @@ const labelStyle: CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: ".04em",
 };
+
+interface VariantDraft {
+  id: string;
+  image: string;
+  size: string;
+  color: string;
+  shape: string;
+}
+
+const newVariantDraft = (): VariantDraft => ({
+  id: `v_${Math.random().toString(36).slice(2, 10)}`,
+  image: "",
+  size: "",
+  color: "",
+  shape: "",
+});
+
+function VariantEditor({
+  drafts,
+  onChange,
+}: {
+  drafts: VariantDraft[];
+  onChange: (next: VariantDraft[]) => void;
+}) {
+  const fieldStyle: CSSProperties = {
+    flex: 1,
+    minWidth: 0,
+    padding: ".45rem .6rem",
+    borderRadius: ".5rem",
+    border: "1px solid var(--border-input)",
+    background: "var(--bg-surface)",
+    color: "var(--text-primary)",
+    fontSize: ".8rem",
+    outline: "none",
+  };
+  const update = (id: string, patch: Partial<VariantDraft>) =>
+    onChange(drafts.map((d) => (d.id === id ? { ...d, ...patch } : d)));
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: ".5rem",
+        padding: ".75rem",
+        background: "var(--bg-tertiary)",
+        border: "1px solid var(--border-default)",
+        borderRadius: ".75rem",
+      }}
+    >
+      <span
+        style={{
+          fontSize: ".72rem",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: ".04em",
+          color: "var(--text-muted)",
+        }}
+      >
+        Variants (size / colour / shape / extra image)
+      </span>
+      {drafts.length === 0 && (
+        <span style={{ fontSize: ".78rem", color: "var(--text-muted)" }}>
+          No variants yet. Buyers will pick from the options you add, with the
+          first variant selected by default.
+        </span>
+      )}
+      {drafts.map((d) => (
+        <div
+          key={d.id}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: ".4rem",
+            padding: ".6rem",
+            border: "1px solid var(--border-default)",
+            borderRadius: ".6rem",
+            background: "var(--bg-surface)",
+          }}
+        >
+          <div style={{ display: "flex", gap: ".4rem" }}>
+            <input
+              value={d.size}
+              onChange={(e) => update(d.id, { size: e.target.value })}
+              placeholder="Size (e.g. M, 500ml)"
+              style={fieldStyle}
+            />
+            <input
+              value={d.color}
+              onChange={(e) => update(d.id, { color: e.target.value })}
+              placeholder="Colour (e.g. Red)"
+              style={fieldStyle}
+            />
+          </div>
+          <div style={{ display: "flex", gap: ".4rem" }}>
+            <input
+              value={d.shape}
+              onChange={(e) => update(d.id, { shape: e.target.value })}
+              placeholder="Shape (e.g. Round)"
+              style={fieldStyle}
+            />
+            <input
+              value={d.image}
+              onChange={(e) => update(d.id, { image: e.target.value })}
+              placeholder="Image URL (optional)"
+              style={fieldStyle}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: ".5rem",
+            }}
+          >
+            <span style={{ fontSize: ".72rem", color: "var(--text-muted)" }}>
+              {[d.size, d.color, d.shape].filter(Boolean).join(" · ") ||
+                "Empty variant"}
+            </span>
+            <button
+              onClick={() => onChange(drafts.filter((x) => x.id !== d.id))}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: ".3rem",
+                padding: ".3rem .55rem",
+                borderRadius: ".5rem",
+                cursor: "pointer",
+                border: "1px solid var(--border-danger)",
+                background: "var(--bg-danger)",
+                color: "var(--text-danger)",
+                fontSize: ".72rem",
+                fontWeight: 600,
+                flexShrink: 0,
+              }}
+            >
+              <Trash2 size={12} /> Remove
+            </button>
+          </div>
+        </div>
+      ))}
+      <button
+        onClick={() => onChange([...drafts, newVariantDraft()])}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: ".3rem",
+          alignSelf: "flex-start",
+          padding: ".4rem .7rem",
+          borderRadius: ".5rem",
+          cursor: "pointer",
+          border: "1px dashed var(--border-info)",
+          background: "transparent",
+          color: "var(--text-info)",
+          fontSize: ".78rem",
+          fontWeight: 600,
+        }}
+      >
+        <Plus size={14} /> Add variant
+      </button>
+    </div>
+  );
+}

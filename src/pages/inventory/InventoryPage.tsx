@@ -32,7 +32,6 @@ interface Product {
   category: string
   status: 'in-stock' | 'low-stock' | 'out-of-stock'
   image?: string
-  rating?: number
 }
 
 function stockStatus(stock: number): Product['status'] {
@@ -59,7 +58,7 @@ export function InventoryPage() {
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editItem, setEditItem] = useState<Product | null>(null)
-  const [formData, setFormData] = useState({ name: '', sku: '', price: '', stock: '', category: '', image: '', rating: '0' })
+  const [formData, setFormData] = useState({ name: '', sku: '', price: '', stock: '', category: '', image: '' })
   const [formError, setFormError] = useState('')
   const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(
     () => new Set(getUploadedSourceIds(ownerKey)),
@@ -88,14 +87,14 @@ export function InventoryPage() {
 
   const openAdd = () => {
     setEditItem(null)
-    setFormData({ name: '', sku: '', price: '', stock: '', category: '', image: '', rating: '5' })
+    setFormData({ name: '', sku: '', price: '', stock: '', category: '', image: '' })
     setFormError('')
     setShowForm(true)
   }
 
   const openEdit = (p: Product) => {
     setEditItem(p)
-    setFormData({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, image: p.image || '', rating: p.rating != null ? String(p.rating) : '5' })
+    setFormData({ name: p.name, sku: p.sku, price: String(p.price), stock: String(p.stock), category: p.category, image: p.image || '' })
     setFormError('')
     setShowForm(true)
   }
@@ -110,11 +109,6 @@ export function InventoryPage() {
       setFormError('A product image is required')
       return
     }
-    const rating = formData.rating === '' ? 5 : Number(formData.rating)
-    if (Number.isNaN(rating) || rating < 0 || rating > 5) {
-      setFormError('Rating must be a number between 0 and 5')
-      return
-    }
     const payload = {
       name: formData.name,
       sku: formData.sku,
@@ -122,7 +116,6 @@ export function InventoryPage() {
       stock: parseInt(formData.stock) || 0,
       category: formData.category,
       image,
-      rating,
       status: stockStatus(parseInt(formData.stock) || 0),
     }
     if (editItem) {
@@ -134,7 +127,6 @@ export function InventoryPage() {
           stock: payload.stock,
           category: payload.category,
           image: payload.image,
-          rating: payload.rating,
         })
         syncUserMarketData()
       }
@@ -334,15 +326,9 @@ export function InventoryPage() {
                 <input value={formData.stock} onChange={e => setFormData(p => ({ ...p, stock: e.target.value }))} style={inputStyle} placeholder="0" type="number" min="0" />
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Initial Rating</label>
-                <input value={formData.rating}  onChange={e => setFormData(p => ({ ...p, rating: e.target.value }))} style={inputStyle} placeholder="0-5" type="number" min="0" max="5" step="0.1" />
-              </div>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Category</label>
-                <input value={formData.category} onChange={e => setFormData(p => ({ ...p, category: e.target.value }))} style={inputStyle} placeholder="e.g. Beverages, Snacks" />
-              </div>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Category</label>
+              <input value={formData.category} onChange={e => setFormData(p => ({ ...p, category: e.target.value }))} style={inputStyle} placeholder="e.g. Beverages, Snacks" />
             </div>
             <div>
               <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Product Image *</label>

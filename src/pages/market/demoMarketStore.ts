@@ -19,6 +19,13 @@ export interface MarketStoreShop {
   };
 }
 
+export interface MarketProductVariant {
+  image?: string;
+  size?: string;
+  color?: string;
+  shape?: string;
+}
+
 export interface MarketStoreProduct {
   group_id: string;
   product_id: string;
@@ -31,6 +38,7 @@ export interface MarketStoreProduct {
   keywords?: string[]
   productImageUrl?: string
   productImages?: string[]
+  variants?: MarketProductVariant[]
   description?: string
   uploadedAt?: string
   ownerKey?: string
@@ -240,6 +248,23 @@ export const marketData: MarketStore = {
         "https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=900&q=80",
         "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=900&q=80",
       ],
+      variants: [
+        {
+          size: "500ml",
+          image:
+            "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=900&q=80",
+        },
+        {
+          size: "1L",
+          image:
+            "https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=900&q=80",
+        },
+        {
+          size: "2L",
+          image:
+            "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=900&q=80",
+        },
+      ],
       description: "Farm-fresh whole milk, chilled daily and packed with natural goodness. Perfect for your morning cereal, coffee, or a glass straight up.",
       uploadedAt: "2026-01-14",
     },
@@ -316,6 +341,18 @@ export const marketData: MarketStore = {
         "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=900&q=80",
         "https://images.unsplash.com/photo-1547996160-81dfa63595aa?auto=format&fit=crop&w=900&q=80",
         "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80",
+      ],
+      variants: [
+        {
+          color: "Gold",
+          image:
+            "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=900&q=80",
+        },
+        {
+          color: "Silver",
+          image:
+            "https://images.unsplash.com/photo-1547996160-81dfa63595aa?auto=format&fit=crop&w=900&q=80",
+        },
       ],
       description: "A statement timepiece set with brilliant stones on a premium bracelet. Engineered for those who value precision and style.",
       uploadedAt: "2025-11-08",

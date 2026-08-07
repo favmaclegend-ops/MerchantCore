@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { MarketStoreProduct } from "@/pages/market/demoMarketStore";
 import {
   getProductRatings,
+  getProductRatingFigure,
   getRaterKey,
   setProductRating,
 } from "@/pages/market/productRatings";
@@ -68,5 +69,18 @@ describe("productRatings", () => {
   it("derives the rater key from the account owner key", () => {
     expect(getRaterKey({ id: "abc" })).toBe("user:abc");
     expect(getRaterKey(null, null, null)).toBe("user:guest");
+  });
+
+  it("reflects real user ratings in the displayed popularity figure", () => {
+    expect(getProductRatingFigure(product)).toBe("0");
+    setProductRating(product.product_id, "user:1", 5);
+    setProductRating(product.product_id, "user:2", 4);
+    expect(getProductRatingFigure(product)).toBe("2");
+  });
+
+  it("keeps the historical popularity figure for seeded products", () => {
+    const seeded: MarketStoreProduct = { ...product, product_rating: "2500" };
+    expect(parseInt(getProductRatingFigure(seeded), 10)).toBeGreaterThan(2400);
+    expect(parseInt(getProductRatingFigure(seeded), 10)).toBeLessThan(2600);
   });
 });

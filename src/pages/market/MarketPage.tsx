@@ -18,6 +18,7 @@ import { ShopPage } from "./ShopPage";
 import { useStore } from "elk-components";
 import {
   clearMarketCart,
+  getMarketCartItemKey,
   getMarketCartTotals,
   marketCartStore,
   removeFromMarketCart,
@@ -129,7 +130,7 @@ function CartPanel({
         ) : (
           cart.map((item) => (
             <div
-              key={item.product_id}
+              key={getMarketCartItemKey(item)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -182,10 +183,24 @@ function CartPanel({
                 >
                   {valueFormater(item.product_price)} × {item.quantity}
                 </p>
+                {item.variant &&
+                  (item.variant.size || item.variant.color || item.variant.shape) && (
+                    <p
+                      style={{
+                        fontSize: "9px",
+                        color: "var(--text-info)",
+                        margin: "2px 0 0",
+                      }}
+                    >
+                      {[item.variant.size, item.variant.color, item.variant.shape]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
                 <button
-                  onClick={() => updateMarketCartQuantity(item.product_id, -1)}
+                  onClick={() => updateMarketCartQuantity(getMarketCartItemKey(item), -1)}
                   style={{
                     width: "20px",
                     height: "20px",
@@ -211,7 +226,7 @@ function CartPanel({
                   {item.quantity}
                 </span>
                 <button
-                  onClick={() => updateMarketCartQuantity(item.product_id, 1)}
+                  onClick={() => updateMarketCartQuantity(getMarketCartItemKey(item), 1)}
                   style={{
                     width: "20px",
                     height: "20px",
@@ -240,7 +255,7 @@ function CartPanel({
                 NLE{valueFormater((parseFloat(item.product_price) * item.quantity).toString())}
               </p>
               <button
-                onClick={() => removeFromMarketCart(item.product_id)}
+                onClick={() => removeFromMarketCart(getMarketCartItemKey(item))}
                 style={{
                   padding: ".4rem",
                   borderRadius: "1rem",

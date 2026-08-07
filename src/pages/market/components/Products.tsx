@@ -6,6 +6,7 @@ import { useStore } from "elk-components";
 import { marketStore } from "../demoMarketStore";
 import type { MarketStoreProduct } from "../demoMarketStore";
 import { valueFormater } from "../market";
+import { getProductRatingFigure } from "../productRatings";
 import { addToMarketCart } from "../cart";
 import { ProductInfoPanel } from "./ProductInfoPanel";
 import { UploadToShopModal } from "./UploadToShopModal";
@@ -305,7 +306,7 @@ export function Products() {
                     }}
                   >
                     <Star size={14} />
-                    {valueFormater(product.product_rating)}
+                    {valueFormater(getProductRatingFigure(product))}
                   </strong>
                 </div>
               </div>

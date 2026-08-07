@@ -25,9 +25,18 @@ export const formatDate = (date?: string) => {
 
 export const getProductImages = (product?: MarketStoreProduct): string[] => {
   if (!product) return [];
-  if (product.productImages?.length) return product.productImages;
-  if (product.productImageUrl) return [product.productImageUrl];
-  return [];
+  const base = product.productImages?.length
+    ? product.productImages
+    : product.productImageUrl
+      ? [product.productImageUrl]
+      : [];
+  const images = [...base];
+  for (const variant of product.variants ?? []) {
+    if (variant.image && !images.includes(variant.image)) {
+      images.push(variant.image);
+    }
+  }
+  return images;
 };
 
 export const resolveShopForProduct = (

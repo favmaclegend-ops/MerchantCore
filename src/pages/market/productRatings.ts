@@ -108,3 +108,9 @@ export function setProductRating(
   state[productId] = productRatings;
   writeRatings(state);
 }
+
+// The popularity figure shown on product cards. For seeded items this mirrors the
+// historical `product_rating` count; for user uploads it grows as buyers rate the
+// product, so the market rating display always reflects real user engagement.
+export const getProductRatingFigure = (product: MarketStoreProduct): string =>
+  String(getProductRatings(product).count);

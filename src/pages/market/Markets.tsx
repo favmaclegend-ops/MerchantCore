@@ -11,6 +11,7 @@ import { useState, type ChangeEvent, useRef, useEffect } from "react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import Alert from "@/components/alert/alert";
 import { valueFormater } from "./market";
+import { getProductRatingFigure } from "./productRatings";
 
 export function Markets() {
   const { loading } = useMarketData();
@@ -265,7 +266,7 @@ export function Markets() {
                 >
                   <strong>NLE{valueFormater(product.product_price)}</strong>
                   <strong style={{ color: "gold", marginInlineStart: "auto" }}>
-                    {valueFormater(product.product_rating)}
+                    {valueFormater(getProductRatingFigure(product))}
                   </strong>
                 </div>
               </div>

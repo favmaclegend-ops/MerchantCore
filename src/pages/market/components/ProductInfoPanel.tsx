@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
+  Check,
   ChevronLeft,
   ChevronRight,
   ShoppingCart,
@@ -45,6 +46,7 @@ export function ProductInfoPanel({
     getProductRatings(product, ownerKey),
   );
   const [hovered, setHovered] = useState<StarRating | null>(null);
+  const [variantIndex, setVariantIndex] = useState(0);
 
   const safeIndex = images.length ? index % images.length : 0;
 
@@ -53,12 +55,25 @@ export function ProductInfoPanel({
     [product],
   );
 
+  const variants = product.variants ?? [];
+
   const maxCount = Math.max(...ratings.levels.map((l) => l.count), 1);
 
   const handleRate = (star: StarRating) => {
     setProductRating(product.product_id, ownerKey, star);
     setRatings(getProductRatings(product, ownerKey));
     setHovered(null);
+    const state = marketStore.getState();
+    marketStore.setState({ ...state });
+  };
+
+  const selectVariant = (i: number) => {
+    setVariantIndex(i);
+    const variant = variants[i];
+    if (variant?.image) {
+      const imageIndex = images.indexOf(variant.image);
+      if (imageIndex >= 0) setIndex(imageIndex);
+    }
   };
 
   const go = useCallback(
@@ -84,7 +99,7 @@ export function ProductInfoPanel({
   };
 
   const handleAddToCart = () => {
-    if (!addToMarketCart(product)) return;
+    if (!addToMarketCart(product, 1, variantIndex)) return;
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -362,6 +377,88 @@ export function ProductInfoPanel({
           >
             {product.description ?? "No description provided for this product."}
           </p>
+
+          {variants.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: ".5rem",
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: ".85rem",
+                  fontWeight: "bold",
+                  color: "var(--text-primary)",
+                }}
+              >
+                Select variant
+              </h3>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: ".5rem",
+                }}
+                role="radiogroup"
+                aria-label="Select a variant"
+              >
+                {variants.map((variant, i) => {
+                  const label =
+                    [variant.size, variant.color, variant.shape]
+                      .filter(Boolean)
+                      .join(" · ") || `Option ${i + 1}`;
+                  const active = variantIndex === i;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => selectVariant(i)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: ".4rem",
+                        padding: ".45rem .75rem",
+                        borderRadius: ".6rem",
+                        cursor: "pointer",
+                        border: active
+                          ? "2px solid var(--bg-nav-active)"
+                          : "1px solid var(--border-default)",
+                        background: active
+                          ? "var(--bg-nav)"
+                          : "var(--bg-surface)",
+                        color: "var(--text-primary)",
+                        fontSize: ".82rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {variant.image && (
+                        <span
+                          style={{
+                            width: "22px",
+                            height: "22px",
+                            borderRadius: "4px",
+                            overflow: "hidden",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <GracefulImage src={variant.image} alt={label} />
+                        </span>
+                      )}
+                      {label}
+                      {active && (
+                        <Check size={14} color="var(--text-info)" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div
             style={{

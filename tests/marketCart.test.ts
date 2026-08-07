@@ -3,6 +3,7 @@ import {
   addToMarketCart,
   buildMarketCartItem,
   clearMarketCart,
+  getMarketCartItemKey,
   getMarketCartTotals,
   marketCartStore,
   removeFromMarketCart,
@@ -78,21 +79,27 @@ describe('addToMarketCart', () => {
 describe('cart quantity helpers', () => {
   it('increments and decrements a quantity', () => {
     addToMarketCart(sunriseMilk)
-    updateMarketCartQuantity(sunriseMilk.product_id, 1)
+    const lineKey = getMarketCartItemKey(marketCartStore.getState().items[0])
+    updateMarketCartQuantity(lineKey, 1)
     expect(marketCartStore.getState().items[0].quantity).toBe(2)
-    updateMarketCartQuantity(sunriseMilk.product_id, -1)
+    updateMarketCartQuantity(lineKey, -1)
     expect(marketCartStore.getState().items[0].quantity).toBe(1)
   })
 
   it('removes the item when quantity drops to zero', () => {
     addToMarketCart(sunriseMilk)
-    updateMarketCartQuantity(sunriseMilk.product_id, -1)
+    updateMarketCartQuantity(
+      getMarketCartItemKey(marketCartStore.getState().items[0]),
+      -1,
+    )
     expect(marketCartStore.getState().items).toHaveLength(0)
   })
 
   it('removes an item entirely', () => {
     addToMarketCart(sunriseMilk)
-    removeFromMarketCart(sunriseMilk.product_id)
+    removeFromMarketCart(
+      getMarketCartItemKey(marketCartStore.getState().items[0]),
+    )
     expect(marketCartStore.getState().items).toHaveLength(0)
   })
 
