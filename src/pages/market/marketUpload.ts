@@ -172,6 +172,13 @@ export const uploadProductsToShop = (
 ): UploadedMarketProduct[] => {
   const shop = getMyShop(ownerKey);
   if (!shop) throw new Error("Create a shop before uploading items");
+  const withoutImage = sourceProducts.filter((p) => !p.image?.trim());
+  if (withoutImage.length > 0) {
+    const names = withoutImage.map((p) => `"${p.name}"`).join(", ");
+    throw new Error(
+      `Sorry, please select an image for the following product${withoutImage.length === 1 ? "" : "s"} before uploading: ${names}`,
+    );
+  }
   const existingIds = new Set(getUploadedSourceIds(ownerKey));
   const products = loadUserProducts();
   const added: UploadedMarketProduct[] = [];

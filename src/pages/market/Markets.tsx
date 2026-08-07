@@ -10,20 +10,7 @@ import { useShopOwner } from "./useShopOwner";
 import { useState, type ChangeEvent, useRef, useEffect } from "react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import Alert from "@/components/alert/alert";
-
-type formatValue = string;
-
-const valueFormater = (value: formatValue, fixed: number = 2) => {
-  const parseValue = parseFloat(value);
-  if (!parseValue) return "NAN";
-  if (parseValue >= 1000000000000)
-    return `${(parseValue / 1000000000).toFixed(fixed)}T`;
-  if (parseValue >= 1000000000)
-    return `${(parseValue / 1000000000).toFixed(fixed)}B`;
-  if (parseValue >= 1000000) return `${(parseValue / 1000000).toFixed(fixed)}M`;
-  if (parseValue >= 1000) return `${(parseValue / 1000).toFixed(fixed)}K`;
-  else return `${parseValue.toFixed(fixed)}`;
-};
+import { valueFormater } from "./market";
 
 export function Markets() {
   const { loading } = useMarketData();

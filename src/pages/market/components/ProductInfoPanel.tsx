@@ -20,6 +20,7 @@ import {
 } from "../market";
 import { addToMarketCart } from "../cart";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { GracefulImage } from "@/components/GracefulImage";
 
 export function ProductInfoPanel({
   product,
@@ -160,18 +161,11 @@ export function ProductInfoPanel({
           >
             {images.length ? (
               images.map((src) => (
-                <img
+                <GracefulImage
                   key={src}
                   src={src}
                   alt={product.product_name}
-                  draggable={false}
-                  style={{
-                    flex: "0 0 100%",
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    objectPosition: "center",
-                  }}
+                  wrapperStyle={{ flex: "0 0 100%" }}
                 />
               ))
             ) : (

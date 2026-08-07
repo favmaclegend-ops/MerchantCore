@@ -147,6 +147,10 @@ body {
   to { transform: rotate(360deg); }
 }
 
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
 *::-webkit-scrollbar {
   display: flex;
   background: transparent;

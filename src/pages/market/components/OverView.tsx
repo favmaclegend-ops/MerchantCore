@@ -7,6 +7,7 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { marketStore } from "../demoMarketStore";
 import { valueFormater } from "../market";
 import { geocodeAddress, type GeoCoords } from "../geocode";
+import { GracefulImage } from "@/components/GracefulImage";
 import {
   BadgeCheck,
   CalendarDays,
@@ -225,10 +226,9 @@ export function OverView() {
                     zIndex: '1' 
                   }}
                 >
-                  <img
+                  <GracefulImage
                     src={shop.shopProfileImage}
                     alt={shop.shop_name}
-                    style={{ objectFit: "cover", width: "100%", height: "100%", }}
                   />
                 </div>
                 <div style={{ minWidth: "0", zIndex: '1' }}>

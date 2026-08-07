@@ -15,6 +15,7 @@ import {
 } from '@/pages/market/marketUpload'
 import { marketData, marketStore } from '@/pages/market/demoMarketStore'
 import { syncUserMarketData } from '@/pages/market/marketApi'
+import { valueFormater } from '@/pages/market/market'
 
 const OWNER = 'user:u_1'
 
@@ -26,9 +27,9 @@ const shopInput: MarketShopInput = {
 }
 
 const posItems: PosSourceProduct[] = [
-  { id: 'p1', name: 'Sugar 1kg', price: 15, stock: 40, category: 'Groceries' },
-  { id: 'p2', name: 'Milk 1L', price: 22, stock: 0, category: 'Groceries' },
-  { id: 'p3', name: 'Bread', price: 8, stock: 12, category: 'Bakery' },
+  { id: 'p1', name: 'Sugar 1kg', price: 15, stock: 40, category: 'Groceries', image: 'https://img/sugar.png' },
+  { id: 'p2', name: 'Milk 1L', price: 22, stock: 0, category: 'Groceries', image: 'https://img/milk.png' },
+  { id: 'p3', name: 'Bread', price: 8, stock: 12, category: 'Bakery', image: 'https://img/bread.png' },
 ]
 
 beforeEach(() => {
@@ -95,6 +96,18 @@ describe('uploadProductsToShop', () => {
     )
   })
 
+  it('rejects items without an image before they can reach the market', () => {
+    createMarketShop(OWNER, shopInput)
+    const withBareItem = [
+      ...posItems,
+      { id: 'p4', name: 'Bare Item', price: 5, stock: 10, category: 'Groceries' },
+    ]
+    expect(() => uploadProductsToShop(OWNER, withBareItem)).toThrow(
+      /Sorry, please select an image for/,
+    )
+    expect(loadUserProducts()).toHaveLength(0)
+  })
+
   it('uploads items into the shop and maps stock', () => {
     createMarketShop(OWNER, shopInput)
     const added = uploadProductsToShop(OWNER, posItems)
@@ -120,6 +133,16 @@ describe('uploadProductsToShop', () => {
     expect(added[0].productImageUrl).toBe('https://img/x.png')
     expect(added[0].product_rating).toBe('4.2')
     expect(added[0].inStock).toBe(true)
+  })
+
+  it('defaults missing rating to 0 so the grid never shows NAN', () => {
+    createMarketShop(OWNER, shopInput)
+    const added = uploadProductsToShop(OWNER, [
+      { id: 'nr1', name: 'Rice', price: 60, stock: 5, category: 'Grains', image: 'https://img/rice.png' },
+    ])
+    expect(added[0].product_rating).toBe('0')
+    expect(valueFormater(added[0].product_rating)).toBe('0')
+    expect(valueFormater(added[0].product_rating)).not.toBe('NAN')
   })
 
   it('dedupes by sourceId so a second upload adds nothing', () => {

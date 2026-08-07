@@ -8,6 +8,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // react-progressive-graceful-image's observer dependency relies on
+      // ReactDOM.findDOMNode, which was removed in React 19. Point it at a small
+      // local, React 19-safe replacement.
+      '@researchgate/react-intersection-observer': path.resolve(
+        __dirname,
+        './src/lib/intersectionObserverStub.tsx',
+      ),
     },
   },
   build: {

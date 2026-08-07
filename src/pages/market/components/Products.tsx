@@ -11,6 +11,7 @@ import { ProductInfoPanel } from "./ProductInfoPanel";
 import { UploadToShopModal } from "./UploadToShopModal";
 import { useShopOwner } from "../useShopOwner";
 import Alert from "@/components/alert/alert";
+import { GracefulImage } from "@/components/GracefulImage";
 
 export function Products() {
   const params = useParams();
@@ -215,15 +216,10 @@ export function Products() {
                   overflow: "hidden",
                 }}
               >
-                {product.productImageUrl ? (
-                  <img
-                    src={product.productImageUrl}
-                    alt={product.product_name}
-                    style={{ objectFit: "cover", width: "100%", height: "100%" }}
-                  />
-                ) : (
-                  <Package size={32} color="var(--text-placeholder)" />
-                )}
+                <GracefulImage
+                  src={product.productImageUrl}
+                  alt={product.product_name}
+                />
                 <span
                   style={{
                     position: "absolute",

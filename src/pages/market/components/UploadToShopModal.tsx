@@ -24,6 +24,7 @@ import {
 import { syncUserMarketData } from "../marketApi";
 import { valueFormater } from "../market";
 import { geocodeAddress } from "../geocode";
+import { GracefulImage } from "@/components/GracefulImage";
 import {
   LocationAutocomplete,
   type LocationSelection,
@@ -392,6 +393,15 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
 
   const doUpload = (list: PosSourceProduct[]) => {
     if (list.length === 0) return;
+    const missingImage = list.filter((p) => !p.image?.trim());
+    if (missingImage.length > 0) {
+      const names = missingImage.map((p) => `"${p.name}"`).join(", ");
+      setSuccess("");
+      setError(
+        `Sorry, please select an image for ${missingImage.length === 1 ? "this product" : "these products"} before uploading: ${names}`,
+      );
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -737,38 +747,19 @@ function ItemRow({
       ) : (
         <Check size={14} color="var(--text-success)" style={{ flexShrink: 0 }} />
       )}
-      {image ? (
-        <img
-          src={image}
-          alt={name}
-          style={{
-            width: "28px",
-            height: "28px",
-            flexShrink: 0,
-            borderRadius: "6px",
-            objectFit: "cover",
-            border: "1px solid var(--border-default)",
-            background: "var(--bg-tertiary)",
-          }}
-        />
-      ) : (
-        <div
-          style={{
-            width: "28px",
-            height: "28px",
-            flexShrink: 0,
-            borderRadius: "6px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "var(--bg-tertiary)",
-          }}
-        >
-          <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)" }}>
-            {name[0]}
-          </span>
-        </div>
-      )}
+      <div
+        style={{
+          width: "28px",
+          height: "28px",
+          flexShrink: 0,
+          borderRadius: "6px",
+          overflow: "hidden",
+          border: "1px solid var(--border-default)",
+          background: "var(--bg-tertiary)",
+        }}
+      >
+        <GracefulImage src={image} alt={name} />
+      </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p
           style={{
@@ -789,7 +780,13 @@ function ItemRow({
             color: uploaded ? "var(--text-muted)" : "var(--text-secondary)",
           }}
         >
-          {uploaded ? "Already in shop" : inStock ? "In stock" : "Sold out"}
+          {uploaded
+            ? "Already in shop"
+            : !image
+              ? "No image — add one to upload"
+              : inStock
+                ? "In stock"
+                : "Sold out"}
         </span>
       </div>
       <span

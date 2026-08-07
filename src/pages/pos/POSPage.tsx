@@ -18,12 +18,14 @@ import { CurrencyContext } from "@/context/currency_context";
 import { useDebounceEffect, useInstance, useSetState } from "elk-components";
 import { store } from "@/context/store";
 import { UploadToShopModal } from "@/pages/market/components/UploadToShopModal";
+import { GracefulImage } from "@/components/GracefulImage";
 
 interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
+  image?: string;
 }
 
 const LOW_STOCK_THRESHOLD = 20;
@@ -36,6 +38,7 @@ interface Product {
   stock: number;
   category: string;
   status: "in-stock" | "low-stock" | "out-of-stock";
+  image?: string;
 }
 
 interface Transaction {
@@ -171,6 +174,7 @@ export function POSPage() {
           name: product.name,
           price: product.price,
           quantity: 1,
+          image: product.image,
         },
       ];
     });
@@ -476,17 +480,10 @@ export function POSPage() {
                           alignItems: "center",
                           justifyContent: "center",
                           position: "relative",
+                          overflow: "hidden",
                         }}
                       >
-                        <span
-                          style={{
-                            fontSize: "24px",
-                            fontWeight: 700,
-                            color: "var(--border-input)",
-                          }}
-                        >
-                          {product.name[0]}
-                        </span>
+                        <GracefulImage src={product.image} alt={product.name} />
                         <span
                           style={{
                             position: "absolute",
@@ -683,17 +680,10 @@ export function POSPage() {
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
+                          overflow: "hidden",
                         }}
                       >
-                        <span
-                          style={{
-                            fontSize: "10px",
-                            fontWeight: 700,
-                            color: "var(--text-secondary)",
-                          }}
-                        >
-                          {item.name[0]}
-                        </span>
+                        <GracefulImage src={item.image} alt={item.name} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p

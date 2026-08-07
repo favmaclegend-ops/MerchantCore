@@ -121,65 +121,70 @@ function stockStatus(stock: number): OrgProductStatus {
   return 'in-stock'
 }
 
+const unsplashImg = (photoId: string) =>
+  `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=300&q=60`
+
+const SEED_PRODUCTS: OrgProduct[] = [
+  // Beverages
+  { id: 'PRD-001', name: 'Coca-Cola 500ml', sku: 'BEV-001', price: 4, stock: 240, category: 'Beverages', status: 'in-stock', image: unsplashImg('1554866585-cd94860890b7') },
+  { id: 'PRD-002', name: 'Malta Guinness 330ml', sku: 'BEV-002', price: 6, stock: 120, category: 'Beverages', status: 'in-stock', image: unsplashImg('1608270586620-248524c67de9') },
+  { id: 'PRD-003', name: 'Alvaro Malt 330ml', sku: 'BEV-003', price: 5, stock: 90, category: 'Beverages', status: 'in-stock', image: unsplashImg('1544145945-f90425340c7e') },
+  { id: 'PRD-004', name: 'FanIce Yoghurt Drink', sku: 'BEV-004', price: 3.5, stock: 180, category: 'Beverages', status: 'in-stock', image: unsplashImg('1550583724-b2692b85b150') },
+  { id: 'PRD-005', name: 'VitaMilk 250ml', sku: 'BEV-005', price: 5.5, stock: 150, category: 'Beverages', status: 'in-stock', image: unsplashImg('1563636619-e9143da7973b') },
+  { id: 'PRD-006', name: 'Voltic Water 1.5L', sku: 'BEV-006', price: 3, stock: 300, category: 'Beverages', status: 'in-stock', image: unsplashImg('1548839140-29a749e1cf4d') },
+  // Grains & Flour
+  { id: 'PRD-007', name: 'Bama Rice 5kg', sku: 'GRN-001', price: 60, stock: 52, category: 'Grains & Flour', status: 'in-stock', image: unsplashImg('1586201375761-83865001e31c') },
+  { id: 'PRD-008', name: 'Royal Rice 25kg', sku: 'GRN-002', price: 290, stock: 25, category: 'Grains & Flour', status: 'in-stock', image: unsplashImg('1586201375761-83865001e31c') },
+  { id: 'PRD-009', name: 'Wheat Flour 25kg', sku: 'GRN-003', price: 150, stock: 30, category: 'Grains & Flour', status: 'in-stock', image: unsplashImg('1509440159596-0249088772ff') },
+  { id: 'PRD-010', name: 'Maize Flour 1kg', sku: 'GRN-004', price: 10, stock: 120, category: 'Grains & Flour', status: 'in-stock', image: unsplashImg('1414235077428-338989a2e8c0') },
+  { id: 'PRD-011', name: 'Golden Penny Pasta 500g', sku: 'GRN-005', price: 8, stock: 140, category: 'Grains & Flour', status: 'in-stock', image: unsplashImg('1551183053-bf91a1d81141') },
+  { id: 'PRD-012', name: 'Semovita 1kg', sku: 'GRN-006', price: 11, stock: 90, category: 'Grains & Flour', status: 'in-stock', image: unsplashImg('1509440159596-0249088772ff') },
+  { id: 'PRD-013', name: 'Gino Baked Beans 400g', sku: 'GRN-007', price: 12, stock: 85, category: 'Grains & Flour', status: 'in-stock', image: unsplashImg('1512621776951-a57141f2eefd') },
+  // Cooking Essentials
+  { id: 'PRD-014', name: 'Frytol Cooking Oil 5L', sku: 'COO-001', price: 120, stock: 45, category: 'Cooking Essentials', status: 'in-stock', image: unsplashImg('1474979266404-7eaacbcd87c5') },
+  { id: 'PRD-015', name: 'Vegetable Oil 1L', sku: 'COO-002', price: 25, stock: 150, category: 'Cooking Essentials', status: 'in-stock', image: unsplashImg('1474979266404-7eaacbcd87c5') },
+  { id: 'PRD-016', name: 'Milo 900g', sku: 'COO-003', price: 65, stock: 40, category: 'Cooking Essentials', status: 'in-stock', image: unsplashImg('1571934811356-5cc061b6821f') },
+  { id: 'PRD-017', name: 'Ideal Milk 160g', sku: 'COO-004', price: 9, stock: 196, category: 'Cooking Essentials', status: 'in-stock', image: unsplashImg('1550583724-b2692b85b150') },
+  { id: 'PRD-018', name: 'Sugar 50kg', sku: 'COO-005', price: 300, stock: 9, category: 'Cooking Essentials', status: 'low-stock', image: unsplashImg('1581441363689-1f3c3c414635') },
+  { id: 'PRD-019', name: 'Salt 1kg', sku: 'COO-006', price: 6, stock: 160, category: 'Cooking Essentials', status: 'in-stock', image: unsplashImg('1596040033229-a9821ebd058d') },
+  { id: 'PRD-020', name: 'Royco Seasoning', sku: 'COO-007', price: 4.5, stock: 110, category: 'Cooking Essentials', status: 'in-stock', image: unsplashImg('1596040033229-a9821ebd058d') },
+  { id: 'PRD-021', name: 'Ketchup 500g', sku: 'COO-008', price: 18, stock: 55, category: 'Cooking Essentials', status: 'in-stock', image: unsplashImg('1583511655857-d19b40a7a54e') },
+  { id: 'PRD-022', name: 'Tomato Paste 420g', sku: 'COO-009', price: 9.5, stock: 70, category: 'Cooking Essentials', status: 'in-stock', image: unsplashImg('1592924357228-91a4daadcfea') },
+  // Snacks
+  { id: 'PRD-023', name: 'Mr. Chips 45g', sku: 'SNK-001', price: 5, stock: 95, category: 'Snacks', status: 'in-stock', image: unsplashImg('1566478989037-eec170784d0b') },
+  { id: 'PRD-024', name: 'Jumbo Choco Biscuit', sku: 'SNK-002', price: 3, stock: 200, category: 'Snacks', status: 'in-stock', image: unsplashImg('1558961363-fa8fdf82db35') },
+  { id: 'PRD-025', name: 'Dangme Biscuits', sku: 'SNK-003', price: 2.5, stock: 240, category: 'Snacks', status: 'in-stock', image: unsplashImg('1599599810694-b5b37304c041') },
+  { id: 'PRD-026', name: 'Cheese Balls 40g', sku: 'SNK-004', price: 4, stock: 60, category: 'Snacks', status: 'in-stock', image: unsplashImg('1566478989037-eec170784d0b') },
+  { id: 'PRD-027', name: 'Peanut Crunch', sku: 'SNK-005', price: 6, stock: 50, category: 'Snacks', status: 'in-stock', image: unsplashImg('1548848221-0c2e497ed557') },
+  { id: 'PRD-028', name: 'Water Biscuits', sku: 'SNK-006', price: 4.5, stock: 70, category: 'Snacks', status: 'in-stock', image: unsplashImg('1558961363-fa8fdf82db35') },
+  { id: 'PRD-029', name: 'Pringles 165g', sku: 'SNK-007', price: 15, stock: 12, category: 'Snacks', status: 'low-stock', image: unsplashImg('1566478989037-eec170784d0b') },
+  { id: 'PRD-030', name: 'Gala Roll', sku: 'SNK-008', price: 5, stock: 60, category: 'Snacks', status: 'in-stock', image: unsplashImg('1509440159596-0249088772ff') },
+  { id: 'PRD-031', name: 'Lollipop Bag', sku: 'SNK-009', price: 1.5, stock: 150, category: 'Snacks', status: 'in-stock', image: unsplashImg('1582058091505-f87a2e55a40f') },
+  { id: 'PRD-032', name: 'Fruit Cake Slice', sku: 'SNK-010', price: 7, stock: 8, category: 'Snacks', status: 'low-stock', image: unsplashImg('1578985545062-69928b1d9587') },
+  // Dairy & Eggs
+  { id: 'PRD-033', name: 'Fresh Milk 500ml', sku: 'DAY-001', price: 12, stock: 60, category: 'Dairy & Eggs', status: 'in-stock', image: unsplashImg('1550583724-b2692b85b150') },
+  { id: 'PRD-034', name: 'Eggs (Tray 30)', sku: 'DAY-002', price: 22, stock: 35, category: 'Dairy & Eggs', status: 'in-stock', image: unsplashImg('1506976785307-8732e854ad03') },
+  { id: 'PRD-035', name: 'Margarine 250g', sku: 'DAY-003', price: 15, stock: 40, category: 'Dairy & Eggs', status: 'in-stock', image: unsplashImg('1589985270826-4b7bb135bc9d') },
+  { id: 'PRD-036', name: 'Cheese Slices', sku: 'DAY-004', price: 18, stock: 30, category: 'Dairy & Eggs', status: 'in-stock', image: unsplashImg('1486297678162-eb2a19b0a32d') },
+  { id: 'PRD-037', name: 'Plain Yoghurt', sku: 'DAY-005', price: 10, stock: 45, category: 'Dairy & Eggs', status: 'in-stock', image: unsplashImg('1488477181946-6428a0291777') },
+  // Household
+  { id: 'PRD-038', name: 'Dish Soap 500ml', sku: 'HOU-001', price: 14, stock: 80, category: 'Household', status: 'in-stock', image: unsplashImg('1583947215259-38e31be8751f') },
+  { id: 'PRD-039', name: 'Laundry Powder 1kg', sku: 'HOU-002', price: 28, stock: 60, category: 'Household', status: 'in-stock', image: unsplashImg('1610557892470-55d9e80c0bce') },
+  { id: 'PRD-040', name: 'Toilet Roll (10)', sku: 'HOU-003', price: 20, stock: 100, category: 'Household', status: 'in-stock', image: unsplashImg('1584824486509-112e4181ff6b') },
+  { id: 'PRD-041', name: 'Bleach 1L', sku: 'HOU-004', price: 12, stock: 70, category: 'Household', status: 'in-stock', image: unsplashImg('1584568694244-14fbdf83bd30') },
+  { id: 'PRD-042', name: 'Air Freshener', sku: 'HOU-005', price: 16, stock: 0, category: 'Household', status: 'out-of-stock', image: unsplashImg('1522335789203-aabd1fc54bc9') },
+  { id: 'PRD-043', name: 'Broom', sku: 'HOU-006', price: 9, stock: 45, category: 'Household', status: 'in-stock', image: unsplashImg('1585186878913-b5cbb191f4c4') },
+  { id: 'PRD-044', name: 'Sponge Pack', sku: 'HOU-007', price: 7.5, stock: 54, category: 'Household', status: 'in-stock', image: unsplashImg('1584568694244-14fbdf83bd30') },
+  // Personal Care
+  { id: 'PRD-045', name: 'Bar Soap', sku: 'PER-001', price: 5, stock: 120, category: 'Personal Care', status: 'in-stock', image: unsplashImg('1583947215259-38e31be8751f') },
+  { id: 'PRD-046', name: 'Toothpaste', sku: 'PER-002', price: 8, stock: 90, category: 'Personal Care', status: 'in-stock', image: unsplashImg('1588776814546-1ffcf47267a5') },
+  { id: 'PRD-047', name: 'Shampoo 250ml', sku: 'PER-003', price: 22, stock: 25, category: 'Personal Care', status: 'in-stock', image: unsplashImg('1585232004423-244e0e6904e3') },
+  { id: 'PRD-048', name: 'Baby Wipes', sku: 'PER-004', price: 12.5, stock: 40, category: 'Personal Care', status: 'in-stock', image: unsplashImg('1585232004423-244e0e6904e3') },
+]
+
 function seedCommerceState(): OrgCommerceState {
   return {
-    products: [
-      // Beverages
-      { id: 'PRD-001', name: 'Coca-Cola 500ml', sku: 'BEV-001', price: 4, stock: 240, category: 'Beverages', status: 'in-stock' },
-      { id: 'PRD-002', name: 'Malta Guinness 330ml', sku: 'BEV-002', price: 6, stock: 120, category: 'Beverages', status: 'in-stock' },
-      { id: 'PRD-003', name: 'Alvaro Malt 330ml', sku: 'BEV-003', price: 5, stock: 90, category: 'Beverages', status: 'in-stock' },
-      { id: 'PRD-004', name: 'FanIce Yoghurt Drink', sku: 'BEV-004', price: 3.5, stock: 180, category: 'Beverages', status: 'in-stock' },
-      { id: 'PRD-005', name: 'VitaMilk 250ml', sku: 'BEV-005', price: 5.5, stock: 150, category: 'Beverages', status: 'in-stock' },
-      { id: 'PRD-006', name: 'Voltic Water 1.5L', sku: 'BEV-006', price: 3, stock: 300, category: 'Beverages', status: 'in-stock' },
-      // Grains & Flour
-      { id: 'PRD-007', name: 'Bama Rice 5kg', sku: 'GRN-001', price: 60, stock: 52, category: 'Grains & Flour', status: 'in-stock' },
-      { id: 'PRD-008', name: 'Royal Rice 25kg', sku: 'GRN-002', price: 290, stock: 25, category: 'Grains & Flour', status: 'in-stock' },
-      { id: 'PRD-009', name: 'Wheat Flour 25kg', sku: 'GRN-003', price: 150, stock: 30, category: 'Grains & Flour', status: 'in-stock' },
-      { id: 'PRD-010', name: 'Maize Flour 1kg', sku: 'GRN-004', price: 10, stock: 120, category: 'Grains & Flour', status: 'in-stock' },
-      { id: 'PRD-011', name: 'Golden Penny Pasta 500g', sku: 'GRN-005', price: 8, stock: 140, category: 'Grains & Flour', status: 'in-stock' },
-      { id: 'PRD-012', name: 'Semovita 1kg', sku: 'GRN-006', price: 11, stock: 90, category: 'Grains & Flour', status: 'in-stock' },
-      { id: 'PRD-013', name: 'Gino Baked Beans 400g', sku: 'GRN-007', price: 12, stock: 85, category: 'Grains & Flour', status: 'in-stock' },
-      // Cooking Essentials
-      { id: 'PRD-014', name: 'Frytol Cooking Oil 5L', sku: 'COO-001', price: 120, stock: 45, category: 'Cooking Essentials', status: 'in-stock' },
-      { id: 'PRD-015', name: 'Vegetable Oil 1L', sku: 'COO-002', price: 25, stock: 150, category: 'Cooking Essentials', status: 'in-stock' },
-      { id: 'PRD-016', name: 'Milo 900g', sku: 'COO-003', price: 65, stock: 40, category: 'Cooking Essentials', status: 'in-stock' },
-      { id: 'PRD-017', name: 'Ideal Milk 160g', sku: 'COO-004', price: 9, stock: 196, category: 'Cooking Essentials', status: 'in-stock' },
-      { id: 'PRD-018', name: 'Sugar 50kg', sku: 'COO-005', price: 300, stock: 9, category: 'Cooking Essentials', status: 'low-stock' },
-      { id: 'PRD-019', name: 'Salt 1kg', sku: 'COO-006', price: 6, stock: 160, category: 'Cooking Essentials', status: 'in-stock' },
-      { id: 'PRD-020', name: 'Royco Seasoning', sku: 'COO-007', price: 4.5, stock: 110, category: 'Cooking Essentials', status: 'in-stock' },
-      { id: 'PRD-021', name: 'Ketchup 500g', sku: 'COO-008', price: 18, stock: 55, category: 'Cooking Essentials', status: 'in-stock' },
-      { id: 'PRD-022', name: 'Tomato Paste 420g', sku: 'COO-009', price: 9.5, stock: 70, category: 'Cooking Essentials', status: 'in-stock' },
-      // Snacks
-      { id: 'PRD-023', name: 'Mr. Chips 45g', sku: 'SNK-001', price: 5, stock: 95, category: 'Snacks', status: 'in-stock' },
-      { id: 'PRD-024', name: 'Jumbo Choco Biscuit', sku: 'SNK-002', price: 3, stock: 200, category: 'Snacks', status: 'in-stock' },
-      { id: 'PRD-025', name: 'Dangme Biscuits', sku: 'SNK-003', price: 2.5, stock: 240, category: 'Snacks', status: 'in-stock' },
-      { id: 'PRD-026', name: 'Cheese Balls 40g', sku: 'SNK-004', price: 4, stock: 60, category: 'Snacks', status: 'in-stock' },
-      { id: 'PRD-027', name: 'Peanut Crunch', sku: 'SNK-005', price: 6, stock: 50, category: 'Snacks', status: 'in-stock' },
-      { id: 'PRD-028', name: 'Water Biscuits', sku: 'SNK-006', price: 4.5, stock: 70, category: 'Snacks', status: 'in-stock' },
-      { id: 'PRD-029', name: 'Pringles 165g', sku: 'SNK-007', price: 15, stock: 12, category: 'Snacks', status: 'low-stock' },
-      { id: 'PRD-030', name: 'Gala Roll', sku: 'SNK-008', price: 5, stock: 60, category: 'Snacks', status: 'in-stock' },
-      { id: 'PRD-031', name: 'Lollipop Bag', sku: 'SNK-009', price: 1.5, stock: 150, category: 'Snacks', status: 'in-stock' },
-      { id: 'PRD-032', name: 'Fruit Cake Slice', sku: 'SNK-010', price: 7, stock: 8, category: 'Snacks', status: 'low-stock' },
-      // Dairy & Eggs
-      { id: 'PRD-033', name: 'Fresh Milk 500ml', sku: 'DAY-001', price: 12, stock: 60, category: 'Dairy & Eggs', status: 'in-stock' },
-      { id: 'PRD-034', name: 'Eggs (Tray 30)', sku: 'DAY-002', price: 22, stock: 35, category: 'Dairy & Eggs', status: 'in-stock' },
-      { id: 'PRD-035', name: 'Margarine 250g', sku: 'DAY-003', price: 15, stock: 40, category: 'Dairy & Eggs', status: 'in-stock' },
-      { id: 'PRD-036', name: 'Cheese Slices', sku: 'DAY-004', price: 18, stock: 30, category: 'Dairy & Eggs', status: 'in-stock' },
-      { id: 'PRD-037', name: 'Plain Yoghurt', sku: 'DAY-005', price: 10, stock: 45, category: 'Dairy & Eggs', status: 'in-stock' },
-      // Household
-      { id: 'PRD-038', name: 'Dish Soap 500ml', sku: 'HOU-001', price: 14, stock: 80, category: 'Household', status: 'in-stock' },
-      { id: 'PRD-039', name: 'Laundry Powder 1kg', sku: 'HOU-002', price: 28, stock: 60, category: 'Household', status: 'in-stock' },
-      { id: 'PRD-040', name: 'Toilet Roll (10)', sku: 'HOU-003', price: 20, stock: 100, category: 'Household', status: 'in-stock' },
-      { id: 'PRD-041', name: 'Bleach 1L', sku: 'HOU-004', price: 12, stock: 70, category: 'Household', status: 'in-stock' },
-      { id: 'PRD-042', name: 'Air Freshener', sku: 'HOU-005', price: 16, stock: 0, category: 'Household', status: 'out-of-stock' },
-      { id: 'PRD-043', name: 'Broom', sku: 'HOU-006', price: 9, stock: 45, category: 'Household', status: 'in-stock' },
-      { id: 'PRD-044', name: 'Sponge Pack', sku: 'HOU-007', price: 7.5, stock: 54, category: 'Household', status: 'in-stock' },
-      // Personal Care
-      { id: 'PRD-045', name: 'Bar Soap', sku: 'PER-001', price: 5, stock: 120, category: 'Personal Care', status: 'in-stock' },
-      { id: 'PRD-046', name: 'Toothpaste', sku: 'PER-002', price: 8, stock: 90, category: 'Personal Care', status: 'in-stock' },
-      { id: 'PRD-047', name: 'Shampoo 250ml', sku: 'PER-003', price: 22, stock: 25, category: 'Personal Care', status: 'in-stock' },
-      { id: 'PRD-048', name: 'Baby Wipes', sku: 'PER-004', price: 12.5, stock: 40, category: 'Personal Care', status: 'in-stock' },
-    ],
+    products: SEED_PRODUCTS.map((p) => ({ ...p })),
     customers: [
       { id: 'CUS-001', name: 'Adom Fresh Foods', email: 'orders@adom.example', phone: '+1 555 010 2101', company: 'Adom Fresh Foods', total_spent: 12480, credit_limit: 10000, tier: 'gold', last_purchase: '2 days ago', created_at: daysAgo(240) },
       { id: 'CUS-002', name: "Naana's Kitchen", email: 'naana@kitchen.example', phone: '+1 555 010 2102', company: "Naana's Kitchen", total_spent: 3200, credit_limit: 5000, tier: 'silver', last_purchase: '3 days ago', created_at: daysAgo(180) },
@@ -206,13 +211,31 @@ function seedCommerceState(): OrgCommerceState {
   }
 }
 
+function backfillProductImages(products: OrgProduct[]): OrgProduct[] {
+  const byId = new Map(SEED_PRODUCTS.map(p => [p.id, p.image]))
+  const bySku = new Map(SEED_PRODUCTS.map(p => [p.sku, p.image]))
+  return products.map(p => {
+    if (p.image?.trim()) return p
+    const image = byId.get(p.id) ?? bySku.get(p.sku)
+    return image ? { ...p, image } : p
+  })
+}
+
 export function loadCommerceState(orgId: string): OrgCommerceState {
   const key = storageKey(orgId)
   try {
     const raw = localStorage.getItem(key)
     if (raw) {
       const parsed = JSON.parse(raw) as { version: number; state: OrgCommerceState }
-      if (parsed && parsed.version === COMMERCE_VERSION && parsed.state) return parsed.state
+      if (parsed && parsed.version === COMMERCE_VERSION && parsed.state) {
+        const products = backfillProductImages(parsed.state.products)
+        if (products !== parsed.state.products) {
+          const updated = { ...parsed.state, products }
+          saveCommerceState(orgId, updated)
+          return updated
+        }
+        return parsed.state
+      }
     }
   } catch {
     // corrupt or outdated storage -> reseed fresh
