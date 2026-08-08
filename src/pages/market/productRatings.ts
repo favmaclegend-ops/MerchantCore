@@ -57,6 +57,7 @@ export const getRaterKey = (
 // Deterministic distribution for products that already carry a historical popularity
 // figure, mirroring the previous rating breakdown so seeded items keep their look.
 function seedLevels(productId: string, total: number): RatingLevel[] {
+  
   let h = productId
     .split("")
     .reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -79,6 +80,7 @@ export function getProductRatings(
   const userRating = raterKey ? ratings[raterKey] : undefined;
   const seedTotal = Math.max(0, parseInt(product.product_rating ?? "0", 10) || 0);
   const counts = new Map<number, number>();
+  
   for (const level of seedLevels(product.product_id, seedTotal)) {
     counts.set(level.star, (counts.get(level.star) ?? 0) + level.count);
   }

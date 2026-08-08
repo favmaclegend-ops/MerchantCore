@@ -3,6 +3,7 @@ import { MoreVertical, Phone, Mail, Pencil, Ban, Power, Trash2, EyeOff, CheckCir
 import { AVATAR_COLORS, initials, isSuperAdmin, isStaffMember, roleLabel } from './data'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { Member } from './data'
+import { createPortal } from 'react-dom'
 
 const thStyle: React.CSSProperties = {
   padding: '10px 16px',
@@ -96,8 +97,11 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
 
         {open && (
           <>
-            <div onClick={onToggle} style={{ position: 'fixed', inset: 0, zIndex: 40,  }} />
-            <div style={{ position: 'absolute', right: '8px', top: 'calc(100% - 4px)',  width: '260px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '12px', boxShadow: 'var(--shadow-menu)', zIndex: 50, overflow: 'hidden', textAlign: 'left' }}>
+          {/* modal */}
+            <div onClick={onToggle} style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'red' }} />
+
+            { createPortal(
+              <div style={{ position: 'fixed', right: '8px', top: 'calc(100% - 4px)',  width: '260px', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '12px', boxShadow: 'var(--shadow-menu)', zIndex: 50, overflow: 'hidden', textAlign: 'left' }}>
               <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--bg-tertiary)' }}>
                 <Avatar member={member} color={color} size={36} />
                 <div style={{ minWidth: 0 }}>
@@ -143,7 +147,9 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
                   <MenuAction icon={<Trash2 style={{ width: '14px', height: '14px' }} />} label="Delete" danger onClick={() => { onDelete(member); onToggle() }} />
                 )}
               </div>
-            </div>
+            </div>, document.body,
+            )
+            }
           </>
         )}
       </td>

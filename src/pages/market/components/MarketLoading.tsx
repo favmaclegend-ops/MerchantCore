@@ -1,4 +1,8 @@
-export function MarketLoading() {
+export interface MarketLoadingProp {
+  info?: string
+}
+
+export function MarketLoading({info = 'Loading market data...'}: MarketLoadingProp) {
   return (
     <div
       style={{
@@ -23,7 +27,7 @@ export function MarketLoading() {
           animation: "spin 1s linear infinite",
         }}
       />
-      <span>Loading market data...</span>
+      <span>{info}</span>
     </div>
   );
 }

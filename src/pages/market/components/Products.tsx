@@ -47,7 +47,7 @@ export function Products() {
             p.product_name.toLowerCase().includes(query.toLowerCase()) ||
             p.category.toLowerCase().includes(query.toLowerCase()),
         );
-
+        console.log(filtered)
   return (
     <div
       style={{
