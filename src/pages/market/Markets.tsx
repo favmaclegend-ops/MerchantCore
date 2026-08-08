@@ -31,7 +31,7 @@ export function Markets() {
   const bp = useBreakpoint();
   const scrollRef = useRef<HTMLDivElement>(null);
   const SCROLL_KEY = "markets-scroll";
-  const chunckSize = chunckStore.getSnapshot().size
+  const chunckSize = chunckStore.getSnapshot().size;
 
   const [selectedProduct, setSelectedProduct] =
     useState<MarketStoreProduct | null>(null);
@@ -109,7 +109,8 @@ export function Markets() {
           (p) =>
             p.product_name.toLowerCase().includes(query.toLowerCase()) ||
             p.category.toLowerCase().includes(query.toLowerCase()) ||
-            (p.keywords?.includes(query.toLowerCase()) ?? false),
+            (p.keywords?.includes(query.toLowerCase()) ?? false) ||
+            p.shop_name.toLowerCase().includes(query.toLowerCase()),
         );
 
   if (loading) {
@@ -168,7 +169,7 @@ export function Markets() {
             onFocus={() => setIsSearch(true)}
           />
         </div>
-        
+
         <div
           style={{
             display: "flex",
@@ -209,6 +210,7 @@ export function Markets() {
         ) : (
           <div
             style={{
+             
               display: "grid",
               gridTemplateColumns: bp.xxsm
                 ? "1fr"
@@ -386,13 +388,16 @@ export function Markets() {
                 alignItems: "center",
                 gap: ".4rem",
               }}
-              disabled={chunckStore.getState().isProductLoading || chunckStore.getState().updates <= 0}
+              disabled={
+                chunckStore.getState().isProductLoading ||
+                chunckStore.getState().updates <= 0
+              }
               onClick={() =>
                 updateChunck({
                   start: chunckStore.getState().start - chunckSize,
                   end: chunckStore.getState().end - chunckSize,
                   updates: chunckStore.getState().updates - 1,
-                  isProductLoading: true
+                  isProductLoading: true,
                 })
               }
             >
@@ -410,14 +415,14 @@ export function Markets() {
                 borderRadius: "1rem",
                 background:
                   chunckStore.getState().isProductLoading ||
-                  chunckStore.getState().end > state.products.length
+                  chunckStore.getState().end > baseProducts.length
                     ? "grey"
                     : "var(--bg-nav-active)",
                 padding: "1rem",
                 justifyContent: "center",
                 cursor:
                   chunckStore.getState().isProductLoading ||
-                  chunckStore.getState().end > state.products.length
+                  chunckStore.getState().end > baseProducts.length
                     ? "not-allowed"
                     : "pointer",
                 alignItems: "center",
@@ -425,7 +430,7 @@ export function Markets() {
               }}
               disabled={
                 chunckStore.getState().isProductLoading ||
-                chunckStore.getState().end > state.products.length
+                chunckStore.getState().end > baseProducts.length
               }
               onClick={() =>
                 updateChunck({

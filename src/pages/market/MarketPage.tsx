@@ -68,6 +68,7 @@ function CartPanel({
         width: "100%",
         height: "100%",
         minHeight: "0",
+        flexShrink: 0,
       }}
     >
       <div
@@ -526,8 +527,10 @@ export function MarketPage() {
                 width: "100%",
                 maxWidth: "520px",
                 maxHeight: "85vh",
-                overflow: "hidden",
+                overflowX: "hidden",
+                overflowY: "auto",
                 display: "flex",
+                flexDirection: "column",
                 borderRadius: "1rem",
               }}
             >

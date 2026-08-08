@@ -103,7 +103,8 @@ export function CustomersPage() {
   }
   const modalCard: React.CSSProperties = {
     background: 'var(--bg-surface)', borderRadius: '12px', padding: '24px', width: '100%',
-    maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '14px',
+    maxWidth: '420px', maxHeight: '90vh', overflowY: 'auto',
+    display: 'flex', flexDirection: 'column', gap: '14px',
   }
 
   return (
@@ -161,7 +162,7 @@ export function CustomersPage() {
         {
           isSelectedCustomerCard &&
           <div onClick={(e) => e.target == e.currentTarget && setCustomerCard(false)} style={{display: 'flex', position: 'fixed', top: '0', zIndex: '111', inset: '0', background: 'rgba(23, 23, 23, 0.38)', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
-          <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', overflow: 'hidden', maxHeight: '90vh', overflowY: 'auto' }}>
             {selectedCustomer ? (
               <>
                 <div style={{ background: 'var(--bg-nav-active)', padding: '20px', color: 'var(--text-on-dark)', maxWidth: '700px'}}>

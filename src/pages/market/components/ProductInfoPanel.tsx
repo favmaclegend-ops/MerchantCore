@@ -166,6 +166,7 @@ export function ProductInfoPanel({
             background: "var(--bg-tertiary)",
             overflow: "hidden",
             touchAction: "pan-y",
+            flexShrink: 0,
           }}
           onTouchStart={(e) => setTouchX(e.touches[0].clientX)}
           onTouchEnd={(e) => {
@@ -299,6 +300,8 @@ export function ProductInfoPanel({
             gap: "1rem",
             padding: "1.25rem",
             overflowY: "auto",
+            flex: 1,
+            minHeight: 0,
           }}
         >
           <div>

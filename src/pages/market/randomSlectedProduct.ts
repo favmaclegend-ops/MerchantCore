@@ -2,9 +2,9 @@ import { marketStore, type MarketStoreProduct } from "./demoMarketStore";
 
 const product = marketStore.getState().products;
 const productLength = product.length;
-const nestedArray = [];
-const alreadyGetProduct = [];
-let incrementArray = [];
+const nestedArray: MarketStoreProduct[][] = [];
+const alreadyGetProduct: MarketStoreProduct[] = [];
+let incrementArray: MarketStoreProduct[] = [];
 
 for (let i = 0; i < productLength; i++) {
   const randomProduct = product.filter((x) => !alreadyGetProduct.includes(x));

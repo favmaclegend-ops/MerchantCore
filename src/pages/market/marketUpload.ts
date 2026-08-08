@@ -84,6 +84,36 @@ export const getOwnerKey = (
 export const getMyShop = (ownerKey: string): MarketShopDraft | undefined =>
   loadUserShops().find((shop) => shop.ownerKey === ownerKey);
 
+// Updates one of YOUR shop's images (only shops created by this account are stored in
+// localStorage, so seeded demo shops are left untouched). Returns the updated shop or
+// undefined when no owned shop matches the owner key.
+const setShopImage = (
+  ownerKey: string,
+  imageUrl: string,
+  field: "shopProfileImage" | "shopProfileImagebg",
+): MarketShopDraft | undefined => {
+  const next = imageUrl?.trim();
+  if (!next) return undefined;
+  const shops = loadUserShops();
+  const shop = shops.find((s) => s.ownerKey === ownerKey);
+  if (!shop) return undefined;
+  shop[field] = next;
+  writeStore(USER_SHOPS_KEY, shops);
+  return shop;
+};
+
+export const updateShopProfileImage = (
+  ownerKey: string,
+  imageUrl: string,
+): MarketShopDraft | undefined => setShopImage(ownerKey, imageUrl, "shopProfileImage");
+
+// Updates the banner behind the round profile image so it can be a different picture
+// from the avatar itself.
+export const updateShopProfileBackground = (
+  ownerKey: string,
+  imageUrl: string,
+): MarketShopDraft | undefined => setShopImage(ownerKey, imageUrl, "shopProfileImagebg");
+
 export const createMarketShop = (
   ownerKey: string,
   input: MarketShopInput,

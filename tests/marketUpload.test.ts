@@ -9,6 +9,8 @@ import {
   mergeUserMarketData,
   removeProductFromMarket,
   updateMarketProductFromInventory,
+  updateShopProfileBackground,
+  updateShopProfileImage,
   uploadProductsToShop,
   type MarketShopInput,
   type PosSourceProduct,
@@ -86,6 +88,39 @@ describe('createMarketShop', () => {
     createMarketShop('user:other', { shop_name: 'B' })
     expect(getMyShop(OWNER)?.shop_name).toBe('A')
     expect(getMyShop('user:other')?.shop_name).toBe('B')
+  })
+})
+
+describe('updateShopProfileImage', () => {
+  it('updates the round profile image of the owned shop', () => {
+    createMarketShop(OWNER, shopInput)
+    const updated = updateShopProfileImage(OWNER, 'https://img/avatar.png')
+    expect(updated?.shopProfileImage).toBe('https://img/avatar.png')
+    expect(getMyShop(OWNER)?.shopProfileImage).toBe('https://img/avatar.png')
+  })
+
+  it('returns undefined when the owner has no shop', () => {
+    expect(updateShopProfileImage(OWNER, 'https://img/avatar.png')).toBeUndefined()
+  })
+
+  it('ignores blank image values', () => {
+    createMarketShop(OWNER, shopInput)
+    expect(updateShopProfileImage(OWNER, '   ')).toBeUndefined()
+    expect(getMyShop(OWNER)?.shopProfileImage).toBe('/img1.png')
+  })
+})
+
+describe('updateShopProfileBackground', () => {
+  it('updates the banner image separately from the profile image', () => {
+    createMarketShop(OWNER, shopInput)
+    const updated = updateShopProfileBackground(OWNER, 'https://img/banner.png')
+    expect(updated?.shopProfileImagebg).toBe('https://img/banner.png')
+    expect(getMyShop(OWNER)?.shopProfileImagebg).toBe('https://img/banner.png')
+    expect(getMyShop(OWNER)?.shopProfileImage).toBe('/img1.png')
+  })
+
+  it('returns undefined when the owner has no shop', () => {
+    expect(updateShopProfileBackground(OWNER, 'https://img/banner.png')).toBeUndefined()
   })
 })
 

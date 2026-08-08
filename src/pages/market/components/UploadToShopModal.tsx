@@ -80,6 +80,7 @@ export function UploadToShopModal({ onClose }: { onClose: () => void }) {
             gap: ".5rem",
             padding: "1rem 1.25rem",
             borderBottom: "1px solid var(--border-default)",
+            flexShrink: 0,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
@@ -117,6 +118,7 @@ export function UploadToShopModal({ onClose }: { onClose: () => void }) {
         <div
           style={{
             flex: 1,
+            minHeight: 0,
             overflowY: "auto",
             padding: "1.25rem",
             display: "flex",
