@@ -28,7 +28,7 @@ const registerInput: OrgRegisterInput = {
 }
 
 function sessionFor(org: Organisation, member: OrgMember): OrgSession {
-  return { orgId: org.id, orgName: org.name, member }
+  return { orgId: org.id, orgName: org.name, member, token: 'test-token' }
 }
 
 describe('organisations (mock data layer)', () => {
@@ -37,12 +37,10 @@ describe('organisations (mock data layer)', () => {
   })
 
   describe('loadOrganisations', () => {
-    it('seeds the demo Sunrise Mart workspace', () => {
+    it('starts with no seeded demo workspace', () => {
       const orgs = loadOrganisations()
-      expect(orgs).toHaveLength(1)
-      expect(orgs[0].name).toBe('Sunrise Mart')
-      expect(orgs[0].members).toHaveLength(8)
-      expect(localStorage.getItem('merchant_org_data_version')).toBe('5')
+      expect(orgs).toHaveLength(0)
+      expect(localStorage.getItem('merchant_org_data_version')).toBe('6')
     })
 
     it('removes legacy unprefixed keys on load', () => {
@@ -56,31 +54,36 @@ describe('organisations (mock data layer)', () => {
     })
 
     it('returns stored data when the version matches', () => {
-      const orgs = loadOrganisations()
-      orgs[0].name = 'Renamed Mart'
-      localStorage.setItem('merchant_org_data', JSON.stringify(orgs))
+      loadOrganisations()
+      const org = registerOrganisation(registerInput)
+      org.name = 'Renamed Mart'
+      localStorage.setItem('merchant_org_data', JSON.stringify([org]))
       expect(loadOrganisations()[0].name).toBe('Renamed Mart')
     })
 
-    it('reseeds when the stored version is stale', () => {
+    it('wipes stale workspace data instead of reseeding demo data', () => {
       localStorage.setItem('merchant_org_data_version', '1')
       localStorage.setItem('merchant_org_data', JSON.stringify([]))
       const orgs = loadOrganisations()
-      expect(orgs[0].name).toBe('Sunrise Mart')
-      expect(localStorage.getItem('merchant_org_data_version')).toBe('5')
+      expect(orgs).toHaveLength(0)
+      expect(localStorage.getItem('merchant_org_data_version')).toBe('6')
     })
 
-    it('reseeds when stored data is corrupt', () => {
-      localStorage.setItem('merchant_org_data_version', '5')
+    it('wipes stored data and clears the session when data is corrupt', () => {
+      const org = registerOrganisation(registerInput)
+      setOrgSession(sessionFor(org, org.members[0]))
+      localStorage.setItem('merchant_org_data_version', '6')
       localStorage.setItem('merchant_org_data', 'not-json')
-      expect(loadOrganisations()[0].name).toBe('Sunrise Mart')
+      expect(loadOrganisations()).toEqual([])
+      expect(getOrgSession()).toBeNull()
     })
   })
 
   describe('findOrganisation', () => {
     it('finds by name or business email, case-insensitive and trimmed', () => {
-      expect(findOrganisation('  sunrise mart ')).toBeTruthy()
-      expect(findOrganisation('BUSINESS@SUNRISE.EXAMPLE')).toBeTruthy()
+      const org = registerOrganisation(registerInput)
+      expect(findOrganisation(`  ${org.name} `)?.id).toBe(org.id)
+      expect(findOrganisation(org.businessEmail.toUpperCase())?.id).toBe(org.id)
       expect(findOrganisation('nope')).toBeNull()
     })
   })
@@ -88,7 +91,7 @@ describe('organisations (mock data layer)', () => {
   describe('registerOrganisation', () => {
     it('creates and persists a new org with a super-admin member', () => {
       const org = registerOrganisation(registerInput)
-      expect(org.id).toBe('ORG-002')
+      expect(org.id).toBe('ORG-001')
       expect(org.name).toBe('Kofi Stores')
       expect(org.businessEmail).toBe('hello@kofistores.example')
       expect(org.members).toHaveLength(1)
@@ -105,21 +108,25 @@ describe('organisations (mock data layer)', () => {
     })
 
     it('rejects duplicate names or business emails', () => {
-      expect(() => registerOrganisation({ ...registerInput, orgName: 'SUNRISE MART' })).toThrow('already registered')
-      expect(() => registerOrganisation({ ...registerInput, businessEmail: 'BUSINESS@SUNRISE.EXAMPLE' })).toThrow('already registered')
+      registerOrganisation(registerInput)
+      expect(() => registerOrganisation({ ...registerInput, orgName: 'KOFI STORES' })).toThrow('already registered')
+      expect(() => registerOrganisation({ ...registerInput, businessEmail: 'HELLO@KOFISTORES.EXAMPLE' })).toThrow('already registered')
     })
   })
 
   describe('loginOrganisation', () => {
     it('authenticates by email or username', () => {
-      expect(loginOrganisation('Sunrise Mart', 'daniel.kofi@sunrise.example', 'DemoPass@123').member.id).toBe('ADM-001')
-      expect(loginOrganisation('Sunrise Mart', 'dkofi', 'DemoPass@123').member.id).toBe('ADM-001')
+      const org = registerOrganisation(registerInput)
+      expect(loginOrganisation('Kofi Stores', 'kofi@kofistores.example', 'Pass@123').member.id).toBe('ADM-001')
+      expect(loginOrganisation('Kofi Stores', 'kofi', 'Pass@123').member.id).toBe('ADM-001')
+      expect(loginOrganisation('Kofi Stores', 'kofi@kofistores.example', 'Pass@123').org.id).toBe(org.id)
     })
 
     it('rejects unknown orgs, unknown members and wrong passwords', () => {
+      registerOrganisation(registerInput)
       expect(() => loginOrganisation('No Org', 'x@y.example', 'pw')).toThrow('Organisation not found')
-      expect(() => loginOrganisation('Sunrise Mart', 'ghost@sunrise.example', 'pw')).toThrow('Invalid credentials')
-      expect(() => loginOrganisation('Sunrise Mart', 'daniel.kofi@sunrise.example', 'wrong')).toThrow('Invalid credentials')
+      expect(() => loginOrganisation('Kofi Stores', 'ghost@kofistores.example', 'pw')).toThrow('Invalid credentials')
+      expect(() => loginOrganisation('Kofi Stores', 'kofi@kofistores.example', 'wrong')).toThrow('Invalid credentials')
     })
 
     it('rejects disabled and blocked members', () => {
@@ -138,7 +145,7 @@ describe('organisations (mock data layer)', () => {
   describe('org sessions', () => {
     it('stores, reads and clears a session', () => {
       expect(getOrgSession()).toBeNull()
-      const org = loadOrganisations()[0]
+      const org = registerOrganisation(registerInput)
       const session = sessionFor(org, org.members[0])
       setOrgSession(session)
       expect(getOrgSession()).toEqual(session)
@@ -205,16 +212,16 @@ describe('organisations (mock data layer)', () => {
     })
 
     it('adds, updates and deletes members for the active org', () => {
-      const org = loadOrganisations()[0]
+      const org = registerOrganisation(registerInput)
       setOrgSession(sessionFor(org, org.members[0]))
 
       const staff = addOrgMember(staffInput)
-      expect(staff.id).toBe('STF-104')
+      expect(staff.id).toBe('STF-001')
 
       const admin = addOrgMember({ ...staffInput, role: 'admin', jobTitle: 'Administrator' })
-      expect(admin.id).toBe('ADM-006')
+      expect(admin.id).toBe('ADM-002')
 
-      expect(loadOrganisations()[0].members).toHaveLength(10)
+      expect(loadOrganisations()[0].members).toHaveLength(3)
 
       const updated = updateOrgMember(staff.id, { disabled: true })
       expect(updated.disabled).toBe(true)

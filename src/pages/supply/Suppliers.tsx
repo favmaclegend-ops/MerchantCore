@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Plus, Edit2, Trash2, Building2 } from 'lucide-react'
 import { api } from '@/lib/api'
-import type { OrgProduct } from '@/data/orgCommerce'
-import type { OrgSupplyState, OrgSupplier, OrgSupplierStatus } from '@/data/orgSupply'
+import type { OrgProduct } from '@/lib/orgTypes'
+import type { OrgSupplyState, OrgSupplier, OrgSupplierStatus } from '@/lib/orgTypes'
 import { Modal, FormButtons, StatusBadge, PageNotice } from './components'
 import { inputStyle, selectStyle, thStyle, tdStyle, panelStyle, primaryBtn, labelStyle, fieldRow, field, TONE_COLORS } from './styles'
 

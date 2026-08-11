@@ -1,18 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api'
-import { setOrgSession, type OrgRegisterInput, type OrgSession } from '@/data/organisations'
+import { setOrgSession, type OrgSession } from '@/data/organisations'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
-
-const registerInput: OrgRegisterInput = {
-  orgName: 'Kofi Stores',
-  businessEmail: 'hello@kofistores.example',
-  superAdminName: 'Kofi Mensah',
-  superAdminUsername: 'kofi',
-  superAdminEmail: 'kofi@kofistores.example',
-  password: 'Pass@123',
-  phone: '+233 555 010 9999',
-}
 
 function jsonResponse(body: unknown, status = 200): Response {
   return {
@@ -23,9 +13,25 @@ function jsonResponse(body: unknown, status = 200): Response {
   } as Response
 }
 
-async function registerAndSession(): Promise<OrgSession> {
-  const org = await api.org.register(registerInput)
-  return { orgId: org.id, orgName: org.name, member: org.members[0] }
+function sessionFor(token = 'org-jwt'): OrgSession {
+  return {
+    orgId: 'ORG-001',
+    orgName: 'Kofi Stores',
+    member: {
+      id: 'M-001',
+      name: 'Kofi Mensah',
+      email: 'kofi@kofistores.example',
+      username: 'kofi',
+      password: '',
+      phone: '',
+      role: 'super-admin',
+      jobTitle: 'Owner',
+      isActive: true,
+      dataBlocked: false,
+      disabled: false,
+    },
+    token,
+  }
 }
 
 describe('api server guard (real server is normal-login only)', () => {
@@ -84,191 +90,134 @@ describe('api server guard (real server is normal-login only)', () => {
   })
 })
 
-describe('api.org (mock-backed organisation workspace)', () => {
+describe('api.org (real backend organisation workspace)', () => {
   beforeEach(() => {
     localStorage.clear()
+    vi.stubGlobal('fetch', vi.fn())
   })
 
-  it('registers and logs into a new organisation', async () => {
-    const org = await api.org.register(registerInput)
-    expect(org.id).toBe('ORG-002')
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
 
+  it('registers an organisation through the public auth endpoint', async () => {
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(jsonResponse({ message: 'registered', org_id: 'ORG-001' }, 201))
+    const result = await api.org.register({
+      orgName: 'Kofi Stores',
+      businessEmail: 'hello@kofistores.example',
+      superAdminName: 'Kofi Mensah',
+      superAdminUsername: 'kofi',
+      superAdminEmail: 'kofi@kofistores.example',
+      password: 'Pass@123',
+    })
+    expect(result.org_id).toBe('ORG-001')
+    expect(fetchMock.mock.calls[0][0]).toBe(`${API_BASE}/auth/org/register`)
+    const body = JSON.parse(String(fetchMock.mock.calls[0][1]?.body))
+    expect(body).toEqual({
+      name: 'Kofi Stores',
+      business_email: 'hello@kofistores.example',
+      username: 'kofi',
+      full_name: 'Kofi Mensah',
+      password: 'Pass@123',
+    })
+  })
+
+  it('verifies an organisation email through the public endpoint', async () => {
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(jsonResponse({ message: 'verified' }))
+    await api.org.verifyEmail('kofi@kofistores.example', '123456')
+    expect(fetchMock.mock.calls[0][0]).toBe(`${API_BASE}/auth/org/verify-email`)
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({
+      email: 'kofi@kofistores.example',
+      otp: '123456',
+    })
+  })
+
+  it('logs in and maps the snake_case response to the app contract', async () => {
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        access_token: 'jwt-123',
+        token_type: 'bearer',
+        member_id: 'M-001',
+        role: 'super-admin',
+        full_name: 'Kofi Mensah',
+        username: 'kofi',
+        email: 'kofi@kofistores.example',
+        org_id: 'ORG-001',
+        org_name: 'Kofi Stores',
+      }),
+    )
     const result = await api.org.login('Kofi Stores', 'kofi@kofistores.example', 'Pass@123')
-    expect(result.member.role).toBe('super-admin')
+    expect(fetchMock.mock.calls[0][0]).toBe(`${API_BASE}/auth/org/login`)
+    expect(result.token).toBe('jwt-123')
+    expect(result.org).toEqual({ id: 'ORG-001', name: 'Kofi Stores' })
+    expect(result.member).toMatchObject({ id: 'M-001', name: 'Kofi Mensah', role: 'super-admin' })
   })
 
-  it('rejects org logins for disabled members', async () => {
-    const session = await registerAndSession()
-    setOrgSession(session)
-    await api.org.updateUser(session.member.id, { disabled: true })
-    await expect(api.org.login('Kofi Stores', 'kofi@kofistores.example', 'Pass@123')).rejects.toThrow('disabled')
-  })
-
-  it('requires an active session for org endpoints', async () => {
+  it('requires an active organisation session for org endpoints', async () => {
+    const fetchMock = vi.mocked(fetch)
     await expect(api.org.getUsers()).rejects.toThrow('No active organisation session')
     await expect(api.org.finance.getState()).rejects.toThrow('No active organisation session')
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('manages members of the active organisation', async () => {
-    const session = await registerAndSession()
-    setOrgSession(session)
+  it('authenticates org requests with the org session token, not the personal token', async () => {
+    localStorage.setItem('token', 'personal-tok')
+    setOrgSession(sessionFor('org-jwt'))
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(jsonResponse({ members: [] }))
+    await api.org.getUsers()
+    expect(fetchMock.mock.calls[0][0]).toBe(`${API_BASE}/organisations/ORG-001/members`)
+    const [, options] = fetchMock.mock.calls[0]
+    expect(options?.headers).toMatchObject({ Authorization: 'Bearer org-jwt' })
+    expect(String(options?.headers)).not.toContain('personal-tok')
+  })
 
+  it('maps member responses into the camelCase app contract', async () => {
+    setOrgSession(sessionFor())
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        members: [
+          {
+            id: 'M-002',
+            name: 'Ama Serwaa',
+            email: 'ama@kofistores.example',
+            username: 'ama',
+            phone: '+233',
+            role: 'staff',
+            jobTitle: 'Cashier',
+            isActive: true,
+            dataBlocked: false,
+            disabled: false,
+          },
+        ],
+      }),
+    )
     const users = await api.org.getUsers()
-    expect(users).toHaveLength(1)
-
-    const added = await api.org.addUser({
-      name: 'Ama', email: 'ama@kofistores.example', username: 'ama', password: 'StaffPass@123',
-      phone: '', role: 'staff', jobTitle: 'Cashier', isActive: true, dataBlocked: false, disabled: false,
+    expect(users[0]).toMatchObject({
+      id: 'M-002',
+      name: 'Ama Serwaa',
+      jobTitle: 'Cashier',
+      role: 'staff',
+      isActive: true,
     })
-    expect(added.id).toBe('STF-001')
-
-    const updated = await api.org.updateUser(added.id, { jobTitle: 'Supervisor' })
-    expect(updated.jobTitle).toBe('Supervisor')
-
-    await api.org.deleteUser(added.id)
-    const after = await api.org.getUsers()
-    expect(after.find(u => u.id === added.id)).toBeUndefined()
   })
 
-  it('serves finance state for the active organisation', async () => {
-    const session = await registerAndSession()
-    setOrgSession(session)
-
-    const state = await api.org.finance.getState()
-    expect(state.invoices).toHaveLength(5)
-    expect(state.ledger).toHaveLength(18)
-
-    const created = await api.org.finance.createInvoice({
-      customer: 'New Client',
-      dueAt: '2030-01-01',
-      items: [{ description: 'Service', qty: 2, unitPrice: 25.5 }],
-    })
-    expect(created.amount).toBe(51)
-    expect(created.status).toBe('draft')
-
-    const paid = await api.org.finance.setInvoiceStatus(created.id, 'paid')
-    expect(paid.status).toBe('paid')
-  })
-
-  it('serves commerce (inventory) for the active organisation', async () => {
-    const session = await registerAndSession()
-    setOrgSession(session)
-
-    const products = await api.org.getProducts()
-    expect(products).toHaveLength(48)
-    expect(products.reduce((sum, p) => sum + p.price * p.stock, 0)).toBe(58200)
-
-    const created = await api.org.createProduct({ name: 'Test Item', sku: 'TST-001', price: 10, stock: 5, category: 'Testing' })
-    expect(created.id).toBe('PRD-049')
-
-    const updated = await api.org.updateProduct(created.id, { stock: 0 })
-    expect(updated.status).toBe('out-of-stock')
-
-    await api.org.deleteProduct(created.id)
-    const after = await api.org.getProducts()
-    expect(after.find(p => p.id === created.id)).toBeUndefined()
-  })
-
-  it('serves customers and credit for the active organisation', async () => {
-    const session = await registerAndSession()
-    setOrgSession(session)
-
-    const customers = await api.org.getCustomers()
-    expect(customers).toHaveLength(5)
-
-    const customer = await api.org.createCustomer({ name: 'Ama', email: 'ama@example.com', credit_limit: 1000 })
-    expect(customer.tier).toBe('bronze')
-
-    const updatedCustomer = await api.org.updateCustomer(customer.id, { credit_limit: 5000 })
-    expect(updatedCustomer.credit_limit).toBe(5000)
-
-    const credit = await api.org.getCreditEntries()
-    expect(credit.reduce((sum, e) => sum + e.balance, 0)).toBe(10025)
-
-    const entry = await api.org.updateCreditEntry('CRD-001', { balance: 0 })
-    expect(entry.balance).toBe(0)
-  })
-
-  it('handles a POS checkout for the active organisation', async () => {
-    const session = await registerAndSession()
-    setOrgSession(session)
-
-    const before = (await api.org.getProducts()).find(p => p.id === 'PRD-007')?.stock
-
-    const txn = await api.org.checkout({
-      items: [{ id: 'PRD-007', name: 'Bama Rice 5kg', price: 60, quantity: 3 }],
-      total: 189,
-      payment_method: 'Card',
-    })
-    expect(txn.type).toBe('sale')
-    expect(txn.amount).toBe(189)
-
-    const after = await api.org.getProducts()
-    expect(after.find(p => p.id === 'PRD-007')?.stock).toBe((before ?? 0) - 3)
-
-    const log = await api.org.getTransactions()
-    expect(log[0].id).toBe(txn.id)
-  })
-
-  it('serves HRM data for the active organisation', async () => {
-    const session = await registerAndSession()
-    setOrgSession(session)
-
-    const state = await api.org.hrm.getState()
-    expect(state.employees).toHaveLength(13)
-    expect(state.payrollRuns).toHaveLength(11)
-
-    const created = await api.org.hrm.createEmployee({
-      name: 'Ama Owusu', email: 'ama@kofistores.example', phone: '', department: 'Sales',
-      jobTitle: 'Associate', employmentType: 'full-time', hireDate: '2026-08-01', salary: 1800,
-    })
-    expect(created.id).toBe('EMP-014')
-    expect(created.status).toBe('probation')
-
-    const retired = await api.org.hrm.retireEmployee('EMP-002')
-    expect(retired.status).toBe('retired')
-
-    const benefits = await api.org.hrm.getBenefits()
-    expect(benefits.find(b => b.id === 'BNF-001')?.enrollment).toBe(9)
-
-    const runs = await api.org.hrm.runPayroll('Sep 2099')
-    expect(runs).toHaveLength(11)
-
-    const paid = await api.org.hrm.setPayrollStatus(runs[0].id, 'paid')
-    expect(paid.status).toBe('paid')
-
-    const entry = await api.org.hrm.logTime({ employee_id: 'EMP-004', date: '2026-08-01', hours: 8 })
-    expect(entry.employee_name).toBe('Michael Owusu')
-
-    const review = await api.org.hrm.createReview({ employee_id: 'EMP-003', period: 'H2 2026', score: 4.7 })
-    expect(review.rating).toBe('exceeds')
-  })
-
-  it('supports self check-in and attendance summaries for the active org', async () => {
-    const session = await registerAndSession()
-    setOrgSession(session)
-
-    // The super-admin has no HRM employee record yet — check-in auto-provisions one.
-    expect(await api.org.attendance.self()).toBeNull()
-
-    const record = await api.org.attendance.checkIn()
-    expect(record.status).toBe('present')
-    expect(record.employee_name).toBe('Kofi Mensah')
-
-    const again = await api.org.attendance.checkIn()
-    expect(again.id).toBe(record.id)
-
-    const self = await api.org.attendance.self()
-    expect(self?.email).toBe('kofi@kofistores.example')
-    expect(self?.status).toBe('probation')
-
-    const records = await api.org.attendance.getRecords()
-    expect(records.some(r => r.id === record.id)).toBe(true)
-
-    const summary = await api.org.attendance.getSummary()
-    const own = summary.find(s => s.employee_id === self!.id)
-    expect(own?.present_days).toBe(1)
-    expect(own?.scheduled_days).toBe(1)
-    expect(own?.attendance_rate).toBe(100)
+  it('serves the organisation dashboard aggregate', async () => {
+    setOrgSession(sessionFor())
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        stats: { totalRevenue: 250, totalSales: 4, creditOutstanding: 10, customersCount: 3, productsCount: 8 },
+        revenueTrend: [{ date: '2026-08-01', revenue: 100 }],
+        stockLevels: [{ name: 'Milk', stock: 2, status: 'low-stock' }],
+      }),
+    )
+    const dashboard = await api.org.getDashboard()
+    expect(fetchMock.mock.calls[0][0]).toBe(`${API_BASE}/organisations/ORG-001/dashboard`)
+    expect(dashboard).toMatchObject({ stats: { totalRevenue: 250 } })
   })
 })

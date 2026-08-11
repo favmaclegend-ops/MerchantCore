@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Plus, ArrowRight, ClipboardList, Zap, Minus } from 'lucide-react'
 import { api } from '@/lib/api'
-import type { OrgProduct } from '@/data/orgCommerce'
-import type { OrgSupplyState, OrgPurchaseOrder, OrgPoStatus } from '@/data/orgSupply'
+import type { OrgProduct } from '@/lib/orgTypes'
+import type { OrgSupplyState, OrgPurchaseOrder, OrgPoStatus } from '@/lib/orgTypes'
 import { Modal, FormButtons, StatusBadge, PageNotice } from './components'
 import { inputStyle, selectStyle, thStyle, tdStyle, panelStyle, primaryBtn, ghostBtn, labelStyle, PO_STATUS_TONES, formatDate } from './styles'
 

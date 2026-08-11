@@ -4,7 +4,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { OrgNotificationContext } from '@/context/org_notification_context'
 import { CurrencyContext } from '@/context/currency_context'
-import type { OrgNotification, OrgNotificationSeverity } from '@/data/orgNotifications'
+import type { OrgNotification, OrgNotificationSeverity } from '@/lib/orgTypes'
 
 const kindConfig: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
   sale: { icon: DollarSign, color: 'var(--text-success)', bg: 'var(--bg-success)' },

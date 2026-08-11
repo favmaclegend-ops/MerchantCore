@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import DLineChart from '@/components/layout/chart'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { CurrencyContext } from '@/context/currency_context'
-import { loadDashboardCache, saveDashboardCache, refreshDashboardCache, defaultStats, type Tx, type DashboardAlert, type DashboardStats } from '@/lib/dashboardCache'
-import { generateOrgDashboard } from '@/data/orgDashboard'
+import { loadDashboardCache, saveDashboardCache, refreshDashboardCache, refreshOrgDashboardCache, defaultStats, ORG_CACHE_KEY, type Tx, type DashboardAlert, type DashboardStats } from '@/lib/dashboardCache'
 import { Authcontext } from '@/context'
 
 const CHART_RANGE_KEY = 'dashboard_chart_range'
@@ -147,19 +146,17 @@ export function DashboardPage() {
   const { format } = useContext(CurrencyContext)
   const { user, orgUser } = useContext(Authcontext)
 
-  // Organisation logins never touch the real server or the shared server cache: they get a
-  // local mock dashboard (consistent with the Finance mock). Only personal (token-based)
-  // logins read `dashboard_cache` / fetch from the backend.
+  // Organisation logins fetch the real org dashboard and cache it under its own
+  // key; personal (token-based) logins read the shared `dashboard_cache` instead.
   const isOrg = !!orgUser
-  const orgMock = isOrg ? generateOrgDashboard() : null
 
-  const [cacheSnapshot] = useState(() => (isOrg ? null : loadDashboardCache()))
-  const [stats, setStats] = useState<DashboardStats>(() => (orgMock ? orgMock.stats : (cacheSnapshot?.stats ?? defaultStats)))
-  const [revenueMonths, setRevenueMonths] = useState<string[]>(() => (orgMock ? orgMock.revenueMonths : (cacheSnapshot?.revenueMonths ?? [])))
-  const [revenueData, setRevenueData] = useState<number[]>(() => (orgMock ? orgMock.revenueData : (cacheSnapshot?.revenueData ?? [])))
-  const [txns, setTxns] = useState<Tx[]>(() => (orgMock ? orgMock.txns : (cacheSnapshot?.txns ?? [])))
-  const [alertList, setAlertList] = useState<DashboardAlert[]>(() => (orgMock ? orgMock.alertList : (cacheSnapshot?.alertList ?? [])))
-  const [loading, setLoading] = useState(!orgMock && !cacheSnapshot)
+  const [cacheSnapshot] = useState(() => (isOrg ? loadDashboardCache(ORG_CACHE_KEY) : loadDashboardCache()))
+  const [stats, setStats] = useState<DashboardStats>(cacheSnapshot?.stats ?? defaultStats)
+  const [revenueMonths, setRevenueMonths] = useState<string[]>(cacheSnapshot?.revenueMonths ?? [])
+  const [revenueData, setRevenueData] = useState<number[]>(cacheSnapshot?.revenueData ?? [])
+  const [txns, setTxns] = useState<Tx[]>(cacheSnapshot?.txns ?? [])
+  const [alertList, setAlertList] = useState<DashboardAlert[]>(cacheSnapshot?.alertList ?? [])
+  const [loading, setLoading] = useState(!cacheSnapshot)
   
   const [chartRange, setChartRange] = useState<ChartRange>(() => {
     try {
@@ -182,16 +179,21 @@ export function DashboardPage() {
 
   const handleClearTxns = () => {
     setTxns([])
-    if (!isOrg) saveDashboardCache({ stats, revenueMonths, revenueData, txns: [], alertList })
+    if (isOrg) {
+      saveDashboardCache({ stats, revenueMonths, revenueData, txns: [], alertList }, ORG_CACHE_KEY)
+    } else {
+      saveDashboardCache({ stats, revenueMonths, revenueData, txns: [], alertList })
+    }
   }
 
   const fetchId = useRef(0)
 
   useEffect(() => {
     const id = ++fetchId.current
-    if (cacheSnapshot || isOrg) return
+    if (cacheSnapshot) return
 
-    refreshDashboardCache().then((data) => {
+    const refresh = isOrg ? refreshOrgDashboardCache() : refreshDashboardCache()
+    refresh.then((data) => {
       if (id !== fetchId.current || !data) return
       setStats(data.stats)
       setRevenueMonths(data.revenueMonths)

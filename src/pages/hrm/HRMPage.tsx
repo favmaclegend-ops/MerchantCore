@@ -21,7 +21,7 @@ import {
   type OrgHrmState,
   type OrgReviewInput,
   type OrgTimeInput,
-} from '@/data/orgHRM'
+} from '@/lib/orgTypes'
 import { useMountEffect } from 'elk-components'
 
 
@@ -369,7 +369,7 @@ export function HRMPage() {
   }
 
   const completeReview = (id: string) => {
-    api.org.hrm.updateReview(id, { status: 'completed' }).then(reload).catch(() => {})
+    api.org.hrm.updateReview(id).then(reload).catch(() => {})
   }
 
   const runPayroll = () => {

@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import type { OrgNotification, OrgNotificationSettings } from "@/data/orgNotifications";
+import type { OrgNotification, OrgNotificationSettings } from "@/lib/orgTypes";
 
 export interface OrgNotificationContextType {
   notifications: OrgNotification[];

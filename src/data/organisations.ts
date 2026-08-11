@@ -1,12 +1,9 @@
-// Organisation (business workspace) mock data layer.
+// Organisation (business workspace) session layer.
 //
-// The real backend does NOT implement the organisation feature yet. This module
-// simulates the future API using seeded mock data persisted in localStorage so
-// the whole admin/staff flow can be developed and demoed today.
-//
-// When the backend ships the endpoints (see ORGANIZATION.md), `src/lib/api.ts`
-// should swap these calls for real HTTP requests. The shapes returned here are
-// the contract the rest of the app expects.
+// The backend owns all organisation data. This module only persists the *session*
+// (which member of which org is logged in) and mirrors the organisation/member
+// shapes the rest of the app expects. No demo data is seeded here any more — a
+// workspace only appears after a real backend register/login.
 
 export type OrgRole =
   | 'super-admin'
@@ -51,6 +48,7 @@ export interface OrgSession {
   orgId: string
   orgName: string
   member: OrgMember
+  token: string
 }
 
 // All organisation storage is namespaced under `merchant_org_` so it can never mix with
@@ -64,47 +62,16 @@ const ORG_VERSION_KEY = 'merchant_org_data_version'
 // from earlier builds does not linger.
 const LEGACY_ORG_KEYS = ['org_data', 'org_session', 'org_data_version']
 
-// Bump SEED_VERSION whenever SEED_ORGS changes so stored demo data is reset to the
-// fresh seed (prevents stale/conflicting demo credentials lingering in localStorage).
-const SEED_VERSION = 5
-
-// Seeded demo organisation. Login with these while the backend is missing:
-//   Organisation name : Sunrise Mart
-//   Super Admin       : daniel.kofi@sunrise.example / DemoPass@123
-//   Admin             : sarah.mensah@sunrise.example / DemoPass@123
-//   HRM Manager       : efua.mensah@sunrise.example / DemoPass@123 (HRM only)
-//   Finance Manager   : kwame.asante@sunrise.example / DemoPass@123 (Finance only)
-//   Logistics Manager : akosua.amoah@sunrise.example / DemoPass@123 (Supply Chain only)
-//   Staff (Cashier)   : grace.addo@sunrise.example / StaffPass@123
-//   Staff (Sales)     : michael.owusu@sunrise.example / StaffPass@123
-//   Staff (Stock)     : rita.boateng@sunrise.example / StaffPass@123 (data-blocked demo)
-//
-// Emails use the reserved `.example` domain (RFC 2606) so they can never collide
-// with real server users.
-const SEED_ORGS: Organisation[] = [
-  {
-    id: 'ORG-001',
-    name: 'Sunrise Mart',
-    businessEmail: 'business@sunrise.example',
-    members: [
-      { id: 'ADM-001', name: 'Daniel Kofi', email: 'daniel.kofi@sunrise.example', username: 'dkofi', password: 'DemoPass@123', phone: '+1 555 010 1001', role: 'super-admin', jobTitle: 'Super Admin', isActive: true, dataBlocked: false, disabled: false },
-      { id: 'ADM-002', name: 'Sarah Mensah', email: 'sarah.mensah@sunrise.example', username: 'smensah', password: 'DemoPass@123', phone: '+1 555 010 1002', role: 'admin', jobTitle: 'Administrator', isActive: true, dataBlocked: false, disabled: false },
-      { id: 'ADM-003', name: 'Efua Mensah', email: 'efua.mensah@sunrise.example', username: 'efua', password: 'DemoPass@123', phone: '+1 555 010 1007', role: 'hrm-manager', jobTitle: 'HR Manager', isActive: true, dataBlocked: false, disabled: false },
-      { id: 'ADM-004', name: 'Kwame Asante', email: 'kwame.asante@sunrise.example', username: 'kwame', password: 'DemoPass@123', phone: '+1 555 010 1006', role: 'finance-manager', jobTitle: 'Accountant', isActive: true, dataBlocked: false, disabled: false },
-      { id: 'ADM-005', name: 'Akosua Amoah', email: 'akosua.amoah@sunrise.example', username: 'akosua', password: 'DemoPass@123', phone: '+1 555 010 1008', role: 'logistics-manager', jobTitle: 'Supply Chain Manager', isActive: true, dataBlocked: false, disabled: false },
-      { id: 'STF-101', name: 'Grace Addo', email: 'grace.addo@sunrise.example', username: 'grace', password: 'StaffPass@123', phone: '+1 555 010 1003', role: 'staff', jobTitle: 'Cashier', isActive: true, dataBlocked: false, disabled: false },
-      { id: 'STF-102', name: 'Michael Owusu', email: 'michael.owusu@sunrise.example', username: 'michael', password: 'StaffPass@123', phone: '+1 555 010 1004', role: 'staff', jobTitle: 'Sales', isActive: true, dataBlocked: false, disabled: false },
-      { id: 'STF-103', name: 'Rita Boateng', email: 'rita.boateng@sunrise.example', username: 'rita', password: 'StaffPass@123', phone: '+1 555 010 1005', role: 'staff', jobTitle: 'Stock Clerk', isActive: true, dataBlocked: true, disabled: false },
-    ],
-  },
-]
+// Bump SEED_VERSION whenever the stored layout changes. On mismatch the stored
+// workspace data is WIPED (not reseeded) so no stale/demo session can survive a reload.
+const SEED_VERSION = 6
 
 export function loadOrganisations(): Organisation[] {
   for (const key of LEGACY_ORG_KEYS) {
     try {
       localStorage.removeItem(key)
     } catch {
-      // storage unavailable (e.g. blocked) — best effort; reseed below handles the rest
+      // storage unavailable (e.g. blocked) — best effort
     }
   }
   try {
@@ -117,18 +84,19 @@ export function loadOrganisations(): Organisation[] {
       }
     }
   } catch {
-    // corrupt or outdated storage -> fall through and reseed fresh
+    // corrupt or outdated storage -> wipe below
   }
 
+  // Stale or corrupt workspace data (or demo data from an older build): wipe the
+  // workspace and session so a forgotten org login is never resurrected on reload.
   clearOrgSession()
-  const seed = SEED_ORGS.map(o => ({ ...o, members: o.members.map(m => ({ ...m })) }))
-  saveOrganisations(seed)
   try {
+    localStorage.removeItem(ORG_DATA_KEY)
     localStorage.setItem(ORG_VERSION_KEY, String(SEED_VERSION))
   } catch {
-    return seed
+    return []
   }
-  return seed
+  return []
 }
 
 function saveOrganisations(orgs: Organisation[]) {
@@ -234,7 +202,7 @@ export function validateOrgSession(session: OrgSession | null): OrgSession | nul
     clearOrgSession()
     return null
   }
-  return { orgId: org.id, orgName: org.name, member }
+  return { orgId: org.id, orgName: org.name, member, token: session.token }
 }
 
 // ---- Member CRUD against the active organisation -------------------------

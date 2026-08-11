@@ -3,7 +3,7 @@ import { Clock, CalendarCheck2, CheckCircle2, Star, User, Briefcase } from 'luci
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context/auth_context'
 import { CurrencyContext } from '@/context/currency_context'
-import type { OrgAttendanceRecord, OrgAttendanceSummary, OrgEmployee } from '@/data/orgHRM'
+import type { OrgAttendanceRecord, OrgAttendanceSummary, OrgEmployee } from '@/lib/orgTypes'
 
 const formatDate = (iso: string) => {
   if (!iso) return '—'

@@ -5,7 +5,7 @@ import { Authcontext } from '@/context/auth_context'
 import { NotificationContext, type Notification } from '@/context/notification_context'
 import { OrgNotificationContext, type OrgNotificationContextType } from '@/context/org_notification_context'
 import { CurrencyContext } from '@/context/currency_context'
-import type { OrgNotification } from '@/data/orgNotifications'
+import type { OrgNotification } from '@/lib/orgTypes'
 
 const typeConfig: Record<string, { icon: LucideIcon; color: string }> = {
   new_sale: { icon: DollarSign, color: 'var(--text-success)' },

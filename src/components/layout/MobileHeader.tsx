@@ -18,7 +18,7 @@ const pageConfig: Record<string, { title: string; subtitle?: string }> = {
   '/home/supply': { title: 'Supply Chain', subtitle: 'Inventory, orders & shipping' },
   '/home/settings': { title: 'Settings', subtitle: 'Account & preferences' },
   '/home/users': {title: 'Users', subtitle: 'Administarator Control'},
-  '/home/attendance': { title: 'My Attendance', subtitle: 'Sunrise Mart · Check in at the start of your shift — it records your attendance and updates the HRM view.' },
+  '/home/attendance': { title: 'My Attendance', subtitle: 'Check in at the start of your shift — it records your attendance and updates the HRM view.' },
   '/home/hrm': { title: 'HRM', subtitle: 'Track and know who performs well' },
   '/home/finance': { title: 'Finance', subtitle: 'Keep track of transactions' },
    '/home/market': {title: 'MC Market', subtitle: 'Here is what happening on the market today', },

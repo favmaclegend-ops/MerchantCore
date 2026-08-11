@@ -1,8 +1,8 @@
 import { useContext } from 'react'
 import { Package, AlertTriangle, Truck, ClipboardList, CheckCircle2, Timer, ArrowRight, TrendingUp } from 'lucide-react'
 import { CurrencyContext } from '@/context/currency_context'
-import type { OrgSupplyState } from '@/data/orgSupply'
-import type { OrgProduct } from '@/data/orgCommerce'
+import type { OrgSupplyState } from '@/lib/orgTypes'
+import type { OrgProduct } from '@/lib/orgTypes'
 import { StatCard, StatusBadge } from './components'
 import { PO_STATUS_TONES, SHIPMENT_STATUS_TONES, panelStyle, formatDate } from './styles'
 

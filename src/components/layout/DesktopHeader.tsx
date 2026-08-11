@@ -7,7 +7,7 @@ import { NotificationContext } from '@/context/notification_context'
 import { OrgNotificationContext } from '@/context/org_notification_context'
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 import {  useComponentData, useStore,} from 'elk-components'
-import {  type Product } from '@/data/mockData'
+import type { OrgProduct } from '@/lib/orgTypes'
 import { store } from '@/context/store'
 
 const pageConfig: Record<string, { title: string; search?: string }> = {
@@ -47,7 +47,7 @@ export function DesktopHeader() {
   
   useStore(store)
   
-  const setPosProduct = useComponentData<React.Dispatch<React.SetStateAction<Product[]>>>('POS', 'setProducts')
+  const setPosProduct = useComponentData<React.Dispatch<React.SetStateAction<OrgProduct[]>>>('POS', 'setProducts')
 
   const staticData = store.getState().staticData
 

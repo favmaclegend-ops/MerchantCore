@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -28,9 +27,6 @@ import "../spread.css";
 import { workbookStorage, type WorkbookMeta } from "./workbookStorage";
 import { createEmptyWorkbook, toExternalSheets } from "./sheetFormat";
 import { useWorkbooks } from "./useWorkbooks";
-import { addOrgNotification } from "@/data/orgNotifications";
-import { getOrgSession } from "@/data/organisations";
-import {  OrgNotificationContext } from "@/context";
 
 
 /** Formats a millisecond timestamp as a short "time ago" label. */
@@ -57,20 +53,6 @@ function WorkbookCard({
   onOpen: () => void;
   onDelete: () => void;
 }) {
-  const session = getOrgSession();
-  // const { fetch: refreshNotifications } = useContext(OrgNotificationContext);
-
-  const handleSetNotification = () => {
-    if (session)
-      addOrgNotification(session.orgId, {
-        kind: "system",
-        title: "Workbook Deleted",
-        message: `${session.member.name} Deleted ${workbook.name}`,
-        is_alert: true,
-      });
-   // void refreshNotifications();
-  };
-
   return (
     <div
       className="workbook-card"
@@ -90,7 +72,6 @@ function WorkbookCard({
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
-          handleSetNotification()
         }}
       >
         <Trash2 size={15} />
@@ -541,19 +522,6 @@ export function ExternalSheet() {
     useWorkbooks();
 
   const meta = workbooks.find((w) => w.id === activeId);
-  const session = getOrgSession();
-  const { fetch: refreshNotifications } = useContext(OrgNotificationContext);
-
-  const handleSetNotification = () => {
-    if (session)
-      addOrgNotification(session.orgId, {
-        kind: "system",
-        title: "Workbook created",
-        message: `${session.member.name} created a new workbook`,
-        is_alert: true,
-      });
-    void refreshNotifications();
-  };
 
   // Redirect to the workspace when ?id= points at a nonexistent workbook.
   // Only runs after the list has finished loading to avoid a false redirect
@@ -641,9 +609,6 @@ export function ExternalSheet() {
 
         <button
           onClick={() => {
-            // 613
-           
-              handleSetNotification();
             void handleNewWorkbook();
           }}
           style={{
@@ -705,7 +670,7 @@ export function ExternalSheet() {
               Create your first workbook to start building spreadsheets.
             </p>
             <button
-              onClick={() => {void handleNewWorkbook(); handleSetNotification()}}
+              onClick={() => {void handleNewWorkbook();}}
               style={{
                 display: "inline-flex",
                 alignItems: "center",

@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useState, type ReactNode } from "re
 import { api } from "@/lib/api";
 import { Authcontext } from "./auth_context";
 import { OrgNotificationContext, type OrgNotificationContextType } from "./org_notification_context";
-import type { OrgNotification, OrgNotificationSettings } from "@/data/orgNotifications";
+import type { OrgNotification, OrgNotificationSettings } from "@/lib/orgTypes";
 
 const POLL_INTERVAL = 30000;
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useContext } from 'react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context'
-import type { OrgCreditStatus } from '@/data/orgCommerce'
+import type { OrgCreditStatus } from '@/lib/orgTypes'
 import { CurrencyContext } from '@/context/currency_context'
 
 const statusStyle = (status: string) => {

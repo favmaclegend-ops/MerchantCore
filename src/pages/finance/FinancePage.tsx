@@ -6,7 +6,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context/auth_context'
 import { CurrencyContext } from '@/context/currency_context'
-import { buildBalanceSheet, type FinanceState, type Invoice, type InvoiceStatus } from '@/data/finance'
+import { buildBalanceSheet, type FinanceState, type Invoice, type InvoiceStatus } from '@/lib/orgTypes'
 
 type TabId = 'overview' | 'ledger' | 'invoices' | 'tax' | 'balance'
 

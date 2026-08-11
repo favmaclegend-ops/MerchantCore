@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus, Truck } from 'lucide-react'
 import { api } from '@/lib/api'
-import type { OrgShipmentStatus, OrgShipment, OrgSupplyState } from '@/data/orgSupply'
+import type { OrgShipmentStatus, OrgShipment, OrgSupplyState } from '@/lib/orgTypes'
 import { Modal, FormButtons, StatusBadge, PageNotice } from './components'
 import { inputStyle, selectStyle, thStyle, tdStyle, panelStyle, primaryBtn, labelStyle, SHIPMENT_STATUS_TONES, formatDate } from './styles'
 

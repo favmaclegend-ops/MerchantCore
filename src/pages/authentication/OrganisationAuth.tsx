@@ -55,11 +55,18 @@ const navStyle: React.CSSProperties = {
   marginBottom: '24px',
 }
 
-type Mode = 'login' | 'register'
+type Mode = 'login' | 'register' | 'verify'
+
+interface PendingRegistration {
+  orgName: string
+  email: string
+  password: string
+}
 
 export default function OrganisationAuth() {
   const { orgLogin } = useContext(Authcontext)
   const [mode, setMode] = useState<Mode>('login')
+  const [pending, setPending] = useState<PendingRegistration | null>(null)
   const [alertInfo, setAlert] = useState({ message: '', type: '' })
   const [isAlert, setIsAlert] = useState('none')
   const [isLoading, setIsLoading] = useState(false)
@@ -73,6 +80,7 @@ export default function OrganisationAuth() {
   const superUsernameRef = useRef<HTMLInputElement>(null)
   const superEmailRef = useRef<HTMLInputElement>(null)
   const confirmRef = useRef<HTMLInputElement>(null)
+  const otpRef = useRef<HTMLInputElement>(null)
 
   const showAlert = (message: string, type: string) => {
     setIsAlert('flex')
@@ -96,8 +104,8 @@ export default function OrganisationAuth() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     const password = passwordRef.current!.value
-    if (password.length < 6) {
-      showAlert('Password must be at least 6 characters', 'invalid')
+    if (password.length < 8) {
+      showAlert('Password must be at least 8 characters', 'invalid')
       return
     }
     if (password !== confirmRef.current!.value) {
@@ -106,21 +114,53 @@ export default function OrganisationAuth() {
     }
     try {
       setIsLoading(true)
+      const email = superEmailRef.current!.value.trim()
       await api.org.register({
         orgName: orgNameRef.current!.value,
         businessEmail: businessEmailRef.current!.value,
         superAdminName: superNameRef.current!.value,
         superAdminUsername: superUsernameRef.current!.value,
-        superAdminEmail: superEmailRef.current!.value,
+        superAdminEmail: email,
         password,
       })
-      await orgLogin(orgNameRef.current!.value, superEmailRef.current!.value, password)
       setIsLoading(false)
-      showAlert('Organisation created successfully', 'success')
-      setTimeout(() => navigate('/home/dashboard', { replace: true }), 1500)
+      setPending({ orgName: orgNameRef.current!.value.trim(), email, password })
+      setMode('verify')
+      showAlert('Organisation created. Check your email for the verification code.', 'success')
     } catch (err) {
       setIsLoading(false)
       showAlert((err as Error).message || 'Registration failed', 'invalid')
+    }
+  }
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!pending) return
+    const otp = otpRef.current!.value.trim()
+    if (!otp) {
+      showAlert('Enter the verification code from your email', 'invalid')
+      return
+    }
+    try {
+      setIsLoading(true)
+      await api.org.verifyEmail(pending.email, otp)
+      await orgLogin(pending.orgName, pending.email, pending.password)
+      setIsLoading(false)
+      showAlert('Organisation verified successfully', 'success')
+      setTimeout(() => navigate('/home/dashboard', { replace: true }), 1500)
+    } catch (err) {
+      setIsLoading(false)
+      showAlert((err as Error).message || 'Verification failed', 'invalid')
+    }
+  }
+
+  const handleResend = async () => {
+    if (!pending) return
+    try {
+      await api.org.resendVerification(pending.email)
+      showAlert('Verification code resent. Check your inbox.', 'success')
+    } catch (err) {
+      showAlert((err as Error).message || 'Failed to resend the code', 'invalid')
     }
   }
 
@@ -128,40 +168,44 @@ export default function OrganisationAuth() {
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <AlertDialog alert={{ message: alertInfo.message, type: alertInfo.type }} display={isAlert} setdisplay={setIsAlert} />
 
-      <nav style={navStyle}>
-        <button
-          onClick={() => setMode('login')}
-          style={{
-            display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', borderRadius: '2rem',
-            padding: '8px 40px', color: mode === 'login' ? 'var(--bg-surface)' : 'var(--text-muted)',
-            background: mode === 'login' ? 'var(--bg-nav-active)' : 'transparent', cursor: 'pointer', fontWeight: 500,
-            transition: 'background .3s ease',
-          }}
-        >
-          Login
-        </button>
-        <button
-          onClick={() => setMode('register')}
-          style={{
-            display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', borderRadius: '2rem',
-            padding: '8px 40px', color: mode === 'register' ? 'var(--bg-surface)' : 'var(--text-muted)',
-            background: mode === 'register' ? 'var(--bg-nav-active)' : 'transparent', cursor: 'pointer', fontWeight: 500,
-            transition: 'background .3s ease',
-          }}
-        >
-          Register
-        </button>
-      </nav>
+      {mode !== 'verify' && (
+        <nav style={navStyle}>
+          <button
+            onClick={() => setMode('login')}
+            style={{
+              display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', borderRadius: '2rem',
+              padding: '8px 40px', color: mode === 'login' ? 'var(--bg-surface)' : 'var(--text-muted)',
+              background: mode === 'login' ? 'var(--bg-nav-active)' : 'transparent', cursor: 'pointer', fontWeight: 500,
+              transition: 'background .3s ease',
+            }}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => setMode('register')}
+            style={{
+              display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', borderRadius: '2rem',
+              padding: '8px 40px', color: mode === 'register' ? 'var(--bg-surface)' : 'var(--text-muted)',
+              background: mode === 'register' ? 'var(--bg-nav-active)' : 'transparent', cursor: 'pointer', fontWeight: 500,
+              transition: 'background .3s ease',
+            }}
+          >
+            Register
+          </button>
+        </nav>
+      )}
 
       <div style={cardStyle}>
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-            Organisation {mode === 'login' ? 'Login' : 'Registration'}
+            Organisation {mode === 'login' ? 'Login' : mode === 'verify' ? 'Verification' : 'Registration'}
           </h2>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginTop: '6px', marginBottom: 0 }}>
             {mode === 'login'
               ? 'Sign in with your organisation workspace'
-              : 'Set up your business workspace'}
+              : mode === 'verify'
+                ? `Enter the 6-digit code sent to ${pending?.email ?? 'your email'}`
+                : 'Set up your business workspace'}
           </p>
         </div>
 
@@ -169,7 +213,7 @@ export default function OrganisationAuth() {
           <form onSubmit={handleLogin}>
             <div style={fieldStyle}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '8px' }}>Organisation name</label>
-              <input ref={orgNameRef} style={inputStyle} placeholder="e.g. Sunrise Mart" required />
+              <input ref={orgNameRef} style={inputStyle} placeholder="e.g. Acme Foods" required />
             </div>
             <div style={fieldStyle}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '8px' }}>Email or username</label>
@@ -183,11 +227,37 @@ export default function OrganisationAuth() {
               {isLoading ? 'Validating...' : 'Submit'}
             </button>
           </form>
+        ) : mode === 'verify' ? (
+          <form onSubmit={handleVerify}>
+            <div style={fieldStyle}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '8px' }}>Verification code</label>
+              <input ref={otpRef} style={{ ...inputStyle, textAlign: 'center', letterSpacing: '8px', fontSize: '18px' }} placeholder="000000" required inputMode="numeric" maxLength={6} />
+            </div>
+            <button type="submit" style={{ ...buttonStyle, opacity: isLoading ? 0.5 : 1 }} disabled={isLoading}>
+              {isLoading ? 'Verifying...' : 'Verify & continue'}
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '16px' }}>
+              <button
+                type="button"
+                onClick={handleResend}
+                style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Resend code
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('register')}
+                style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                Back
+              </button>
+            </div>
+          </form>
         ) : (
           <form onSubmit={handleRegister}>
             <div style={fieldStyle}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '8px' }}>Organisation name</label>
-              <input ref={orgNameRef} style={inputStyle} placeholder="e.g. Sunrise Mart" required />
+              <input ref={orgNameRef} style={inputStyle} placeholder="e.g. Acme Foods" required />
             </div>
             <div style={fieldStyle}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '8px' }}>Business email</label>
@@ -207,7 +277,7 @@ export default function OrganisationAuth() {
             </div>
             <div style={fieldStyle}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '8px' }}>Password</label>
-              <input ref={passwordRef} style={inputStyle} placeholder="Min 6 characters" type="password" required />
+              <input ref={passwordRef} style={inputStyle} placeholder="Min 8 characters" type="password" required />
             </div>
             <div style={fieldStyle}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '8px' }}>Confirm password</label>
