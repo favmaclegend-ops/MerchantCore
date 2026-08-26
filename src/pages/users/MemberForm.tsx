@@ -39,6 +39,7 @@ export function MemberForm({ title, submitLabel, initial, kind, lockRole, onSave
   })
 
   const handleSave = () => {
+    console.log(formData)
     if (!formData.name || !formData.email) return
     onSave(formData)
   }

@@ -80,11 +80,12 @@ export function Users() {
       api.org.addUser(toMember(data, role)).then(created => {
         loadMembers()
         setCredential(created)
+        console.log(created)
       })
     }
     closeForm()
   }
-
+  
   const handleToggleActive = (member: Member) => {
     if (isSuperAdmin(member)) return
     api.org.updateUser(member.id, { isActive: !member.isActive }).then(loadMembers)

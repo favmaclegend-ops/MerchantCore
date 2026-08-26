@@ -8,10 +8,11 @@ import {
   History,
   CheckCircle,
   Store,
+  Delete,
 } from "lucide-react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { api } from "@/lib/api";
-import { refreshDashboardCache } from "@/lib/dashboardCache";
+import { refreshDashboardCache, refreshOrgDashboardCache } from "@/lib/dashboardCache";
 import { Authcontext } from "@/context";
 import Alert from "@/components/alert/alert";
 import { CurrencyContext } from "@/context/currency_context";
@@ -78,7 +79,6 @@ export function POSPage() {
   const [isCart, setCartView] = useState<boolean>(false);
   const [showUpload, setShowUpload] = useState(false);
 
-  
   const [searchedItems, setSearchedItems] = useState(products);
 
   const filteredProducts =
@@ -89,7 +89,10 @@ export function POSPage() {
   useEffect(() => {
     posApi
       .getProducts()
-      .then((p) => {setProducts(normalizeProducts(p)); setSearchedItems(p)})
+      .then((p) => {
+        setProducts(normalizeProducts(p));
+        setSearchedItems(p);
+      })
       .catch(() => {})
       .finally(() => setLoadingProducts(false));
   }, [posApi]);
@@ -191,7 +194,8 @@ export function POSPage() {
       });
       setCart([]);
       setSuccessMsg(`Sale of ${format(total)} completed!`);
-      if (!orgUser) refreshDashboardCache();
+      refreshDashboardCache();
+      refreshOrgDashboardCache();
       loadProducts();
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (e) {
@@ -780,13 +784,8 @@ export function POSPage() {
                         }}
                         onClick={() => removeCartItem(item.id)}
                       >
-                        <img
-                          src={
-                            "https://img.icons8.com/?size=100&id=11705&format=png&color=ff0000"
-                          }
-                          width={"20"}
-                          height={"20"}
-                        />
+                        <Delete color="red" size={20}/>
+                       
                       </button>
                     </div>
                   ))
@@ -1033,9 +1032,7 @@ export function POSPage() {
         )}
       </div>
 
-      {showUpload && (
-        <UploadToShopModal onClose={() => setShowUpload(false)} />
-      )}
+      {showUpload && <UploadToShopModal onClose={() => setShowUpload(false)} />}
 
       {isAlert.isAlert && (
         <Alert message={isAlert.message} type={isAlert.type} />

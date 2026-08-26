@@ -13,7 +13,7 @@ import Alert from "@/components/alert/alert";
 import { valueFormater } from "./market";
 import { getProductRatingFigure } from "./productRatings";
 import { getProductsByChunck } from "./randomSlectedProduct";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Ban } from "lucide-react";
 import { chunckStore } from "./store/chunckStore";
 // import { getRandomProduct } from "./randomSlectedProduct";
 
@@ -136,6 +136,24 @@ export function Markets() {
   const handleSearch = (e: ChangeEvent) => {
     setQuery((e.currentTarget as HTMLInputElement).value ?? "");
   };
+
+  if (filterProduct.length <= 0) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          flex: "1",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Ban color="grey"/>
+        <span style={{color: 'GrayText'}}>Nothing on the market Yet</span>
+      </div>
+    );
+  }
   return (
     <>
       <div
@@ -210,7 +228,6 @@ export function Markets() {
         ) : (
           <div
             style={{
-             
               display: "grid",
               gridTemplateColumns: bp.xxsm
                 ? "1fr"

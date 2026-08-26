@@ -151,6 +151,7 @@ export function DashboardPage() {
   const isOrg = !!orgUser
 
   const [cacheSnapshot] = useState(() => (isOrg ? loadDashboardCache(ORG_CACHE_KEY) : loadDashboardCache()))
+  //console.log(loadDashboardCache(ORG_CACHE_KEY))
   const [stats, setStats] = useState<DashboardStats>(cacheSnapshot?.stats ?? defaultStats)
   const [revenueMonths, setRevenueMonths] = useState<string[]>(cacheSnapshot?.revenueMonths ?? [])
   const [revenueData, setRevenueData] = useState<number[]>(cacheSnapshot?.revenueData ?? [])

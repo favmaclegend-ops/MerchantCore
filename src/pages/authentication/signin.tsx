@@ -62,7 +62,6 @@ export default function SigninPage() {
             if (response.ok) {
                 setIsAlert('flex');
                 setAlert({ message: data.message, type: 'success' });
-                console.log(data)
                setTimeout(() => {
                     navigate('/verify-email', { replace: true });
                 }, 1500);
