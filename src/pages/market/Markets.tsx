@@ -9,6 +9,7 @@ import { useMarketData } from "./useMarketData";
 import { useShopOwner } from "./useShopOwner";
 import { useState, type ChangeEvent, useRef, useEffect } from "react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import Alert from "@/components/alert/alert";
 import { valueFormater } from "./market";
 import { getProductRatingFigure } from "./productRatings";
@@ -25,6 +26,7 @@ export function Markets() {
   const updateChunck = useSetState(chunckStore);
   const categories = state.catergories ?? [];
   const { isMyInventoryProduct } = useShopOwner();
+  const { requireAuth } = useRequireAuth();
   const [activeCat, setActiveCat] = useState(0);
   const [query, setQuery] = useState("");
   const [isSearch, setIsSearch] = useState(false);
@@ -84,6 +86,7 @@ export function Markets() {
   }, [alert]);
 
   const handleAddToCart = (product: MarketStoreProduct) => {
+    if (!requireAuth()) return;
     if (addToMarketCart(product)) {
       setAlert({
         message: `${product.product_name} added to cart`,

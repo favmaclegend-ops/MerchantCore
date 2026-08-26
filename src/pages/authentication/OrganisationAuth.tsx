@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Authcontext } from "@/context/auth_context";
 import AlertDialog from "../../components/layout/alert_dialog";
 import { api } from "@/lib/api";
@@ -71,6 +71,8 @@ export default function OrganisationAuth() {
   const [isAlert, setIsAlert] = useState('none')
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get('redirect')
 
   const orgNameRef = useRef<HTMLInputElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
@@ -94,7 +96,7 @@ export default function OrganisationAuth() {
       await orgLogin(orgNameRef.current!.value, emailRef.current!.value, passwordRef.current!.value)
       setIsLoading(false)
       showAlert('Login Successful', 'success')
-      setTimeout(() => navigate('/home/dashboard', { replace: true }), 1500)
+      setTimeout(() => navigate(redirectTo ? decodeURIComponent(redirectTo) : '/home/dashboard', { replace: true }), 1500)
     } catch (err) {
       setIsLoading(false)
       const msg = (err as Error).message || 'Organisation login failed'
@@ -158,7 +160,7 @@ export default function OrganisationAuth() {
       await orgLogin(pending.orgName, pending.email, pending.password)
       setIsLoading(false)
       showAlert('Organisation verified successfully', 'success')
-      setTimeout(() => navigate('/home/dashboard', { replace: true }), 1500)
+      setTimeout(() => navigate(redirectTo ? decodeURIComponent(redirectTo) : '/home/dashboard', { replace: true }), 1500)
     } catch (err) {
       setIsLoading(false)
       showAlert((err as Error).message || 'Verification failed', 'invalid')

@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import DefaultPage from './pages/authentication/default_page';
 import VerifyEmailPage from './pages/authentication/VerifyEmailPage';
 import Home from './pages/home/home';
+import PublicMarketLayout from './pages/market/PublicMarketLayout';
 
 export default function App() {
 
@@ -16,6 +17,7 @@ export default function App() {
           <VerifyEmailPage />
         </div>
       }/>
+      <Route path='/market/*' element={<PublicMarketLayout />} />
       <Route path='/home/*' element={<Home />} />
     </Routes>
     </>

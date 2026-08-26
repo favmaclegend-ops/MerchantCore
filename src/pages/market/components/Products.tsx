@@ -11,6 +11,7 @@ import { addToMarketCart } from "../cart";
 import { ProductInfoPanel } from "./ProductInfoPanel";
 import { UploadToShopModal } from "./UploadToShopModal";
 import { useShopOwner } from "../useShopOwner";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import Alert from "@/components/alert/alert";
 import { GracefulImage } from "@/components/GracefulImage";
 
@@ -20,6 +21,7 @@ export function Products() {
   const { shops, products } = useStore(marketStore);
   const shop = shops[params.id ?? ""];
   const { isOwner, isMyInventoryProduct } = useShopOwner();
+  const { requireAuth } = useRequireAuth();
   const [query, setQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<MarketStoreProduct | null>(null);
   const [alert, setAlert] = useState<{ message: string; type: string } | null>(null);
@@ -28,6 +30,7 @@ export function Products() {
   if (!shop) return null;
 
   const handleAddToCart = (product: MarketStoreProduct) => {
+    if (!requireAuth()) return;
     if (addToMarketCart(product)) {
       setAlert({ message: `${product.product_name} added to cart`, type: "success" });
     } else {

@@ -1,5 +1,5 @@
-import { useRef, useState, type ChangeEvent } from "react";
-import { ArrowLeft, BadgeCheck, Camera, Check, MessageCircle, Star, Upload, X } from "lucide-react";
+import { useRef, useState, useEffect, type ChangeEvent } from "react";
+import { ArrowLeft, BadgeCheck, Camera, Check, MessageCircle, Share2, Star, Upload, X } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useStore } from "elk-components";
@@ -27,6 +27,24 @@ export function ShopPage () {
     const { isOwner } = useShopOwner();
     const [editing, setEditing] = useState<"profile" | "background" | null>(null);
     const [viewing, setViewing] = useState<string | null>(null);
+    const [shareOpen, setShareOpen] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const shareRef = useRef<HTMLDivElement>(null);
+
+    const shopUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/market/${params.id ?? ''}`
+        : '';
+
+    useEffect(() => {
+        if (!shareOpen) return;
+        const handler = (e: MouseEvent) => {
+            if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+                setShareOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [shareOpen]);
     const shop = shops[params.id ?? ""]
     if (loading) {
         return (
@@ -56,7 +74,7 @@ export function ShopPage () {
                     <div style={{position: 'absolute', top: bp.sm ? '.5rem' : '1rem', left: bp.sm ? '.5rem' : '1rem', zIndex: '20'}}>
                         <button
                             className="click"
-                            onClick={() => navigate('/home/market')}
+                            onClick={() => navigate(location.pathname.startsWith('/market') ? '/market' : '/home/market')}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -156,7 +174,63 @@ export function ShopPage () {
                         </div>
 
                     
-                        <div style={{display: 'flex', alignItems: 'center', marginInlineStart: 'auto', flexShrink: '0'}}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '.4rem', marginInlineStart: 'auto', flexShrink: '0'}}>
+                            <div ref={shareRef} style={{ position: 'relative' }}>
+                                <button
+                                    className="click"
+                                    onClick={() => { setShareOpen(!shareOpen); setCopied(false); }}
+                                    style={{
+                                        display: 'flex', padding: bp.sm ? '.6rem' : '.7rem',
+                                        alignItems: 'center', cursor: 'pointer', borderRadius: '50%',
+                                        background: 'var(--bg-secondary)', border: '1px solid var(--border-default)',
+                                    }}
+                                >
+                                    <Share2 size={bp.sm ? 18 : 20} color="var(--text-primary)"/>
+                                </button>
+                                {shareOpen && (
+                                    <div style={{
+                                        position: 'absolute', top: '110%', right: 0, zIndex: 50,
+                                        background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+                                        borderRadius: '0.75rem', boxShadow: '0 8px 24px rgba(0,0,0,.2)',
+                                        minWidth: '180px', overflow: 'hidden',
+                                    }}>
+                                        <button
+                                            className="click"
+                                            onClick={() => {
+                                                window.open(`https://wa.me/?text=${encodeURIComponent(`Check out ${shop.shop_name} on Merchant Core:\n${shopUrl}`)}`, '_blank');
+                                                setShareOpen(false);
+                                            }}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '.6rem', width: '100%',
+                                                padding: '.7rem 1rem', border: 'none', background: 'transparent',
+                                                cursor: 'pointer', fontSize: '.85rem', color: 'var(--text-primary)',
+                                                textAlign: 'left',
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '1.1rem' }}>💬</span> Share on WhatsApp
+                                        </button>
+                                        <div style={{ height: '1px', background: 'var(--border-default)', margin: '0 .5rem' }}/>
+                                        <button
+                                            className="click"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(shopUrl).then(() => {
+                                                    setCopied(true);
+                                                    setTimeout(() => setCopied(false), 2000);
+                                                });
+                                            }}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '.6rem', width: '100%',
+                                                padding: '.7rem 1rem', border: 'none', background: 'transparent',
+                                                cursor: 'pointer', fontSize: '.85rem', color: 'var(--text-primary)',
+                                                textAlign: 'left',
+                                            }}
+                                        >
+                                            {copied ? <Check size={16} color="var(--text-success, #22c55e)"/> : <Share2 size={16}/>}
+                                            {copied ? 'Copied!' : 'Copy shop link'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                             <button className="click" style={{display: 'flex', padding: bp.sm ? '.6rem .8rem' : '1rem', alignItems: 'center', cursor: 'pointer', gap: '.5rem', borderRadius: '1rem', background: 'var(--bg-nav-active)', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.2)'}}>
                                 <MessageCircle size={bp.sm ? 18 : 24} color="var(--bg-surface)"/>
                                 {!bp.sm && <span style={{color: 'var(--bg-surface)'}}>Message</span>}

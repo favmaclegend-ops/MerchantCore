@@ -1,5 +1,5 @@
 import { useContext, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AlertDialog from "../../components/layout/alert_dialog";
 import { Authcontext } from "@/context/auth_context";
 
@@ -42,6 +42,8 @@ export default function LoginPage() {
     const [isAlert, setIsAlert] = useState('none');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const redirectTo = searchParams.get('redirect');
 
     const handleAuthentication = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -53,7 +55,7 @@ export default function LoginPage() {
             setIsAlert('flex');
             setAlert({ message: 'Login Successful', type: 'success' });
             setTimeout(() => {
-                navigate('/home/dashboard', {replace: true});
+                navigate(redirectTo ? decodeURIComponent(redirectTo) : '/home/dashboard', {replace: true});
             }, 1500);
         }
         catch (e: any) {

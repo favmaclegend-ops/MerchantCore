@@ -28,6 +28,7 @@ import {
 } from "./cart";
 import { marketOrdersStore, submitMarketOrder } from "./marketApi";
 import type { MarketCheckoutResult, MarketOrderAlert } from "./marketApi";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 interface CartPanelProps {
   cart: MarketCartItem[];
@@ -416,6 +417,7 @@ export function MarketPage() {
   const bp = useBreakpoint();
   const { items: cart } = useStore(marketCartStore);
   const { orders } = useStore(marketOrdersStore);
+  const { requireAuth } = useRequireAuth();
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -426,6 +428,7 @@ export function MarketPage() {
   const totals = getMarketCartTotals(cart);
 
   const handleCheckout = async () => {
+    if (!requireAuth()) return;
     if (cart.length === 0 || checkingOut) return;
     setCheckingOut(true);
     try {

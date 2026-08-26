@@ -26,6 +26,7 @@ import {
 import { useShopOwner } from "../useShopOwner";
 import { addToMarketCart } from "../cart";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { GracefulImage } from "@/components/GracefulImage";
 
 export function ProductInfoPanel({
@@ -38,6 +39,7 @@ export function ProductInfoPanel({
   const bp = useBreakpoint();
   const navigate = useNavigate();
   const { ownerKey } = useShopOwner();
+  const { requireAuth } = useRequireAuth();
   const images = useMemo(() => getProductImages(product), [product]);
   const [index, setIndex] = useState(0);
   const [touchX, setTouchX] = useState<number | null>(null);
@@ -60,6 +62,7 @@ export function ProductInfoPanel({
   const maxCount = Math.max(...ratings.levels.map((l) => l.count), 1);
 
   const handleRate = (star: StarRating) => {
+    if (!requireAuth()) return;
     setProductRating(product.product_id, ownerKey, star);
     setRatings(getProductRatings(product, ownerKey));
     setHovered(null);
@@ -95,10 +98,12 @@ export function ProductInfoPanel({
   const handleShopClick = () => {
     if (!shop) return;
     onClose();
-    navigate(`/home/market/${shop.shop_id}`);
+    const base = window.location.pathname.startsWith('/market') ? '/market' : '/home/market';
+    navigate(`${base}/${shop.shop_id}`);
   };
 
   const handleAddToCart = () => {
+    if (!requireAuth()) return;
     if (!addToMarketCart(product, 1, variantIndex)) return;
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);

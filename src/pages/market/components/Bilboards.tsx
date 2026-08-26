@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useStore } from "elk-components";
 import { marketStore } from "../demoMarketStore";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
@@ -6,6 +6,7 @@ import { BILLBOARD_AD_COUNT, useBillboardAds, useBillboardPlayer } from "../bill
 import { BillboardVideo } from "./BillboardVideo";
 
 export const Bilboards = () => {
+  const location = useLocation();
   const state = useStore(marketStore);
   const top4RatingShop = state.top4tRatingShops ?? [];
   const shops = state.shops;
@@ -73,7 +74,7 @@ export const Bilboards = () => {
             top4RatingShop.map((shop) => (
               <Link
                 key={shop.product_id}
-                to={`/home/market/${shop.shop_id}`}
+                to={`${location.pathname.startsWith('/market') ? '/market' : '/home/market'}/${shop.shop_id}`}
                 style={{
                   display: "flex",
                   flexDirection: "column",
