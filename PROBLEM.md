@@ -257,3 +257,78 @@ After creating the backend API, the entire frontend market layer was rewritten t
 | `src/pages/market/marketUpload.ts` | `getMyShop()` now matches the full `ownerKey` (e.g., `"org:abc-123-org"`) against `owner_id` in the DB. Removed the prefix-stripping regex `ownerKey.replace(/^user:\|^org:/, "")` that was producing the mismatched value. |
 
 ---
+
+### Bug 9 — Org login bypasses email verification (commented out)
+
+**Symptom:** Organisation members can log in even when the org hasn't been verified via email OTP.
+
+**Root cause:** In `app/services/org_user.py`, the `login_organisation()` function had the verification check commented out (marked `#######################REQUIRED`):
+
+```python
+# if not org or not org.is_verified:
+#     raise HTTPException(...)
+```
+
+**Fix:**
+
+| File | Change |
+|---|---|
+| `app/services/org_user.py` | Uncommented the `org.is_verified` check in `login_organisation()`. Unverified orgs now receive a 403 with "Your organisation has not been verified" message. Email sending was already functional (verified via yagmail + Gmail SMTP). |
+
+---
+
+### Bug 10 — Top 4 rated shops show with any number of shops / any rating
+
+**Symptom:** The "Top 4 Rated Shops" panel shows shops even when there are very few shops or shops with trivially low ratings.
+
+**Root cause:** The backend `top_rated_shops()` in `app/services/market.py` simply queried all shops ordered by rating with no minimum thresholds.
+
+**Fix:**
+
+| File | Change |
+|---|---|
+| `app/services/market.py` | `top_rated_shops()` now requires: (1) at least 10 shops total in the market (`MIN_SHOPS_FOR_TOP_RATED = 10`), (2) each shop must have `rating >= 1000` (`MIN_RATING_FOR_TOP_RATED = 1000`), (3) at least 4 qualifying shops must exist. If any condition fails, returns `[]` so the frontend shows the 2x2 placeholder grid. |
+
+---
+
+### Bug 11 — "Organisation not verified" error shows but doesn't route to verify page
+
+**Symptom:** After uncommenting the org verification check (Bug 9), logging in with an unverified org shows the error message but the user has no way to verify from there.
+
+**Root cause:** The `handleLogin` catch block in `OrganisationAuth.tsx` just displayed the error via `showAlert()` without switching to the verify mode.
+
+**Fix:**
+
+| File | Change |
+|---|---|
+| `src/pages/authentication/OrganisationAuth.tsx` | `handleLogin` now detects the "not been verified" error message. When caught, it sets `pending` with the org name, email, and password from the login form, then switches `mode` to `'verify'`. This shows the OTP verification form with "Enter the 6-digit code sent to [email]". The existing "Resend code" button triggers `api.org.resendVerification()`, and successful verification auto-logs in via `orgLogin()`. |
+
+---
+
+### Bug 12 — Verification code sent to shared business email (security risk)
+
+**Symptom:** The org registration verification code was sent to the `businessEmail` address. Business emails are often shared among employees, meaning anyone with inbox access could intercept the code.
+
+**Root cause:** The registration endpoint in `org_auth.py` used `business_email` for both the organisation record and the OTP email recipient.
+
+**Fix:**
+
+| File | Change |
+|---|---|
+| `app/routers/org_auth.py` | Registration now reads `superAdminEmail` from the request body and stores it on the `OrgMember.email` field (not `businessEmail`). The verification code is sent to `super_admin_email` instead of `business_email`. Added `_get_org_by_member_email()` helper that looks up an org via its member's email. Both `verify-email` and `resend-verification` endpoints now try member-email lookup first, falling back to business-email lookup for backward compatibility. |
+
+---
+
+### Bug 13 — "Invalid email" after org verification when logging in with business email
+
+**Symptom:** After successfully verifying an org, the auto-login step fails with "Invalid email or password" if the user entered the business email (not the super admin email) in the login form.
+
+**Root cause:** `OrgMember.email` stores the super admin's personal email, but users naturally enter the business email when logging in. `login_organisation()` only looked up `OrgMember.email`, so business-email logins always failed.
+
+**Fix:**
+
+| File | Change |
+|---|---|
+| `app/services/org_user.py` | `login_organisation()` now falls back: if no member matches the email directly, it checks `Organisation.business_email` and resolves the super admin member through the org. This means both `admin@gmail.com` (super admin) and `info@company.com` (business) work as login emails. |
+
+---

@@ -97,7 +97,18 @@ export default function OrganisationAuth() {
       setTimeout(() => navigate('/home/dashboard', { replace: true }), 1500)
     } catch (err) {
       setIsLoading(false)
-      showAlert((err as Error).message || 'Organisation login failed', 'invalid')
+      const msg = (err as Error).message || 'Organisation login failed'
+      if (msg.toLowerCase().includes('not been verified')) {
+        setPending({
+          orgName: orgNameRef.current!.value.trim(),
+          email: emailRef.current!.value.trim(),
+          password: passwordRef.current!.value,
+        })
+        setMode('verify')
+        showAlert('Organisation not verified. Enter the code sent to your email.', 'invalid')
+      } else {
+        showAlert(msg, 'invalid')
+      }
     }
   }
 
