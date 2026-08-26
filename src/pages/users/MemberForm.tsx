@@ -33,6 +33,7 @@ type FormProps = {
 
 export function MemberForm({ title, submitLabel, initial, kind, lockRole, onSave, onClose }: FormProps) {
   const [formData, setFormData] = useState<MemberFormData>(() => {
+    if (initial.id) return initial
     if (initial.username && initial.password) return initial
     const cred = generateCredential(initial.name, initial.email)
     return { ...initial, username: cred.username, password: cred.password }

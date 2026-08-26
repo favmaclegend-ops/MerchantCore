@@ -19,6 +19,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const orgSession = getOrgSession();
     if (token) {
       api.getProfile()
         .then(profile => setUser(profile))
@@ -27,6 +28,15 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem('login');
         })
         .finally(() => setLoading(false));
+    } else if (orgSession?.token) {
+      api.org.validateSession()
+        .then(() => setLoading(false))
+        .catch(() => {
+          clearOrgSession();
+          setOrgUser(null);
+          setOrgName(null);
+          setLoading(false);
+        });
     } else {
       queueMicrotask(() => setLoading(false));
     }

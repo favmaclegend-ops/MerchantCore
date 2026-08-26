@@ -400,6 +400,9 @@ export const api = {
   // authenticates with the member JWT stored in the org session and is scoped to
   // that org server-side.
   org: {
+    validateSession: async (): Promise<{ id: string; name: string }> => {
+      return orgRequest<{ id: string; name: string }>('/organisations')
+    },
     register: async (data: OrgRegisterInput) => {
       return anonRequest<{ message: string; org_id: string }>('/auth/org/register', {
         method: 'POST',
@@ -454,7 +457,7 @@ export const api = {
     addUser: async (member: Omit<OrgMember, 'id'>) => {
       const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/members`, {
         method: 'POST',
-        body: JSON.stringify({ email: member.email, role: member.role, jobTitle: member.jobTitle }),
+        body: JSON.stringify({ email: member.email, role: member.role, jobTitle: member.jobTitle, password: member.password || undefined }),
       })
       return memberFromApi(res)
     },
@@ -467,7 +470,7 @@ export const api = {
           body: JSON.stringify({ role: patch.role }),
         })
       }
-      if (patch.name !== undefined || patch.email !== undefined || patch.username !== undefined || patch.phone !== undefined || patch.jobTitle !== undefined) {
+      if (patch.name !== undefined || patch.email !== undefined || patch.username !== undefined || patch.phone !== undefined || patch.jobTitle !== undefined || patch.password !== undefined) {
         last = await orgRequest<Record<string, unknown>>(base, {
           method: 'PATCH',
           body: JSON.stringify({
@@ -476,6 +479,7 @@ export const api = {
             ...(patch.username !== undefined ? { username: patch.username } : {}),
             ...(patch.phone !== undefined ? { phone: patch.phone } : {}),
             ...(patch.jobTitle !== undefined ? { jobTitle: patch.jobTitle } : {}),
+            ...(patch.password ? { password: patch.password } : {}),
           }),
         })
       }

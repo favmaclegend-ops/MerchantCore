@@ -191,18 +191,21 @@ export function clearOrgSession() {
   }
 }
 
-// Re-checks a stored session against the current mock data: if the member no longer
-// exists, was disabled, or was blocked from logging in, the session is cleared so the
-// user is signed out of the platform entirely.
+// Re-checks a stored session: if the session data is present and has valid
+// structure, trust it. Server-side validation happens on mount via a lightweight
+// API call in auth_provider. We no longer cross-reference against local org data
+// (loadOrganisations) since the backend owns all org data.
 export function validateOrgSession(session: OrgSession | null): OrgSession | null {
   if (!session) return null
-  const org = loadOrganisations().find(o => o.id === session.orgId)
-  const member = org?.members.find(m => m.id === session.member.id)
-  if (!org || !member || member.disabled || !member.isActive) {
+  if (!session.orgId || !session.token || !session.member) {
     clearOrgSession()
     return null
   }
-  return { orgId: org.id, orgName: org.name, member, token: session.token }
+  if (session.member.disabled || !session.member.isActive) {
+    clearOrgSession()
+    return null
+  }
+  return session
 }
 
 // ---- Member CRUD against the active organisation -------------------------
