@@ -409,6 +409,7 @@ export const api = {
         body: JSON.stringify({
           name: data.orgName,
           business_email: data.businessEmail,
+          superAdminEmail: data.superAdminEmail,
           username: data.superAdminUsername,
           full_name: data.superAdminName,
           password: data.password,

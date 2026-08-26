@@ -332,3 +332,22 @@ After creating the backend API, the entire frontend market layer was rewritten t
 | `app/services/org_user.py` | `login_organisation()` now falls back: if no member matches the email directly, it checks `Organisation.business_email` and resolves the super admin member through the org. This means both `admin@gmail.com` (super admin) and `info@company.com` (business) work as login emails. |
 
 ---
+
+### Bug 14 — Frontend never sent superAdminEmail to backend / Resend code went to wrong email
+
+**Symptom:** Despite Bug 12's fix to the backend (which now correctly reads `superAdminEmail`), the verification code was still being sent to the business email. After resend, the new code also went to the business email instead of the super admin's personal email.
+
+**Root cause (two issues):**
+
+1. **`src/lib/api.ts` `register()` omitted `superAdminEmail`** — The frontend `OrganisationAuth.tsx` sent `superAdminEmail` in the `OrgRegisterInput`, but `api.org.register()` never included it in the JSON body. The backend received no `superAdminEmail`, so it fell back to `super_admin_email = business_email`, storing the business email as the member email and sending the OTP there.
+
+2. **`resend_org_code` sent code to user-provided email** — The `resend-verification` endpoint sent the new OTP to whatever email the caller provided (often the business email). It should always send to the super admin member's email regardless of which email was used for the resend request.
+
+**Fix:**
+
+| File | Change |
+|---|---|
+| `src/lib/api.ts` | `org.register()` now includes `superAdminEmail: data.superAdminEmail` in the JSON request body |
+| `app/routers/org_auth.py` | `resend_org_code` now looks up the super admin member via `OrgMember.role == "super-admin"` and sends the new OTP to `admin_member.email` instead of the user-provided email. Rate limiting and lookup also keyed to `org.id` instead of `email` |
+
+---
