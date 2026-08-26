@@ -224,3 +224,36 @@ After creating the backend API, the entire frontend market layer was rewritten t
 | `app/models/market.py` | Added `ForeignKey("market_shops.id")` to `MarketProduct.shop_id`. Added `ForeignKey("market_products.id")` to `MarketProductImage.product_id` and `MarketProductVariant.product_id`. |
 
 ---
+
+### Bug 7 — Login screen content hidden when panel overflows viewport
+
+**Symptom:** On the login page (especially the Organisation Registration form with 8 fields), when the panel height exceeds the viewport, the content is clipped at both top and bottom. The user cannot scroll to see the full form.
+
+**Root cause:** The outer container in `default_page.tsx` used `justifyContent: 'center'` on a flex column with `minHeight: '100vh'`. When content overflows, flexbox centers the oversized content relative to the container, pushing the top of the content above the viewport (inaccessible) and the bottom below it. No `overflow-y` was set, so scrolling was disabled.
+
+**Fix:**
+
+| File | Change |
+|---|---|
+| `src/pages/authentication/default_page.tsx` | Removed `justifyContent: 'center'` from the outer container. Added `overflowY: 'auto'` to allow scrolling. Wrapped all children in an inner `<div>` with `margin: 'auto 0'` which achieves the same centering effect when content fits, but allows natural scroll flow when content overflows. Added `maxWidth: '440px'` to the inner wrapper for consistent width. |
+
+---
+
+### Bug 8 — "Create a shop before uploading items" always shows even after creating a shop
+
+**Symptom:** After successfully creating a shop, opening the upload modal still shows "Create a shop before uploading items" instead of the product upload form.
+
+**Root cause:** owner_id mismatch between creation and lookup.
+
+- **Backend stored** `owner_id = member.id` (the OrgMember UUID, e.g., `"abc-123-member"`)
+- **Frontend searched** with `ownerKey = "org:abc-123-org"` (the Organisation ID), stripped prefix → `"abc-123-org"`
+- These are **different UUIDs** — the match in `getMyShop()` always failed
+
+**Fix:**
+
+| File | Change |
+|---|---|
+| `app/routers/market.py` | Added `_owner_key(member)` helper that returns `f"org:{member.org_id}"`. All 5 authenticated endpoints (`create_shop`, `update_shop`, `create_product`, `update_product`, `delete_product`) now pass this as `owner_id` instead of raw `member.id`. This stores the same cross-platform key the frontend uses. |
+| `src/pages/market/marketUpload.ts` | `getMyShop()` now matches the full `ownerKey` (e.g., `"org:abc-123-org"`) against `owner_id` in the DB. Removed the prefix-stripping regex `ownerKey.replace(/^user:\|^org:/, "")` that was producing the mismatched value. |
+
+---

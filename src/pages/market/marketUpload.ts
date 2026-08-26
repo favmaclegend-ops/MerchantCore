@@ -56,8 +56,7 @@ export const getOwnerKey = (
 export const getMyShop = async (ownerKey: string): Promise<MarketShopDraft | undefined> => {
   try {
     const res = await api.market.getShops(undefined, 1, 100);
-    const ownerId = ownerKey.replace(/^user:|^org:/, "");
-    const match = res.shops.find((s: Record<string, unknown>) => String(s.owner_id) === ownerId);
+    const match = res.shops.find((s: Record<string, unknown>) => String(s.owner_id) === ownerKey);
     return match ? { ...adaptShopDraft(match), ownerKey } : undefined;
   } catch {
     return undefined;
