@@ -76,63 +76,65 @@ const skeletonPulse: React.CSSProperties = {
   borderRadius: '8px',
 }
 
-function SkeletonStatCard() {
+const hideScrollbar: React.CSSProperties = { scrollbarWidth: 'none' as const }
+
+function SkeletonStatCard({ pad }: { pad: string }) {
   return (
-    <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', boxShadow: 'var(--shadow-card)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <div style={{ ...skeletonPulse, width: '80px', height: '12px' }} />
-        <div style={{ ...skeletonPulse, width: '14px', height: '14px' }} />
+    <div style={{ background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-default)', padding: pad, boxShadow: 'var(--shadow-card)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+        <div style={{ ...skeletonPulse, width: '70px', height: '10px' }} />
+        <div style={{ ...skeletonPulse, width: '12px', height: '12px' }} />
       </div>
-      <div style={{ ...skeletonPulse, width: '100px', height: '24px', marginBottom: '8px' }} />
-      <div style={{ ...skeletonPulse, width: '120px', height: '10px' }} />
+      <div style={{ ...skeletonPulse, width: '80px', height: '20px', marginBottom: '6px' }} />
+      <div style={{ ...skeletonPulse, width: '100px', height: '8px' }} />
     </div>
   )
 }
 
 function SkeletonChart() {
   return (
-    <div style={{ width: '100%', padding: '16px', background: 'var(--bg-surface)', borderRadius: '16px', boxShadow: 'var(--shadow-card)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <div style={{ ...skeletonPulse, width: '120px', height: '16px' }} />
-        <div style={{ ...skeletonPulse, width: '100px', height: '24px' }} />
+    <div style={{ width: '100%', padding: '14px', background: 'var(--bg-surface)', borderRadius: '14px', boxShadow: 'var(--shadow-card)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div style={{ ...skeletonPulse, width: '110px', height: '14px' }} />
+        <div style={{ ...skeletonPulse, width: '90px', height: '22px' }} />
       </div>
-      <div style={{ ...skeletonPulse, width: '100%', height: '180px' }} />
+      <div style={{ ...skeletonPulse, width: '100%', height: '160px' }} />
     </div>
   )
 }
 
 function SkeletonTxRow() {
   return (
-    <div style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-      <div style={{ ...skeletonPulse, width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0 }} />
-      <div style={{ flex: 1 }}>
-        <div style={{ ...skeletonPulse, width: '140px', height: '12px', marginBottom: '6px' }} />
-        <div style={{ ...skeletonPulse, width: '100px', height: '10px' }} />
+    <div style={{ width: '100%', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ ...skeletonPulse, width: '28px', height: '28px', borderRadius: '8px', flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ ...skeletonPulse, width: '120px', height: '10px', marginBottom: '5px' }} />
+        <div style={{ ...skeletonPulse, width: '90px', height: '8px' }} />
       </div>
-      <div style={{ ...skeletonPulse, width: '80px', height: '12px' }} />
+      <div style={{ ...skeletonPulse, width: '70px', height: '10px', flexShrink: 0 }} />
     </div>
   )
 }
 
 function SkeletonAlerts() {
   return (
-    <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px' }}>
-      <div style={{ ...skeletonPulse, width: '60px', height: '16px', marginBottom: '12px' }} />
-      <div style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--bg-tertiary)', marginBottom: '8px' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-default)', padding: '14px' }}>
+      <div style={{ ...skeletonPulse, width: '50px', height: '14px', marginBottom: '10px' }} />
+      <div style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--bg-tertiary)', marginBottom: '8px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <div style={{ ...skeletonPulse, width: '14px', height: '14px', flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ ...skeletonPulse, width: '100px', height: '10px', marginBottom: '4px' }} />
-            <div style={{ ...skeletonPulse, width: '160px', height: '10px' }} />
+          <div style={{ ...skeletonPulse, width: '12px', height: '12px', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...skeletonPulse, width: '90px', height: '8px', marginBottom: '4px' }} />
+            <div style={{ ...skeletonPulse, width: '140px', height: '8px' }} />
           </div>
         </div>
       </div>
-      <div style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--bg-tertiary)' }}>
+      <div style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--bg-tertiary)' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <div style={{ ...skeletonPulse, width: '14px', height: '14px', flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ ...skeletonPulse, width: '100px', height: '10px', marginBottom: '4px' }} />
-            <div style={{ ...skeletonPulse, width: '160px', height: '10px' }} />
+          <div style={{ ...skeletonPulse, width: '12px', height: '12px', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...skeletonPulse, width: '90px', height: '8px', marginBottom: '4px' }} />
+            <div style={{ ...skeletonPulse, width: '140px', height: '8px' }} />
           </div>
         </div>
       </div>
@@ -146,19 +148,16 @@ export function DashboardPage() {
   const { format } = useContext(CurrencyContext)
   const { user, orgUser } = useContext(Authcontext)
 
-  // Organisation logins fetch the real org dashboard and cache it under its own
-  // key; personal (token-based) logins read the shared `dashboard_cache` instead.
   const isOrg = !!orgUser
 
   const [cacheSnapshot] = useState(() => (isOrg ? loadDashboardCache(ORG_CACHE_KEY) : loadDashboardCache()))
-  //console.log(loadDashboardCache(ORG_CACHE_KEY))
   const [stats, setStats] = useState<DashboardStats>(cacheSnapshot?.stats ?? defaultStats)
   const [revenueMonths, setRevenueMonths] = useState<string[]>(cacheSnapshot?.revenueMonths ?? [])
   const [revenueData, setRevenueData] = useState<number[]>(cacheSnapshot?.revenueData ?? [])
   const [txns, setTxns] = useState<Tx[]>(cacheSnapshot?.txns ?? [])
   const [alertList, setAlertList] = useState<DashboardAlert[]>(cacheSnapshot?.alertList ?? [])
   const [loading, setLoading] = useState(!cacheSnapshot)
-  
+
   const [chartRange, setChartRange] = useState<ChartRange>(() => {
     try {
       const saved = localStorage.getItem(CHART_RANGE_KEY)
@@ -210,17 +209,29 @@ export function DashboardPage() {
 
   const dataBlocked = !!orgUser && orgUser.dataBlocked
 
+  const tiny = bp.xxsm
+  const mobile = bp.sm
+  const cardPad = tiny ? '10px' : mobile ? '12px' : '16px'
+  const gridGap = tiny ? '8px' : '12px'
+  const valFs = tiny ? '15px' : mobile ? '17px' : '20px'
+  const subFs = tiny ? '8px' : '10px'
+  const sectionGap = mobile ? '20px' : '32px'
+
+  const ellipsis: React.CSSProperties = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, minWidth: 0 }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', width: '100%', padding: '0 8px',paddingBlockEnd: '2rem', }}>
-      <div style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-on-dark)', margin: 0 }}>{orgUser?.username || user?.username || 'Dashboard'}</h1>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: sectionGap, width: '100%', padding: '0 8px', paddingBlockEnd: '2rem' }}>
+
+      {/* Welcome banner */}
+      <div style={{ width: '100%', padding: mobile ? '12px' : '16px', borderRadius: '14px', background: '#0f172a' }}>
+        <h1 style={{ fontSize: mobile ? '17px' : '20px', fontWeight: 700, color: 'var(--text-on-dark)', margin: 0, ...ellipsis }}>{orgUser?.username || user?.username || 'Dashboard'}</h1>
+        <p style={{ fontSize: subFs, color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0, ...ellipsis }}>
           {loading ? 'Loading your data...' : "Here's what's happening with MerchantCore today."}
         </p>
       </div>
 
       {dataBlocked ? (
-        <div style={{ width: '100%', padding: '40px 16px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-danger)', textAlign: 'center' }}>
+        <div style={{ width: '100%', padding: '40px 16px', background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-danger)', textAlign: 'center' }}>
           <AlertTriangle style={{ width: '28px', height: '28px', color: 'var(--text-danger)', margin: '0 auto' }} />
           <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: '12px 0 0 0' }}>You have been blocked from seeing this data</p>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', marginBottom: 0 }}>
@@ -229,16 +240,16 @@ export function DashboardPage() {
         </div>
       ) : loading ? (
         <>
-          <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px' }}>
-            <SkeletonStatCard />
-            <SkeletonStatCard />
-            <SkeletonStatCard />
-            <SkeletonStatCard />
+          <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: gridGap }}>
+            <SkeletonStatCard pad={cardPad} />
+            <SkeletonStatCard pad={cardPad} />
+            <SkeletonStatCard pad={cardPad} />
+            <SkeletonStatCard pad={cardPad} />
           </div>
           <SkeletonChart />
           <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? '2fr 1fr' : '1fr', gap: '16px' }}>
-            <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...skeletonPulse, width: '120px', height: '16px', marginBottom: '12px' }} />
+            <div style={{ background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-default)', padding: cardPad, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ ...skeletonPulse, width: '110px', height: '14px', marginBottom: '10px' }} />
               <SkeletonTxRow />
               <SkeletonTxRow />
               <SkeletonTxRow />
@@ -249,56 +260,69 @@ export function DashboardPage() {
         </>
       ) : (
         <>
-          <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '12px'  }}>
-            <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', boxShadow: 'var(--shadow-card)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Revenue</span>
-                <DollarSign style={{ width: '14px', height: '14px', color: 'var(--text-placeholder)' }} />
+          {/* Stat cards */}
+          <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: gridGap }}>
+
+            {/* Total Revenue */}
+            <div style={{ background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-default)', padding: cardPad, boxShadow: 'var(--shadow-card)', minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', marginBottom: '6px' }}>
+                <span style={{ fontSize: subFs, fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', ...ellipsis }}>Total Revenue</span>
+                <DollarSign style={{ width: '12px', height: '12px', color: 'var(--text-placeholder)', flexShrink: 0 }} />
               </div>
-              <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{format(stats.totalRevenue)}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                <ArrowUpRight style={{ width: '14px', height: '14px', color: 'var(--text-success)', flexShrink: 0 }} />
-                <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-success)' }}>{format(stats.monthlyRevenue)} this month</span>
-              </div>
-            </div>
-            <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', boxShadow: 'var(--shadow-card)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Orders</span>
-                <TrendingUp style={{ width: '14px', height: '14px', color: 'var(--text-placeholder)' }} />
-              </div>
-              <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{stats.totalOrders}</p>
-              <div style={{ marginTop: '4px', fontSize: '10px', color: 'var(--text-muted)' }}>
-                <span>{stats.activeCustomers} active customers</span> <span style={{ color: 'var(--text-placeholder)' }}>•</span> <span>{format(stats.avgTicket)} avg ticket</span>
+              <p style={{ fontSize: valFs, fontWeight: 700, color: 'var(--text-primary)', margin: 0, ...ellipsis }}>{format(stats.totalRevenue)}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '4px', minWidth: 0 }}>
+                <ArrowUpRight style={{ width: '12px', height: '12px', color: 'var(--text-success)', flexShrink: 0 }} />
+                <span style={{ fontSize: subFs, fontWeight: 500, color: 'var(--text-success)', ...ellipsis }}>{format(stats.monthlyRevenue)} this month</span>
               </div>
             </div>
-            <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: 'var(--shadow-card)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Inventory</span>
-                <Package style={{ width: '14px', height: '14px', color: 'var(--text-placeholder)' }} />
+
+            {/* Orders */}
+            <div style={{ background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-default)', padding: cardPad, boxShadow: 'var(--shadow-card)', minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', marginBottom: '6px' }}>
+                <span style={{ fontSize: subFs, fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', ...ellipsis }}>Orders</span>
+                <TrendingUp style={{ width: '12px', height: '12px', color: 'var(--text-placeholder)', flexShrink: 0 }} />
               </div>
-              <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{format(stats.inventoryValue)}</p>
-              <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>{stats.totalProducts} products</p>
-            </div>
-            <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: 'var(--shadow-card)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '10px', fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Credit Outstanding</span>
-                <AlertTriangle style={{ width: '14px', height: '14px', color: 'var(--text-warning)' }} />
+              <p style={{ fontSize: valFs, fontWeight: 700, color: 'var(--text-primary)', margin: 0, ...ellipsis }}>{stats.totalOrders}</p>
+              <div style={{ marginTop: '4px', fontSize: subFs, color: 'var(--text-muted)', ...ellipsis }}>
+                <span>{stats.activeCustomers} active</span>
+                <span style={{ color: 'var(--text-placeholder)' }}> · </span>
+                <span>{format(stats.avgTicket)} avg</span>
               </div>
-              <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-warning)', margin: 0 }}>{format(stats.creditOutstanding)}</p>
-              <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>{stats.lowStockAlerts} low stock alerts</p>
             </div>
+
+            {/* Inventory */}
+            <div style={{ background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-default)', padding: cardPad, display: 'flex', flexDirection: 'column', gap: mobile ? '8px' : '12px', boxShadow: 'var(--shadow-card)', minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                <span style={{ fontSize: subFs, fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', ...ellipsis }}>Inventory</span>
+                <Package style={{ width: '12px', height: '12px', color: 'var(--text-placeholder)', flexShrink: 0 }} />
+              </div>
+              <p style={{ fontSize: valFs, fontWeight: 700, color: 'var(--text-primary)', margin: 0, ...ellipsis }}>{format(stats.inventoryValue)}</p>
+              <p style={{ fontSize: subFs, color: 'var(--text-muted)', margin: 0, ...ellipsis }}>{stats.totalProducts} products</p>
+            </div>
+
+            {/* Credit Outstanding */}
+            <div style={{ background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-default)', padding: cardPad, display: 'flex', flexDirection: 'column', gap: mobile ? '8px' : '12px', boxShadow: 'var(--shadow-card)', minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                <span style={{ fontSize: subFs, fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', ...ellipsis }}>Credit</span>
+                <AlertTriangle style={{ width: '12px', height: '12px', color: 'var(--text-warning)', flexShrink: 0 }} />
+              </div>
+              <p style={{ fontSize: valFs, fontWeight: 700, color: 'var(--text-warning)', margin: 0, ...ellipsis }}>{format(stats.creditOutstanding)}</p>
+              <p style={{ fontSize: subFs, color: 'var(--text-muted)', margin: 0, ...ellipsis }}>{stats.lowStockAlerts} low stock</p>
+            </div>
+
           </div>
 
-          <div style={{ width: '100%', padding: '16px', background: 'var(--bg-surface)', borderRadius: '16px', boxShadow: 'var(--shadow-card)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-              <h3 style={{ fontWeight: 700, fontSize: '16px', margin: 0 }}>Revenue Trend</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px', borderRadius: '8px', background: 'var(--bg-tertiary)', overflowX: 'auto', maxWidth: '100%', scrollbarWidth: 'none' }}>
+          {/* Chart */}
+          <div style={{ width: '100%', padding: mobile ? '12px' : '16px', background: 'var(--bg-surface)', borderRadius: '14px', boxShadow: 'var(--shadow-card)', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', minWidth: 0 }}>
+              <h3 style={{ fontWeight: 700, fontSize: mobile ? '14px' : '16px', margin: 0, flexShrink: 0 }}>Revenue Trend</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '3px', borderRadius: '8px', background: 'var(--bg-tertiary)', overflowX: 'auto', maxWidth: '100%', flex: 1, minWidth: 0, ...hideScrollbar }}>
                 {RANGE_OPTIONS.map((r) => (
                   <button
                     key={r.id}
                     onClick={() => handleChartRange(r.id)}
                     style={{
-                      padding: '6px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 500, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                      padding: tiny ? '4px 7px' : '5px 9px', borderRadius: '6px', fontSize: tiny ? '10px' : '11px', fontWeight: 500, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                       color: chartRange === r.id ? 'var(--text-on-dark)' : 'var(--text-muted)',
                       background: chartRange === r.id ? 'var(--bg-nav-active)' : 'transparent',
                     }}
@@ -309,72 +333,77 @@ export function DashboardPage() {
               </div>
             </div>
             {rangeChart.data.length > 0 ? (
-              <DLineChart key={chartRange} datas={rangeChart.data} labels={rangeChart.labels} />
+              <DLineChart key={chartRange} datas={rangeChart.data} labels={rangeChart.labels} mobileHeight={mobile ? 'min(220px, 36vh)' : undefined} />
             ) : (
-              <div style={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '12px' }}>
+              <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '12px' }}>
                 No revenue data yet
               </div>
             )}
           </div>
 
-          <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? '2fr 1fr' : '1fr', gap: '16px' }}>
-            <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--bg-tertiary)' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Recent Transactions</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <button onClick={handleClearTxns} style={{ fontSize: '10px', color: 'var(--text-danger)', background: 'none', border: '1px solid var(--border-danger)', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer', flexShrink: 0 }}>Clear</button>
-                  <button onClick={() => navigate('/home/pos')} style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View All</button>
+          {/* Bottom section: Transactions + Alerts */}
+          <div style={{ width: '100%', display: 'grid', gridTemplateColumns: bp.lg ? '2fr 1fr' : '1fr', gap: '16px', minWidth: 0 }}>
+
+            {/* Recent Transactions */}
+            <div style={{ background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-default)', padding: cardPad, display: 'flex', flexDirection: 'column', gap: mobile ? '10px' : '14px', width: '100%', minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--bg-tertiary)', gap: '8px', minWidth: 0 }}>
+                <h3 style={{ fontSize: mobile ? '14px' : '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, ...ellipsis }}>Recent Transactions</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                  <button onClick={handleClearTxns} style={{ fontSize: subFs, color: 'var(--text-danger)', background: 'none', border: '1px solid var(--border-danger)', borderRadius: '6px', padding: '2px 6px', cursor: 'pointer', flexShrink: 0 }}>Clear</button>
+                  <button onClick={() => navigate('/home/pos')} style={{ fontSize: subFs, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>View All</button>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? '8px' : '12px' }}>
                 {txns.slice(0, 5).map((tx) => (
-                  <div key={tx.id} style={{ width: '100%', padding: '8px 16px', boxShadow: 'var(--shadow-card)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                  <div key={tx.id} style={{ width: '100%', padding: mobile ? '8px 10px' : '8px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 0, overflow: 'hidden', background: 'var(--bg-page)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? '8px' : '10px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
                       <div style={{
-                        width: '32px', height: '32px', borderRadius: '8px', display: 'flex',
+                        width: mobile ? '28px' : '32px', height: mobile ? '28px' : '32px', borderRadius: '8px', display: 'flex',
                         alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                         background: tx.type === 'sale' ? 'var(--bg-success)' : tx.type === 'payment' ? 'var(--bg-info)' : 'var(--bg-warning)',
                         color: tx.type === 'sale' ? 'var(--text-success)' : tx.type === 'payment' ? 'var(--text-info)' : 'var(--text-warning)',
                       }}>
-                        {tx.type === 'sale' || tx.type === 'payment' ? <DollarSign style={{ width: '14px', height: '14px' }} /> : <Package style={{ width: '14px', height: '14px' }} />}
+                        {tx.type === 'sale' || tx.type === 'payment' ? <DollarSign style={{ width: '12px', height: '12px' }} /> : <Package style={{ width: '12px', height: '12px' }} />}
                       </div>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{tx.customer_name || 'Transaction'} #{tx.id}</p>
-                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>{tx.items}{formatTxTime(tx)}</p>
+                      <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                        <p style={{ fontSize: mobile ? '11px' : '12px', fontWeight: 500, color: 'var(--text-primary)', margin: 0, ...ellipsis }}>{tx.customer_name || 'Transaction'} #{tx.id}</p>
+                        <p style={{ fontSize: subFs, color: 'var(--text-muted)', margin: '2px 0 0 0', ...ellipsis }}>{tx.items}{formatTxTime(tx)}</p>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '8px' }}>
-                      <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{format(tx.amount)}</p>
-                      <p style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', color: tx.status === 'completed' ? 'var(--text-success)' : 'var(--text-info)', margin: 0 }}>{tx.status}</p>
+                      <p style={{ fontSize: mobile ? '11px' : '12px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, ...ellipsis }}>{format(tx.amount)}</p>
+                      <p style={{ fontSize: subFs, fontWeight: 600, textTransform: 'uppercase', color: tx.status === 'completed' ? 'var(--text-success)' : 'var(--text-info)', margin: 0, ...ellipsis }}>{tx.status}</p>
                     </div>
                   </div>
                 ))}
-                {txns.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-placeholder)' }}>No transactions yet</p>}
+                {txns.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', textAlign: 'center', padding: '16px 0', margin: 0 }}>No transactions yet</p>}
               </div>
             </div>
 
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', fontSize: '16px', lineHeight: '16px' }}>
+            {/* Alerts */}
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
+              <div style={{ background: 'var(--bg-surface)', borderRadius: '14px', border: '1px solid var(--border-default)', padding: cardPad, display: 'flex', flexDirection: 'column', gap: mobile ? '10px' : '14px', width: '100%', minWidth: 0, overflow: 'hidden' }}>
                 <div style={{ paddingBottom: '8px', borderBottom: '1px solid var(--bg-tertiary)' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Alerts</h3>
+                  <h3 style={{ fontSize: mobile ? '14px' : '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Alerts</h3>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? '8px' : '10px' }}>
                   {alertList.map((alert) => (
                     <div key={alert.id} style={{
-                      padding: '10px', borderRadius: '8px', border: '1px solid',
+                      padding: mobile ? '8px' : '10px', borderRadius: '8px', border: '1px solid',
                       background: alert.type === 'low-stock' ? 'var(--bg-warning)' : alert.type === 'overdue' ? 'var(--bg-danger)' : 'var(--bg-secondary)',
                       borderColor: alert.type === 'low-stock' ? 'var(--border-warning)' : alert.type === 'overdue' ? 'var(--border-danger)' : 'var(--border-default)',
+                      overflow: 'hidden',
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <AlertTriangle style={{ width: '14px', height: '14px', marginTop: '2px', flexShrink: 0, color: alert.type === 'low-stock' ? 'var(--text-warning)' : alert.type === 'overdue' ? 'var(--text-danger)' : undefined }} />
-                        <div style={{ minWidth: 0 }}>
-                          <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{alert.title}</p>
-                          <p style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: 1.3, margin: '2px 0 0 0' }}>{alert.description}</p>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', minWidth: 0 }}>
+                        <AlertTriangle style={{ width: '12px', height: '12px', marginTop: '2px', flexShrink: 0, color: alert.type === 'low-stock' ? 'var(--text-warning)' : alert.type === 'overdue' ? 'var(--text-danger)' : undefined }} />
+                        <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                          <p style={{ fontSize: subFs, fontWeight: 600, color: 'var(--text-primary)', margin: 0, ...ellipsis }}>{alert.title}</p>
+                          <p style={{ fontSize: subFs, color: 'var(--text-secondary)', marginTop: '2px', lineHeight: 1.3, margin: '2px 0 0 0', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{alert.description}</p>
                         </div>
                       </div>
                     </div>
                   ))}
-                  {alertList.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-placeholder)' }}>No alerts</p>}
+                  {alertList.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', textAlign: 'center', padding: '12px 0', margin: 0 }}>No alerts</p>}
                 </div>
               </div>
             </div>
