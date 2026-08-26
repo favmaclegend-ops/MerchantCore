@@ -1,6 +1,7 @@
 import { createStore } from "elk-components";
 
 export interface MarketStoreShop {
+  id?: string;
   shop_id: string;
   shop_name: string;
   owner: string;
@@ -20,6 +21,7 @@ export interface MarketStoreShop {
 }
 
 export interface MarketProductVariant {
+  id?: string;
   image?: string;
   size?: string;
   color?: string;
@@ -27,6 +29,7 @@ export interface MarketProductVariant {
 }
 
 export interface MarketStoreProduct {
+  id?: string;
   group_id: string;
   product_id: string;
   product_name: string;
@@ -59,25 +62,12 @@ export interface MarketStore extends Record<string, unknown> {
   products: MarketStoreProduct[];
   advert?: MarketStoreAdvert[]
   catergories?: string[]
-  
 }
 
-
-
-export const marketData: MarketStore = {
-
-    catergories: [
-        'All', 'Beverages', 'Dairy', 'Electronics', 'Watch', 'Car', 'Perfume', 'Wine'
-    ],
-
+export const marketStore = createStore<MarketStore>({
   shops: {},
-
   top4tRatingShops: [],
-
-  advert: [],
   products: [],
-};
-
-export const marketStore = createStore<MarketStore>(marketData);
-
-
+  advert: [],
+  catergories: ["All"],
+});

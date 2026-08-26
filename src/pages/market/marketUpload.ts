@@ -1,3 +1,4 @@
+import { api } from "@/lib/api";
 import type {
   MarketProductVariant,
   MarketStore,
@@ -5,13 +6,9 @@ import type {
   MarketStoreShop,
 } from "./demoMarketStore";
 
-// User-owned market shops and uploaded items are kept in localStorage (like the other
-// `merchant_*` mock stores) so they survive reloads. `mergeUserMarketData` folds them into
-// the seeded market data so the market hub, shop pages and billboards see them too.
-// When a real backend ships, these become `POST /market/shops`, `POST /market/items`, etc.
+// All shop/product CRUD now goes through the backend market API.
+// localStorage fallbacks have been removed — the backend owns the data.
 
-const USER_SHOPS_KEY = "mc_market_user_shops";
-const USER_PRODUCTS_KEY = "mc_market_user_products";
 export const DEFAULT_SHOP_IMAGE = "/img1.png";
 
 export interface PosSourceProduct {
@@ -45,33 +42,7 @@ export interface MarketShopDraft extends MarketStoreShop {
   ownerKey: string;
 }
 
-function readStore<T>(key: string): T[] {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as T[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeStore<T>(key: string, value: T[]) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // storage unavailable (blocked/quota) — best effort, do not throw
-  }
-}
-
-export const loadUserShops = (): MarketShopDraft[] =>
-  readStore<MarketShopDraft>(USER_SHOPS_KEY);
-
-export const loadUserProducts = (): UploadedMarketProduct[] =>
-  readStore<UploadedMarketProduct>(USER_PRODUCTS_KEY);
-
-// Personal logins own a shop as `user:<id>`, organisation members share `org:<orgId>` so
-// every member of the org can manage the same shop.
+// Owner key: personal logins own a shop as `user:<id>`, org members share `org:<orgId>`.
 export const getOwnerKey = (
   user?: { id?: string; email?: string } | null,
   orgUser?: { id?: string; email?: string } | null,
@@ -81,103 +52,105 @@ export const getOwnerKey = (
   return `user:${user?.id ?? user?.email ?? "guest"}`;
 };
 
-export const getMyShop = (ownerKey: string): MarketShopDraft | undefined =>
-  loadUserShops().find((shop) => shop.ownerKey === ownerKey);
-
-// Updates one of YOUR shop's images (only shops created by this account are stored in
-// localStorage, so seeded demo shops are left untouched). Returns the updated shop or
-// undefined when no owned shop matches the owner key.
-const setShopImage = (
-  ownerKey: string,
-  imageUrl: string,
-  field: "shopProfileImage" | "shopProfileImagebg",
-): MarketShopDraft | undefined => {
-  const next = imageUrl?.trim();
-  if (!next) return undefined;
-  const shops = loadUserShops();
-  const shop = shops.find((s) => s.ownerKey === ownerKey);
-  if (!shop) return undefined;
-  shop[field] = next;
-  writeStore(USER_SHOPS_KEY, shops);
-  return shop;
+// Fetch the current user's shop from the backend (matched by owner_id).
+export const getMyShop = async (ownerKey: string): Promise<MarketShopDraft | undefined> => {
+  try {
+    const res = await api.market.getShops(undefined, 1, 100);
+    const ownerId = ownerKey.replace(/^user:|^org:/, "");
+    const match = res.shops.find((s: Record<string, unknown>) => String(s.owner_id) === ownerId);
+    return match ? { ...adaptShopDraft(match), ownerKey } : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
-export const updateShopProfileImage = (
-  ownerKey: string,
-  imageUrl: string,
-): MarketShopDraft | undefined => setShopImage(ownerKey, imageUrl, "shopProfileImage");
+function adaptShopDraft(raw: Record<string, unknown>): MarketShopDraft {
+  return {
+    id: String(raw.id ?? ""),
+    shop_id: String(raw.id ?? ""),
+    shop_name: String(raw.shop_name ?? ""),
+    owner: String(raw.owner_name ?? raw.owner_id ?? ""),
+    product_id: String(raw.id ?? ""),
+    shopProfileImage: raw.profile_image ? String(raw.profile_image) : undefined,
+    shopProfileImagebg: raw.background_image ? String(raw.background_image) : undefined,
+    rating: raw.rating != null ? String(raw.rating) : undefined,
+    description: raw.description ? String(raw.description) : undefined,
+    createdAt: raw.created_at ? String(raw.created_at) : undefined,
+    ownerKey: "",
+  };
+}
 
-// Updates the banner behind the round profile image so it can be a different picture
-// from the avatar itself.
-export const updateShopProfileBackground = (
-  ownerKey: string,
-  imageUrl: string,
-): MarketShopDraft | undefined => setShopImage(ownerKey, imageUrl, "shopProfileImagebg");
-
-export const createMarketShop = (
+// Create a new shop on the backend.
+export const createMarketShop = async (
   ownerKey: string,
   input: MarketShopInput,
-): MarketShopDraft => {
-  const slug =
-    input.shop_name
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "") || "shop";
-  const stamp = Date.now();
-  const shop: MarketShopDraft = {
-    shop_id: `mc_${slug}@${stamp}`,
+): Promise<MarketShopDraft> => {
+  const res = await api.market.createShop({
     shop_name: input.shop_name.trim(),
-    owner: input.owner?.trim() || "Shop Owner",
-    product_id: `mc_${slug}_products@${stamp}`,
-    shopProfileImage: input.shopProfileImage?.trim() || DEFAULT_SHOP_IMAGE,
-    shopProfileImagebg: "",
-    rating: "0",
-    description: input.description?.trim() || "",
-    createdAt: new Date().toISOString().slice(0, 10),
-    location:
-      input.address?.trim() || input.city?.trim()
-        ? {
-            lat: Number.isFinite(input.lat) ? (input.lat as number) : 0,
-            lng: Number.isFinite(input.lng) ? (input.lng as number) : 0,
-            address: input.address?.trim() || "",
-            city: input.city?.trim(),
-          }
-        : undefined,
-    ownerKey,
-  };
-  const shops = loadUserShops();
-  shops.push(shop);
-  writeStore(USER_SHOPS_KEY, shops);
-  return shop;
+    description: input.description?.trim() || null,
+    profile_image: input.shopProfileImage?.trim() || null,
+    address: input.address?.trim() || null,
+    city: input.city?.trim() || null,
+    lat: input.lat ?? null,
+    lng: input.lng ?? null,
+  });
+  return { ...adaptShopDraft(res), ownerKey };
 };
 
-export const getUploadedSourceIds = (ownerKey: string): string[] =>
-  loadUserProducts()
-    .filter((product) => product.ownerKey === ownerKey)
-    .map((product) => product.sourceId);
-
-// Removes one of YOUR uploaded products from the market (matched by ownerKey + the
-// inventory source id). Other shops' products and the seeded demo items are never touched.
-export const removeProductFromMarket = (
+// Update shop profile/background image via PATCH.
+const setShopImage = async (
   ownerKey: string,
-  sourceId: string,
-): boolean => {
-  const products = loadUserProducts();
-  const remaining = products.filter(
-    (product) => !(product.ownerKey === ownerKey && product.sourceId === sourceId),
-  );
-  if (remaining.length === products.length) return false;
-  writeStore(USER_PRODUCTS_KEY, remaining);
-  return true;
+  imageUrl: string,
+  field: "profile_image" | "background_image",
+): Promise<MarketShopDraft | undefined> => {
+  const next = imageUrl?.trim();
+  if (!next) return undefined;
+  const shop = await getMyShop(ownerKey);
+  if (!shop?.id) return undefined;
+  await api.market.updateShop(shop.id, { [field]: next });
+  return { ...shop, [field === "profile_image" ? "shopProfileImage" : "shopProfileImagebg"]: next };
 };
 
-// Propagates inventory edits (name / price / stock / category / image) to the uploaded
-// market copy so the marketplace always mirrors the inventory. Product ratings are left
-// alone — they are earned only through the market's rate button, not the inventory form.
-export const updateMarketProductFromInventory = (
+export const updateShopProfileImage = async (
   ownerKey: string,
-  sourceId: string,
+  imageUrl: string,
+): Promise<MarketShopDraft | undefined> => setShopImage(ownerKey, imageUrl, "profile_image");
+
+export const updateShopProfileBackground = async (
+  ownerKey: string,
+  imageUrl: string,
+): Promise<MarketShopDraft | undefined> => setShopImage(ownerKey, imageUrl, "background_image");
+
+// Get source IDs of products already uploaded to the market by this owner.
+export const getUploadedSourceIds = async (ownerKey: string): Promise<string[]> => {
+  try {
+    const shop = await getMyShop(ownerKey);
+    if (!shop?.id) return [];
+    const res = await api.market.getShop(shop.id);
+    const products = Array.isArray(res.products) ? res.products : [];
+    return products.map((p: Record<string, unknown>) => String(p.source_id ?? ""));
+  } catch {
+    return [];
+  }
+};
+
+// Remove a product from the market by its backend product id.
+export const removeProductFromMarket = async (
+  _ownerKey: string,
+  productId: string,
+): Promise<boolean> => {
+  try {
+    await api.market.deleteProduct(productId);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Sync inventory edits to the market product on the backend.
+export const updateMarketProductFromInventory = async (
+  _ownerKey: string,
+  productId: string,
   changes: {
     name: string;
     price: number;
@@ -185,20 +158,19 @@ export const updateMarketProductFromInventory = (
     category: string;
     image?: string;
   },
-): boolean => {
-  const products = loadUserProducts();
-  let updated = false;
-  for (const product of products) {
-    if (product.ownerKey !== ownerKey || product.sourceId !== sourceId) continue;
-    product.product_name = changes.name;
-    product.product_price = String(changes.price);
-    product.inStock = changes.stock > 0;
-    product.category = changes.category?.trim() || "General";
-    product.productImageUrl = changes.image?.trim() || undefined;
-    updated = true;
+): Promise<boolean> => {
+  try {
+    await api.market.updateProduct(productId, {
+      name: changes.name,
+      price: changes.price,
+      in_stock: changes.stock > 0,
+      category: changes.category?.trim() || "General",
+      image_url: changes.image?.trim() || null,
+    });
+    return true;
+  } catch {
+    return false;
   }
-  if (updated) writeStore(USER_PRODUCTS_KEY, products);
-  return updated;
 };
 
 const sanitizeVariants = (
@@ -213,12 +185,13 @@ const sanitizeVariants = (
     }))
     .filter((v) => !!(v.image || v.size || v.color || v.shape));
 
-export const uploadProductsToShop = (
+// Upload products from inventory to the market via the backend.
+export const uploadProductsToShop = async (
   ownerKey: string,
   sourceProducts: PosSourceProduct[],
-): UploadedMarketProduct[] => {
-  const shop = getMyShop(ownerKey);
-  if (!shop) throw new Error("Create a shop before uploading items");
+): Promise<UploadedMarketProduct[]> => {
+  const shop = await getMyShop(ownerKey);
+  if (!shop?.id) throw new Error("Create a shop before uploading items");
   const withoutImage = sourceProducts.filter((p) => !p.image?.trim());
   if (withoutImage.length > 0) {
     const names = withoutImage.map((p) => `"${p.name}"`).join(", ");
@@ -226,46 +199,48 @@ export const uploadProductsToShop = (
       `Sorry, please select an image for the following product${withoutImage.length === 1 ? "" : "s"} before uploading: ${names}`,
     );
   }
-  const existingIds = new Set(getUploadedSourceIds(ownerKey));
-  const products = loadUserProducts();
+
+  // Deduplicate against already-uploaded source IDs.
+  const existingIds = new Set(await getUploadedSourceIds(ownerKey));
   const added: UploadedMarketProduct[] = [];
-  sourceProducts.forEach((source, index) => {
-    if (existingIds.has(source.id)) return;
-    const product: UploadedMarketProduct = {
+
+  for (let i = 0; i < sourceProducts.length; i++) {
+    const source = sourceProducts[i];
+    if (existingIds.has(source.id)) continue;
+
+    const res = await api.market.createProduct(shop.id, {
+      name: source.name,
+      price: source.price,
+      category: source.category?.trim() || "General",
+      in_stock: source.stock > 0,
+      image_url: source.image?.trim() || null,
+      keywords: [source.name.toLowerCase()],
+      source_id: source.id,
+      variants: source.variants ? sanitizeVariants(source.variants) : [],
+    });
+
+    added.push({
       ownerKey,
       sourceId: source.id,
-      group_id: shop.product_id,
-      product_id: `mc_up_${Date.now()}_${index}`,
-      product_name: source.name,
-      product_rating: String(source.rating ?? 0),
+      id: String(res.id ?? ""),
+      group_id: shop.id,
+      product_id: String(res.id ?? ""),
+      product_name: String(res.name ?? source.name),
+      product_rating: "0",
       inStock: source.stock > 0,
       shop_name: shop.shop_name,
-      product_price: String(source.price),
-      category: source.category?.trim() || "General",
-      keywords: [source.name.toLowerCase()],
-      productImageUrl: source.image?.trim() || undefined,
-      variants: source.variants
-        ? sanitizeVariants(source.variants)
-        : undefined,
-      uploadedAt: new Date().toISOString().slice(0, 10),
-    };
-    products.push(product);
-    added.push(product);
+      product_price: String(res.price ?? source.price),
+      category: String(res.category ?? source.category ?? "General"),
+      keywords: Array.isArray(res.keywords) ? res.keywords.map(String) : [source.name.toLowerCase()],
+      productImageUrl: res.image_url ? String(res.image_url) : undefined,
+    });
+
     existingIds.add(source.id);
-  });
-  writeStore(USER_PRODUCTS_KEY, products);
+  }
+
   return added;
 };
 
-export const mergeUserMarketData = (base: MarketStore): MarketStore => {
-  const userShops = loadUserShops();
-  const userProducts = loadUserProducts();
-  if (userShops.length === 0 && userProducts.length === 0) return base;
-  const shops: Record<string, MarketStoreShop> = { ...base.shops };
-  for (const shop of userShops) shops[shop.shop_id] = shop;
-  return {
-    ...base,
-    shops,
-    products: [...base.products, ...userProducts],
-  };
-};
+// Fold user shops/products into a base MarketStore — kept for compat with components
+// that still merge at render time.
+export const mergeUserMarketData = (base: MarketStore): MarketStore => base;

@@ -89,3 +89,138 @@ Three interconnected issues:
 | `src/context/auth_provider.tsx:20-33` | Added org session server-side validation on mount via `api.org.validateSession()` |
 | `src/lib/api.ts:402-405` | Added `org.validateSession()` that calls `GET /organisations` to verify token |
 | `app/config.py:22-23` | `TOKEN_EXPIRE_MINUTES` changed from `1440` (24h) to `10080` (7 days) |
+
+---
+
+## Bug 4: Market Billboard Has No Default Ads and No Empty State (Medium)
+
+### Problem
+The market billboard ads array was initialized as empty (`advert: []`), causing the billboard to render nothing when no ads existed. Additionally, the top 4 rated shops section only rendered when shops existed — when empty, the entire right-side grid was hidden with no indication of what it was for.
+
+### Root Cause
+- `src/pages/market/demoMarketStore.ts:77` - `advert: []` initialized with no default ads
+- `src/pages/market/demoMarketStore.ts:75` - `top4tRatingShops: []` initialized empty
+- `src/pages/market/components/Bilboards.tsx:42` - `top4RatingShop.length > 0 && bp.xsm &&` condition hid the entire grid when no shops existed, leaving blank space with no explanation
+- `src/pages/market/components/Bilboards.tsx:37-39` - `{current && <BillboardVideo />}` rendered nothing when no ads existed
+
+### Note: Backend Does Not Handle Market
+The entire market system (shops, products, ads, billboards, cart, checkout, ratings) is **100% client-side**. The backend (`MerchantCore-API`) has zero market/shop/store/ads/billboard endpoints. All data lives in localStorage and zustand stores. The only "reviews" in the backend are HRM employee performance reviews, not product/customer reviews.
+
+### Fix
+**Files changed:**
+- `src/pages/market/demoMarketStore.ts:67-79` - Added 3 default ads (`DEFAULT_ADVERTS`) with SVG data-URI gradient images and descriptive titles ("Welcome to Merchant Core Market", "Start Selling Today", "Explore Top Products"). The `advert` array now defaults to these instead of empty.
+- `src/pages/market/components/Bilboards.tsx:37-50` - Billboard container now shows a styled "No ads available yet" placeholder with a megaphone emoji when `current` is undefined, instead of rendering nothing.
+- `src/pages/market/components/Bilboards.tsx:42-110` - Top 4 rated shops section now always renders on large screens (`bp.xsm`). When `top4RatingShop` is empty, it shows 4 placeholder cards with dashed borders and "No top rated shops yet" text instead of hiding the grid entirely.
+
+---
+
+## Summary of All Changed Files (Bug 4)
+
+| File | Change |
+|---|---|
+| `src/pages/market/demoMarketStore.ts:67-79` | Added 3 default SVG ads to `DEFAULT_ADVERTS`, set `advert` default |
+| `src/pages/market/components/Bilboards.tsx:37-50` | Added "No ads available yet" fallback when billboard has no ads |
+| `src/pages/market/components/Bilboards.tsx:42-110` | Top 4 shops grid always renders; shows "No top rated shops yet" placeholders when empty |
+
+---
+
+## Bug 5: Market System Was 100% Client-Side (Critical)
+
+### Problem
+The entire market system (shops, products, ads, billboards, cart, ratings, categories) was implemented entirely client-side using localStorage and zustand stores. No backend endpoints existed for market data. This meant:
+- Data was not cross-platform (tied to a single browser's localStorage)
+- No API for mobile/desktop clients to consume
+- Data lost on cache clear or different device
+- No server-side validation or persistence
+
+### Root Cause
+The backend (`MerchantCore-API`) had zero market/shop/store/ads/billboard endpoints. The only "reviews" in the backend were HRM employee performance reviews, not product/customer reviews.
+
+### Fix — Separate Market Database + Full API
+Created a completely separate `merchant_market` database with its own engine, session, and Base, plus a full REST API.
+
+**New files created:**
+
+| File | Purpose |
+|---|---|
+| `app/db/market_session.py` | Separate SQLAlchemy engine, session factory, `MarketBase`, and `get_market_db()` dependency for the `merchant_market` database |
+| `app/models/market.py` | 6 models: `MarketShop`, `MarketProduct`, `MarketProductImage`, `MarketProductVariant`, `MarketAdvert`, `MarketCategory` — all using `MarketBase` |
+| `app/services/market.py` | Full business logic: serialisers, public read helpers (list shops, get shop, list products, get product, list adverts, list categories, top rated shops), and authenticated write helpers (create/update shop, create/update/delete product) with ownership checks |
+| `app/routers/market.py` | 10 endpoints — 7 public (browsing) + 3 authenticated (shop management) |
+
+**Existing files modified:**
+
+| File | Change |
+|---|---|
+| `app/config.py` | Added `MARKET_DATABASE_URL` setting + `sqlalchemy_market_database_url` computed property |
+| `.env` / `.env.example` | Added `MARKET_DATABASE_URL=mysql+pymysql://root@localhost:3306/merchant_market` |
+| `app/models/__init__.py` | Added market model imports for SQLAlchemy registration |
+| `app/main.py` | Imported market models + router, mounted at `/api/v1`, added market DB auto-creation on startup |
+
+**API Endpoints:**
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/market/shops` | No | List shops (search, pagination) |
+| `GET` | `/api/v1/market/shops/{id}` | No | Get shop + its products |
+| `GET` | `/api/v1/market/products` | No | List products (category, search, pagination) |
+| `GET` | `/api/v1/market/products/{id}` | No | Get product + images + variants |
+| `GET` | `/api/v1/market/advert` | No | List active billboard ads |
+| `GET` | `/api/v1/market/categories` | No | List categories (falls back to defaults if empty) |
+| `GET` | `/api/v1/market/top-rated` | No | Top N rated shops (default 4) |
+| `POST` | `/api/v1/market/shops` | Yes | Create a shop |
+| `PATCH` | `/api/v1/market/shops/{id}` | Yes | Update shop (owner only) |
+| `POST` | `/api/v1/market/shops/{id}/products` | Yes | Add product to shop (owner only) |
+| `PATCH` | `/api/v1/market/products/{id}` | Yes | Update product (owner only) |
+| `DELETE` | `/api/v1/market/products/{id}` | Yes | Delete product (owner only) |
+
+### Fix — Frontend Integration with Market Backend
+
+After creating the backend API, the entire frontend market layer was rewritten to use the backend instead of localStorage/mock data.
+
+**Files modified:**
+
+| File | Change |
+|---|---|
+| `src/lib/api.ts` | Added `api.market` namespace with 12 methods: 7 public browsing (getShops, getShop, getProducts, getProduct, getAdverts, getCategories, getTopRated) and 5 authenticated management (createShop, updateShop, createProduct, updateProduct, deleteProduct). Placed at top-level alongside `api.org`. |
+| `src/pages/market/demoMarketStore.ts` | Added optional `id` field to `MarketStoreShop`, `MarketStoreProduct`, and `MarketProductVariant` types for backend ID tracking. Removed `DEFAULT_ADVERTS` — ads now come from the backend. |
+| `src/pages/market/marketApi.ts` | Replaced mock delay/clone pattern with real `api.market.*` calls. Added `adaptShop`, `adaptProduct`, `adaptAdvert` mappers that convert backend snake_case responses to frontend camelCase types. `fetchMarketData` now fetches all data in parallel via `Promise.all`. Removed `mergeUserMarketData` dependency — store is populated entirely from backend. |
+| `src/pages/market/marketUpload.ts` | Replaced all localStorage CRUD (`loadUserShops`, `loadUserProducts`, `writeStore`) with backend API calls. `createMarketShop` → `POST /market/shops`. `uploadProductsToShop` → `POST /market/shops/{id}/products`. `removeProductFromMarket` → `DELETE /market/products/{id}`. `getMyShop` fetches all shops and matches by `owner_id`. All functions are now `async`. |
+| `src/pages/market/useShopOwner.ts` | Changed `getMyShop` call to async `useEffect` — shop state is loaded from backend on mount instead of synchronously from localStorage. |
+| `src/pages/market/useMarketData.ts` | No changes needed — already called `fetchMarketData` which was updated to use backend. |
+| `src/pages/market/randomSlectedProduct.ts` | Removed module-load-time store access (`const product = marketStore.getState().products` at top level). `getProductsByChunck` and `getRandomProduct` now read from the store lazily at call time. |
+| `src/pages/market/components/UploadToShopModal.tsx` | Made `UploadToShopModal`, `CreateShopForm`, and `UploadItemsForm` fully async. `getMyShop`, `getUploadedSourceIds`, `uploadProductsToShop`, `removeProductFromMarket` are all awaited. State initialization uses `useEffect` for async data loading. |
+| `src/pages/market/ShopPage.tsx` | Made `EditShopImageModal.save` async to await `updateShopProfileImage`/`updateShopProfileBackground` before calling `syncUserMarketData`. |
+| `src/pages/inventory/InventoryPage.tsx` | Replaced sync `getMyShop`/`getUploadedSourceIds`/`removeProductFromMarket` with async equivalents. Added `useEffect` to load shop ID and uploaded IDs on mount. Made `handleRemoveFromMarket` and market sync in `handleSave` async. |
+| `src/pages/supply/InventoryTracking.tsx` | Same pattern as InventoryPage — async `useEffect` for initial data load, async `removeFromMarket` and `updateMarketProductFromInventory` calls. Added `useEffect` import. |
+| `src/pages/users/data.ts` | Added optional `id` field to `MemberFormData` type (pre-existing bug fix — `MemberForm.tsx` checked `initial.id` but the type lacked it). |
+
+**Key architecture decisions:**
+- Public browsing endpoints use `anonRequest` (no auth) so any client can browse
+- Authenticated endpoints use `orgRequest` with the org member JWT
+- Backend returns snake_case; frontend adapters map to camelCase types
+- `getMyShop` matches by `owner_id` extracted from the `ownerKey` pattern
+- Checkout/orders remain client-side (no order backend endpoint yet)
+- Product ratings remain localStorage-based (no rating backend endpoint yet)
+
+---
+
+### Bug 6 — Server crashes: MySQL connection refused + Market models missing foreign keys
+
+**Symptom:** `sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1045, "Access denied for user 'root'@'localhost' (using password: NO)")` — server fails to start. After switching to SQLite, all market endpoints returned `500 Internal Server Error` due to `sqlalchemy.exc.NoForeignKeysError`.
+
+**Root causes (two separate issues):**
+1. `.env` had `MARKET_DATABASE_URL=mysql+pymysql://root@localhost:3306/merchant_market` but MySQL isn't running/accessible on this machine. The config defaults to SQLite but the env override forced MySQL.
+2. Market models (`MarketShop`, `MarketProduct`, `MarketProductImage`, `MarketProductVariant`) used `relationship()` declarations but their foreign key columns (`shop_id`, `product_id`) lacked `ForeignKey` constraints. SQLAlchemy needs explicit `ForeignKey` to determine join conditions for relationships.
+
+**Fixes:**
+
+| File | Change |
+|---|---|
+| `.env` | Changed `MARKET_DATABASE_URL` to `sqlite:///./market.db` |
+| `.env.example` | Changed defaults to SQLite, commented out MySQL examples |
+| `app/db/session.py` | Added SQLite fallback — if configured URL fails to connect, auto-falls back to `./app.db`. Added `make_url()` driver detection for MySQL-specific `connect_args`. |
+| `app/db/market_session.py` | Same fallback pattern — if configured URL fails, falls back to `./market.db` |
+| `app/models/market.py` | Added `ForeignKey("market_shops.id")` to `MarketProduct.shop_id`. Added `ForeignKey("market_products.id")` to `MarketProductImage.product_id` and `MarketProductVariant.product_id`. |
+
+---

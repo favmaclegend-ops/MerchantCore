@@ -219,15 +219,15 @@ function EditShopImageModal({
         e.target.value = "";
     };
 
-    const save = () => {
+    const save = async () => {
         if (!url.trim()) {
             setError("Please provide an image URL or select a file.");
             return;
         }
         if (target === "background") {
-            updateShopProfileBackground(ownerKey, url.trim());
+            await updateShopProfileBackground(ownerKey, url.trim());
         } else {
-            updateShopProfileImage(ownerKey, url.trim());
+            await updateShopProfileImage(ownerKey, url.trim());
         }
         syncUserMarketData();
         onClose();

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Plus, Edit2, Trash2, Search, Lock, Package, Store } from 'lucide-react'
 import { api } from '@/lib/api'
 import { canEditInventory } from '@/lib/orgAccess'
@@ -28,10 +28,12 @@ const emptyProductForm: ProductForm = { name: '', sku: '', category: '', price: 
 export function InventoryTracking({ products, reload, notify, orgUser }: { products: OrgProduct[]; reload: () => void; notify: (msg: string) => void; orgUser: OrgMember }) {
   const canEdit = canEditInventory(orgUser)
   const { ownerKey } = useShopOwner()
-  const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(
-    () => new Set(getUploadedSourceIds(ownerKey)),
-  )
+  const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(new Set())
   const [query, setQuery] = useState('')
+
+  useEffect(() => {
+    getUploadedSourceIds(ownerKey).then(ids => setUploadedSourceIds(new Set(ids)))
+  }, [ownerKey])
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<OrgProduct | null>(null)
   const [form, setForm] = useState<ProductForm>(emptyProductForm)
@@ -93,7 +95,7 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
       if (editing) {
         await api.org.updateProduct(editing.id, payload)
         if (uploadedSourceIds.has(editing.id)) {
-          updateMarketProductFromInventory(ownerKey, editing.id, {
+          await updateMarketProductFromInventory(ownerKey, editing.id, {
             name: payload.name,
             price: payload.price,
             stock: payload.stock,
@@ -116,11 +118,12 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
     }
   }
 
-  const removeFromMarket = (product: OrgProduct) => {
+  const removeFromMarket = async (product: OrgProduct) => {
     if (!window.confirm(`Remove ${product.name} from the market? It stays in your inventory.`)) return
-    if (removeProductFromMarket(ownerKey, product.id)) {
+    if (await removeProductFromMarket(ownerKey, product.id)) {
       syncUserMarketData()
-      setUploadedSourceIds(new Set(getUploadedSourceIds(ownerKey)))
+      const ids = await getUploadedSourceIds(ownerKey)
+      setUploadedSourceIds(new Set(ids))
       notify(`${product.name} removed from the market`)
     }
   }

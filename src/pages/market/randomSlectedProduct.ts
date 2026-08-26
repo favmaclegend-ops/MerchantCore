@@ -1,41 +1,24 @@
 import { marketStore, type MarketStoreProduct } from "./demoMarketStore";
 
-const product = marketStore.getState().products;
-const productLength = product.length;
-const nestedArray: MarketStoreProduct[][] = [];
-const alreadyGetProduct: MarketStoreProduct[] = [];
-let incrementArray: MarketStoreProduct[] = [];
-
-for (let i = 0; i < productLength; i++) {
-  const randomProduct = product.filter((x) => !alreadyGetProduct.includes(x));
-  const randSelection = Math.floor(Math.random() * randomProduct.length);
-  incrementArray.push(randomProduct[randSelection]);
-  alreadyGetProduct.push(randomProduct[randSelection]);
-
-  if (i % 10 == 0 && i !== 0) {
-    nestedArray.push(incrementArray);
-    incrementArray = [];
-    continue;
-  }
-}
-export const getRandomProduct = () => {
-  return nestedArray[0];
-};
-
 interface Chunck {
   size?: number;
   start?: number;
   end?: number;
 }
 
+export const getRandomProduct = (): MarketStoreProduct[] | undefined => {
+  const products = marketStore.getState().products;
+  if (products.length === 0) return undefined;
+  const shuffled = [...products].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 10);
+};
 
 export const getProductsByChunck = async ({
   start,
   end,
 }: Chunck): Promise<MarketStoreProduct[]> => {
   const store = marketStore.getState().products;
-  const product = store?.slice(start, end);
+  const product = store?.slice(start ?? 0, end ?? store.length);
   const resolveProduct = await Promise.resolve(product);
-  
   return resolveProduct;
 };

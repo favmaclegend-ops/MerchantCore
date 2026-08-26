@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Authcontext } from "@/context/auth_context";
 import { getOrgSession } from "@/data/organisations";
 import type { MarketStoreProduct, MarketStoreShop } from "./demoMarketStore";
@@ -15,11 +15,19 @@ export function useShopOwner(): ShopOwnerInfo {
   const { user, orgUser } = useContext(Authcontext);
   const orgId = getOrgSession()?.orgId ?? null;
   const ownerKey = getOwnerKey(user, orgUser, orgId);
-  const shop = getMyShop(ownerKey) ?? null;
-  // Uploaded products carry the uploader's ownerKey, so we can tell which market items
-  // came from this account's inventory (org members share one `org:<id>` owner key).
+  const [shop, setShop] = useState<MarketStoreShop | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    getMyShop(ownerKey).then((s) => {
+      if (active) setShop(s ?? null);
+    });
+    return () => { active = false; };
+  }, [ownerKey]);
+
   const isMyInventoryProduct = (product: MarketStoreProduct) =>
     product.ownerKey === ownerKey;
+
   return {
     ownerKey,
     shop,

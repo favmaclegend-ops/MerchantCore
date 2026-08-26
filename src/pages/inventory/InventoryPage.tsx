@@ -60,13 +60,19 @@ export function InventoryPage() {
   const [editItem, setEditItem] = useState<Product | null>(null)
   const [formData, setFormData] = useState({ name: '', sku: '', price: '', stock: '', category: '', image: '' })
   const [formError, setFormError] = useState('')
-  const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(
-    () => new Set(getUploadedSourceIds(ownerKey)),
-  )
+  const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(new Set())
   const [marketMsg, setMarketMsg] = useState('')
-  const shopId = getMyShop(ownerKey)?.shop_id
-  const refreshUploaded = () =>
-    setUploadedSourceIds(new Set(getUploadedSourceIds(ownerKey)))
+  const [shopId, setShopId] = useState<string | undefined>(undefined)
+
+  const refreshUploaded = async () => {
+    const ids = await getUploadedSourceIds(ownerKey)
+    setUploadedSourceIds(new Set(ids))
+  }
+
+  useEffect(() => {
+    getMyShop(ownerKey).then(s => setShopId(s?.shop_id))
+    refreshUploaded()
+  }, [ownerKey])
 
   useEffect(() => {
     productsApi.getProducts().then(p => setItems(normalizeProducts(p))).catch(() => {})
@@ -121,7 +127,7 @@ export function InventoryPage() {
     if (editItem) {
       await productsApi.updateProduct(editItem.id, payload)
       if (uploadedSourceIds.has(editItem.id)) {
-        updateMarketProductFromInventory(ownerKey, editItem.id, {
+        await updateMarketProductFromInventory(ownerKey, editItem.id, {
           name: payload.name,
           price: payload.price,
           stock: payload.stock,
@@ -137,11 +143,11 @@ export function InventoryPage() {
     loadItems()
   }
 
-  const handleRemoveFromMarket = (product: Product) => {
+  const handleRemoveFromMarket = async (product: Product) => {
     if (!window.confirm(`Remove "${product.name}" from the market? It stays in your inventory.`)) return
-    if (removeProductFromMarket(ownerKey, product.id)) {
+    if (await removeProductFromMarket(ownerKey, product.id)) {
       syncUserMarketData()
-      refreshUploaded()
+      await refreshUploaded()
       setMarketMsg(`"${product.name}" removed from the market`)
       window.setTimeout(() => setMarketMsg(''), 4000)
     }

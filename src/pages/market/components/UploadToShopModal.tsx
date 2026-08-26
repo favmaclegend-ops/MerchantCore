@@ -37,9 +37,15 @@ export function UploadToShopModal({ onClose }: { onClose: () => void }) {
   const bp = useBreakpoint();
   const { user, orgUser } = useContext(Authcontext);
   const { ownerKey } = useShopOwner();
-  const [shop, setShop] = useState<MarketStoreShop | null>(() =>
-    getMyShop(ownerKey) ?? null,
-  );
+  const [shop, setShop] = useState<MarketStoreShop | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    getMyShop(ownerKey).then((s) => {
+      if (active) setShop(s ?? null);
+    });
+    return () => { active = false; };
+  }, [ownerKey]);
 
   return (
     <div
@@ -203,7 +209,7 @@ function CreateShopForm({
         );
       }
     }
-    const shop = createMarketShop(ownerKey, {
+    const shop = await createMarketShop(ownerKey, {
       shop_name: name,
       owner,
       description,
@@ -353,13 +359,19 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
   const [error, setError] = useState("");
   const [mode, setMode] = useState<"all" | "selected">("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [uploadedIds, setUploadedIds] = useState<string[]>(() =>
-    getUploadedSourceIds(ownerKey),
-  );
+  const [uploadedIds, setUploadedIds] = useState<string[]>([]);
   const [success, setSuccess] = useState("");
   const [busy, setBusy] = useState(false);
   const [openVariants, setOpenVariants] = useState<string | null>(null);
   const [variantDrafts, setVariantDrafts] = useState<Record<string, VariantDraft[]>>({});
+
+  useEffect(() => {
+    let active = true;
+    getUploadedSourceIds(ownerKey).then((ids) => {
+      if (active) setUploadedIds(ids);
+    });
+    return () => { active = false; };
+  }, [ownerKey]);
 
   useEffect(() => {
     let mounted = true;
@@ -398,7 +410,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
   const available = (products ?? []).filter((p) => !uploadedSet.has(p.id));
   const alreadyUploaded = (products ?? []).filter((p) => uploadedSet.has(p.id));
 
-  const doUpload = (list: PosSourceProduct[]) => {
+  const doUpload = async (list: PosSourceProduct[]) => {
     if (list.length === 0) return;
     const missingImage = list.filter((p) => !p.image?.trim());
     if (missingImage.length > 0) {
@@ -413,9 +425,10 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
     setError("");
     try {
       const withVariants = list.map((p) => ({ ...p, variants: toVariantInput(p) }));
-      const added = uploadProductsToShop(ownerKey, withVariants);
+      const added = await uploadProductsToShop(ownerKey, withVariants);
       syncUserMarketData();
-      setUploadedIds(getUploadedSourceIds(ownerKey));
+      const ids = await getUploadedSourceIds(ownerKey);
+      setUploadedIds(ids);
       setSelected(new Set());
       setSuccess(
         `${added.length} item${added.length === 1 ? "" : "s"} uploaded to ${shop.shop_name}.`,
@@ -430,7 +443,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
     }
   };
 
-  const doRemove = (product: PosSourceProduct) => {
+  const doRemove = async (product: PosSourceProduct) => {
     if (
       !window.confirm(
         `Remove "${product.name}" from ${shop.shop_name}? It stays in your POS inventory.`,
@@ -438,9 +451,10 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
     )
       return;
     setError("");
-    if (removeProductFromMarket(ownerKey, product.id)) {
+    if (await removeProductFromMarket(ownerKey, product.id)) {
       syncUserMarketData();
-      setUploadedIds(getUploadedSourceIds(ownerKey));
+      const ids = await getUploadedSourceIds(ownerKey);
+      setUploadedIds(ids);
       setSuccess(`"${product.name}" removed from ${shop.shop_name}.`);
       setTimeout(() => setSuccess(""), 4000);
     } else {

@@ -5,12 +5,13 @@ interface iAlert {
   type?: string;
 }
 
-const typeIc = {
-  error:
-    "https://img.icons8.com/?size=100&id=undefined&format=png&color=ff0000",
-  success: "https://img.icons8.com/?size=100&id=11658&format=png&color=008000",
-  info: "https://img.icons8.com/?size=100&id=77&format=png&color=000000",
-};
+// const typeIc = {
+//   error:
+//     "https://img.icons8.com/?size=100&id=undefined&format=png&color=ff0000",
+//   success: "https://img.icons8.com/?size=100&id=11658&format=png&color=008000",
+//   info: "https://img.icons8.com/?size=100&id=77&format=png&color=000000",
+// };
+
 export default function Alert({
   message = "Success",
   type = "success",

@@ -5,6 +5,7 @@ export type TabId = 'admin' | 'staff'
 export type Member = OrgMember
 
 export type MemberFormData = {
+  id?: string
   name: string
   email: string
   username: string

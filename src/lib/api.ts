@@ -959,4 +959,46 @@ export const api = {
       },
     },
   },
+
+  // Market — cross-platform marketplace backed by the separate merchant_market DB.
+  market: {
+    // Public browsing (no auth)
+    getShops: async (search?: string, page = 1, limit = 20) => {
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+      if (search) params.set('search', search)
+      return anonRequest<{ shops: Array<Record<string, unknown>>; total: number; page: number; limit: number }>(
+        `/market/shops?${params}`,
+      )
+    },
+    getShop: (shopId: string) =>
+      anonRequest<Record<string, unknown>>(`/market/shops/${shopId}`),
+    getProducts: async (category?: string, search?: string, page = 1, limit = 22) => {
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+      if (category) params.set('category', category)
+      if (search) params.set('search', search)
+      return anonRequest<{ products: Array<Record<string, unknown>>; total: number; page: number; limit: number }>(
+        `/market/products?${params}`,
+      )
+    },
+    getProduct: (productId: string) =>
+      anonRequest<Record<string, unknown>>(`/market/products/${productId}`),
+    getAdverts: () =>
+      anonRequest<Array<Record<string, unknown>>>('/market/advert'),
+    getCategories: () =>
+      anonRequest<Array<Record<string, unknown>>>('/market/categories'),
+    getTopRated: (limit = 4) =>
+      anonRequest<Array<Record<string, unknown>>>(`/market/top-rated?limit=${limit}`),
+
+    // Authenticated shop management (owner only)
+    createShop: (data: Record<string, unknown>) =>
+      orgRequest<Record<string, unknown>>('/market/shops', { method: 'POST', body: JSON.stringify(data) }),
+    updateShop: (shopId: string, data: Record<string, unknown>) =>
+      orgRequest<Record<string, unknown>>(`/market/shops/${shopId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    createProduct: (shopId: string, data: Record<string, unknown>) =>
+      orgRequest<Record<string, unknown>>(`/market/shops/${shopId}/products`, { method: 'POST', body: JSON.stringify(data) }),
+    updateProduct: (productId: string, data: Record<string, unknown>) =>
+      orgRequest<Record<string, unknown>>(`/market/products/${productId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    deleteProduct: (productId: string) =>
+      orgRequest<void>(`/market/products/${productId}`, { method: 'DELETE' }),
+  },
 }
