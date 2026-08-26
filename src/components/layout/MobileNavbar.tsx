@@ -5,6 +5,7 @@ import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserC
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
+import { preloadRoute } from '@/lib/routePreload'
 
 const primaryItems = [
   { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
@@ -62,6 +63,7 @@ export function MobileNavbar() {
                   key={item.path}
                   to={item.path}
                   onClick={() => setOpen(false)}
+                  onTouchStart={() => preloadRoute(item.path)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '12px', padding: '12px',
                     borderRadius: '10px', fontSize: '14px', fontWeight: 500, textDecoration: 'none',
@@ -88,6 +90,7 @@ export function MobileNavbar() {
               key={item.path}
               to={item.path}
               onClick={() => setOpen(false)}
+              onTouchStart={() => preloadRoute(item.path)}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
                 padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,

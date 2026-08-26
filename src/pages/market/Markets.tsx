@@ -53,7 +53,7 @@ export function Markets() {
     }
   }, []);
 
-  // get first 10 products
+  // get first N products in chunks
   useDebounceEffect(
     () => {
       getProductsByChunck({
@@ -65,9 +65,8 @@ export function Markets() {
           chunckStore.setState({ isProductLoading: false });
         })
         .catch((e) =>
-          console.error("An error occure whiles fetching the products", e),
-        )
-        .finally(() => console.log("Data requested successfullt"));
+          console.error("An error occurred while fetching the products", e),
+        );
     },
     1000,
     [marketStore.getState().products, chunckStore.getState().updates],
@@ -116,22 +115,6 @@ export function Markets() {
             p.shop_name.toLowerCase().includes(query.toLowerCase()),
         );
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          width: "100%",
-          height: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <MarketLoading />
-      </div>
-    );
-  }
-
   const handleActiveCat = (idx: number) => {
     setActiveCat(idx);
   };
@@ -140,23 +123,17 @@ export function Markets() {
     setQuery((e.currentTarget as HTMLInputElement).value ?? "");
   };
 
-  if (filterProduct.length <= 0) {
-    return (
-      <div
-        style={{
-          width: "100%",
-          flex: "1",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Ban color="grey"/>
-        <span style={{color: 'GrayText'}}>Nothing on the market Yet</span>
-      </div>
-    );
-  }
+  const fetchError = state.fetchError;
+
+  const hasProducts = products.length > 0;
+
+  const noProductsForCategory =
+    hasProducts && filterProduct.length === 0 && !query.trim();
+
+  const noResultsAtAll = !hasProducts && !loading && !fetchError;
+
+  const noSearchResults = query.trim() !== "" && filterProduct.length === 0;
+
   return (
     <>
       <div
@@ -173,6 +150,26 @@ export function Markets() {
           overflowY: "auto",
         }}
       >
+        {fetchError && (
+          <div
+            style={{
+              width: "100%",
+              padding: "1rem",
+              borderRadius: ".75rem",
+              background: "var(--bg-danger, #3b1111)",
+              border: "1px solid var(--border-danger, #5c1a1a)",
+              display: "flex",
+              alignItems: "center",
+              gap: ".75rem",
+              color: "var(--text-danger, #f87171)",
+              fontSize: ".9rem",
+            }}
+          >
+            <Ban size={18} />
+            <span>{fetchError}</span>
+          </div>
+        )}
+
         <Bilboards />
 
         {/* {Product Section}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */}
@@ -226,7 +223,59 @@ export function Markets() {
             </button>
           ))}
         </div>
-        {chunckStore.getState().isProductLoading ? (
+
+        {loading ? (
+          <MarketLoading info="Loading market data..." />
+        ) : noResultsAtAll ? (
+          <div
+            style={{
+              width: "100%",
+              flex: "1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: ".5rem",
+            }}
+          >
+            <Ban color="grey" />
+            <span style={{ color: "GrayText" }}>Nothing on the market yet</span>
+          </div>
+        ) : noProductsForCategory ? (
+          <div
+            style={{
+              width: "100%",
+              flex: "1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: ".5rem",
+            }}
+          >
+            <Ban color="grey" />
+            <span style={{ color: "GrayText" }}>
+              Nothing for this category
+            </span>
+          </div>
+        ) : noSearchResults ? (
+          <div
+            style={{
+              width: "100%",
+              flex: "1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: ".5rem",
+            }}
+          >
+            <Ban color="grey" />
+            <span style={{ color: "GrayText" }}>
+              No results for "{query}"
+            </span>
+          </div>
+        ) : chunckStore.getState().isProductLoading ? (
           <MarketLoading info="Loading Products ..." />
         ) : (
           <div
