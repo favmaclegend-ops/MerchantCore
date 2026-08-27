@@ -28,7 +28,7 @@ ChartJS.register(
 );
 
 
-export default function DLineChart({labels, datas}: {labels: string[], datas: number[]}) {
+export default function DLineChart({labels, datas, mobileHeight}: {labels: string[], datas: number[], mobileHeight?: string}) {
     const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -64,10 +64,11 @@ export default function DLineChart({labels, datas}: {labels: string[], datas: nu
     };
 
     const minWidth = Math.max(320, datas.length * 28)
+    const scrollHeight = mobileHeight || 'min(600px, 65vh)'
 
     return (
-        <div ref={scrollRef} style={{ height: 'min(600px, 65vh)', overflow: 'auto', scrollbarWidth: 'thin' }}>
-            <div style={{ height: '760px', minWidth: `${minWidth}px`, width: '100%', position: 'relative' }}>
+        <div ref={scrollRef} style={{ height: scrollHeight, overflow: 'auto', scrollbarWidth: 'thin' }}>
+            <div style={{ height: '500px', minWidth: `${minWidth}px`, width: '100%', position: 'relative' }}>
                 <Line data={data} options={options} />
             </div>
         </div>

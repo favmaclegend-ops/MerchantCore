@@ -5,7 +5,7 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { BILLBOARD_AD_COUNT, useBillboardAds, useBillboardPlayer } from "../billboard";
 import { BillboardVideo } from "./BillboardVideo";
 
-export const Bilboards = () => {
+export const Bilboards = ({ hidden }: { hidden?: boolean }) => {
   const location = useLocation();
   const state = useStore(marketStore);
   const top4RatingShop = state.top4tRatingShops ?? [];
@@ -19,9 +19,13 @@ export const Bilboards = () => {
     <div
       style={{
         display: "flex",
-        padding: "1rem",
+        padding: hidden ? "0 1rem" : "1rem",
         width: "100%",
         gap: "1rem",
+        maxHeight: hidden ? "0" : "24rem",
+        opacity: hidden ? 0 : 1,
+        overflow: "hidden",
+        transition: "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.4s ease",
       }}
     >
       <div

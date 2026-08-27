@@ -62,6 +62,7 @@ export interface MarketStore extends Record<string, unknown> {
   products: MarketStoreProduct[];
   advert?: MarketStoreAdvert[]
   catergories?: string[]
+  fetchError?: string | null
 }
 
 export const marketStore = createStore<MarketStore>({
@@ -70,4 +71,5 @@ export const marketStore = createStore<MarketStore>({
   products: [],
   advert: [],
   catergories: ["All"],
+  fetchError: null,
 });

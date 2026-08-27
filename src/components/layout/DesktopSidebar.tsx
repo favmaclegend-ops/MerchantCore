@@ -5,6 +5,7 @@ import { useContext } from 'react'
 import type { ElementType } from 'react'
 import { Authcontext } from '@/context/auth_context'
 import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
+import { preloadRoute } from '@/lib/routePreload'
 
 type NavItem = {
   path: string
@@ -70,6 +71,7 @@ export function DesktopSidebar() {
               className='page-link'
               key={item.path}
               to={item.path}
+              onMouseEnter={() => preloadRoute(item.path)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',
                 borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none',
@@ -86,11 +88,11 @@ export function DesktopSidebar() {
       </nav>
 
       <div style={{ padding: '12px', borderTop: '1px solid var(--bg-tertiary)' }}>
-        <button onClick={() => navigate('/home/pos')} style={{ width: '100%', background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)' , fontSize: '14px', fontWeight: 500, padding: '8px 0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', cursor: 'pointer', marginBottom: '4px' }}>
+        <button onMouseEnter={() => preloadRoute('/home/pos')} onClick={() => navigate('/home/pos')} style={{ width: '100%', background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)' , fontSize: '14px', fontWeight: 500, padding: '8px 0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', cursor: 'pointer', marginBottom: '4px' }}>
           <Plus style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           Quick Sale
         </button>
-        <button onClick={() => navigate('/home/settings')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',  fontSize: '14px', color: location.pathname === '/home/settings' ? 'var(--bg-surface)' : 'var(--text-secondary)', background: location.pathname === '/home/settings' ? 'var(--bg-nav-active)' : 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '2px' }}>
+        <button onMouseEnter={() => preloadRoute('/home/settings')} onClick={() => navigate('/home/settings')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',  fontSize: '14px', color: location.pathname === '/home/settings' ? 'var(--bg-surface)' : 'var(--text-secondary)', background: location.pathname === '/home/settings' ? 'var(--bg-nav-active)' : 'transparent', border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '2px' }}>
           <Settings style={{ width: '16px', height: '16px', flexShrink: 0,  }} />
           Settings
         </button>

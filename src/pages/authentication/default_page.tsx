@@ -32,7 +32,7 @@ export default function DefaultPage() {
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto', background: 'var(--bg-tertiary)', padding: '24px' }}>
-            <div style={{ margin: 'auto 0', width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ margin: 'auto 0', width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center',  }}>
                 {isOrg ? (
                     <>
                         <OrganisationAuth />

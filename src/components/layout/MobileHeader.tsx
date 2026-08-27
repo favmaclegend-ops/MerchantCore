@@ -6,23 +6,24 @@ import { Authcontext } from '@/context/auth_context'
 import { NotificationContext } from '@/context/notification_context'
 import { OrgNotificationContext } from '@/context/org_notification_context'
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
+import { useStore } from 'elk-components'
+import { marketStore } from '@/pages/market/demoMarketStore'
 
 const pageConfig: Record<string, { title: string; subtitle?: string }> = {
-  '/home/dashboard': { title: 'Dashboard', subtitle: "Here's what's happening today" },
-  '/home/inventory': { title: 'Inventory', subtitle: 'Stock tracking & management' },
-  '/home/pos': { title: 'POS Terminal', subtitle: 'Point of sale' },
-  '/home/credit': { title: 'Credit Ledger', subtitle: 'Manage accounts & payments' },
-  '/home/customers': { title: 'Customers', subtitle: 'Directory & profiles' },
-  '/home/calculator': { title: 'Calculator', subtitle: 'Business tools & currency' },
-  '/home/notifications': { title: 'Notifications', subtitle: 'Alerts & activity feed' },
-  '/home/supply': { title: 'Supply Chain', subtitle: 'Inventory, orders & shipping' },
-  '/home/settings': { title: 'Settings', subtitle: 'Account & preferences' },
-  '/home/users': {title: 'Users', subtitle: 'Administarator Control'},
-  '/home/attendance': { title: 'My Attendance', subtitle: 'Check in at the start of your shift — it records your attendance and updates the HRM view.' },
-  '/home/hrm': { title: 'HRM', subtitle: 'Track and know who performs well' },
-  '/home/finance': { title: 'Finance', subtitle: 'Keep track of transactions' },
-   '/home/market': {title: 'MC Market', subtitle: 'Here is what happening on the market today', },
-
+  '/home/dashboard': { title: 'Dashboard' },
+  '/home/inventory': { title: 'Inventory' },
+  '/home/pos': { title: 'POS Terminal' },
+  '/home/credit': { title: 'Credit Ledger' },
+  '/home/customers': { title: 'Customers' },
+  '/home/calculator': { title: 'Calculator' },
+  '/home/notifications': { title: 'Notifications' },
+  '/home/supply': { title: 'Supply Chain' },
+  '/home/settings': { title: 'Settings' },
+  '/home/users': { title: 'Users' },
+  '/home/attendance': { title: 'Attendance' },
+  '/home/hrm': { title: 'HRM' },
+  '/home/finance': { title: 'Finance' },
+  '/home/market': { title: 'Market' },
 }
 
 export function MobileHeader() {
@@ -36,7 +37,19 @@ export function MobileHeader() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
-  const config = pageConfig[location.pathname] ?? { title: '' }
+
+  const isShopPage = /^\/home\/market\/[^/]+/.test(location.pathname) ||
+    /^\/market\/[^/]+/.test(location.pathname)
+
+  let title = pageConfig[location.pathname]?.title ?? ''
+
+  if (isShopPage) {
+    const state = useStore(marketStore)
+    const segments = location.pathname.split('/')
+    const shopId = segments[segments.indexOf('market') + 1]
+    const shop = state.shops?.[shopId]
+    title = shop?.shop_name ?? 'Shop'
+  }
 
   const displayName = orgUser?.name || user?.full_name || 'User'
   const displayEmail = orgUser?.email || user?.email || ''
@@ -52,41 +65,144 @@ export function MobileHeader() {
   if (bp.lg) return null
 
   return (
-    <header style={{ display: 'flex', position: 'sticky', top: 0, background: 'var(--bg-header)', backdropFilter: 'blur(8px)', borderBottom: '1px solid var(--border-default)', padding: '12px 16px', alignItems: 'center', justifyContent: 'space-between', zIndex: 30 }}>
-      <div>
-        <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{config.title}</h2>
-        {config.subtitle && <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{config.subtitle}</p>}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ position: 'relative' }}>
-          <button onClick={() => setShowNotifications(p => !p)} style={{ position: 'relative', padding: '8px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
-            <Bell style={{ width: '20px', height: '20px' }} />
-            {unreadCount > 0 && (
-              <span style={{ position: 'absolute', top: '4px', right: '4px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%' }}></span>
-            )}
-          </button>
-          {showNotifications && <NotificationDropdown onClose={() => setShowNotifications(false)} />}
-        </div>
-        <div ref={userMenuRef} style={{ position: 'relative' }}>
-          <button onClick={() => setShowUserMenu(p => !p)} style={{ width: '32px', height: '32px', background: 'var(--border-input)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}>
-            <User style={{ width: '16px', height: '16px', color: 'var(--text-secondary)' }} />
-          </button>
-          {showUserMenu && (
-            <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', width: '180px', background: 'var(--bg-surface)', borderRadius: '8px', border: '1px solid var(--border-default)', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', overflow: 'hidden', zIndex: 9999 }}>
-              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--bg-tertiary)' }}><p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{displayName}</p>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{displayEmail}</p>
-              </div>
-              <button onClick={() => { navigate('/home/settings'); setShowUserMenu(false) }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: 'var(--text-primary)', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid var(--bg-tertiary)' }}>
-                <Settings style={{ width: '14px', height: '14px' }} />
-                Settings
-              </button>
-              <button onClick={() => { logout() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', fontSize: '13px', color: 'var(--text-danger)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                <LogOut style={{ width: '14px', height: '14px' }} />
-                Sign Out
-              </button>
+    <header
+      style={{
+        display: 'flex',
+        position: 'sticky',
+        top: 0,
+        height: '56px',
+        background: 'color-mix(in srgb, var(--bg-header) 72%, transparent)',
+        backdropFilter: 'blur(24px) saturate(1.4)',
+        WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
+        boxShadow: '0 1px 0 0 var(--border-default), 0 4px 16px -4px rgba(0,0,0,0.08)',
+        padding: '0 12px',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 30,
+      }}
+    >
+      {/* Left: Profile avatar */}
+      <div ref={userMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
+        <button
+          onClick={() => { setShowUserMenu(p => !p); setShowNotifications(false) }}
+          style={{
+            width: '34px',
+            height: '34px',
+            background: 'var(--bg-nav-active)',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s',
+          }}
+        >
+          <User style={{ width: '16px', height: '16px', color: 'var(--bg-surface)' }} />
+        </button>
+        {showUserMenu && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 8px)',
+              left: 0,
+              width: '200px',
+              background: 'var(--bg-surface)',
+              borderRadius: '14px',
+              border: '1px solid var(--border-default)',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
+              overflow: 'hidden',
+              zIndex: 9999,
+            }}
+          >
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bg-tertiary)' }}>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{displayName}</p>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{displayEmail}</p>
             </div>
+            <button
+              onClick={() => { navigate('/home/settings'); setShowUserMenu(false) }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '10px 14px', fontSize: '13px', color: 'var(--text-primary)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                borderBottom: '1px solid var(--bg-tertiary)',
+              }}
+            >
+              <Settings style={{ width: '14px', height: '14px' }} />
+              Settings
+            </button>
+            <button
+              onClick={() => { logout() }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '10px 14px', fontSize: '13px', color: 'var(--text-danger)',
+                background: 'none', border: 'none', cursor: 'pointer',
+              }}
+            >
+              <LogOut style={{ width: '14px', height: '14px' }} />
+              Sign Out
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Center: Title */}
+      <h2
+        style={{
+          fontSize: '16px',
+          fontWeight: 700,
+          color: 'var(--text-primary)',
+          margin: 0,
+          textAlign: 'center',
+          flex: 1,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          letterSpacing: '-0.01em',
+          padding: '0 8px',
+        }}
+      >
+        {title}
+      </h2>
+
+      {/* Right: Notification bell */}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        <button
+          onClick={() => { setShowNotifications(p => !p); setShowUserMenu(false) }}
+          style={{
+            position: 'relative',
+            width: '38px',
+            height: '38px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--text-secondary)',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            transition: 'background 0.2s',
+          }}
+        >
+          <Bell style={{ width: '20px', height: '20px' }} />
+          {unreadCount > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '7px',
+                right: '7px',
+                minWidth: '8px',
+                height: '8px',
+                padding: '0 3px',
+                background: '#ef4444',
+                borderRadius: '999px',
+                border: '2px solid var(--bg-header)',
+              }}
+            />
           )}
-        </div>
+        </button>
+        {showNotifications && <NotificationDropdown onClose={() => setShowNotifications(false)} />}
       </div>
     </header>
   )

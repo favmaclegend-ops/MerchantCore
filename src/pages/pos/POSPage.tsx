@@ -313,39 +313,6 @@ export function POSPage() {
                 <Store style={{ width: "14px", height: "14px" }} />
                 Upload to shop
               </button>
-              {!bp.xl && (
-                <button
-                  onClick={() => setCartView(!isCart)}
-                  style={{
-                    marginInlineStart: "auto",
-                    background: isCart ? "var(--bg-nav-active)" : "none",
-                    color: isCart ? "var(txt-primary)" : "white",
-                    display: "flex",
-                    cursor: "pointer",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: ".5rem",
-                    padding: ".2rem 1rem",
-                    borderRadius: "4rem",
-                    border: "1px solid var(--border-default)",
-                  }}
-                >
-                  <img
-                    src={`https://img.icons8.com/?size=100&id=9671&format=png&color=${isCart ? "ffffff" : "c3c0c0"}`}
-                    width={"20"}
-                    height={"20"}
-                  />
-                  <span
-                    style={{
-                      color: isCart
-                        ? "var(--text-secondary-b)"
-                        : "var(--text-primary)",
-                    }}
-                  >
-                    Cart
-                  </span>
-                </button>
-              )}
 
               {successMsg && (
                 <div
@@ -1033,6 +1000,61 @@ export function POSPage() {
       </div>
 
       {showUpload && <UploadToShopModal onClose={() => setShowUpload(false)} />}
+
+      {!bp.xl && (
+        <button
+          onClick={() => setCartView(!isCart)}
+          style={{
+            position: "fixed",
+            bottom: "5.5rem",
+            right: "1rem",
+            zIndex: 900,
+            width: "56px",
+            height: "56px",
+            borderRadius: "18px",
+            border: "none",
+            background: isCart ? "var(--bg-surface)" : "var(--bg-nav-active)",
+            color: isCart ? "var(--text-primary)" : "var(--bg-surface)",
+            boxShadow: isCart
+              ? "0 4px 20px rgba(0,0,0,0.15)"
+              : "0 4px 20px rgba(15,23,42,0.3)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "2px",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="8" cy="21" r="1"/>
+            <circle cx="19" cy="21" r="1"/>
+            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+          </svg>
+          {cart.length > 0 && (
+            <span style={{
+              position: "absolute",
+              top: "-4px",
+              right: "-4px",
+              minWidth: "20px",
+              height: "20px",
+              padding: "0 5px",
+              borderRadius: "999px",
+              background: "#ef4444",
+              color: "white",
+              fontSize: "11px",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "2px solid var(--bg-page)",
+            }}>
+              {cart.length}
+            </span>
+          )}
+        </button>
+      )}
 
       {isAlert.isAlert && (
         <Alert message={isAlert.message} type={isAlert.type} />

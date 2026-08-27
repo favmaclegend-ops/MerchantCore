@@ -14,7 +14,7 @@ import Alert from "@/components/alert/alert";
 import { valueFormater } from "./market";
 import { getProductRatingFigure } from "./productRatings";
 import { getProductsByChunck } from "./randomSlectedProduct";
-import { ArrowLeft, ArrowRight, Ban } from "lucide-react";
+import { ChevronLeft, ChevronRight, Ban } from "lucide-react";
 import { chunckStore } from "./store/chunckStore";
 // import { getRandomProduct } from "./randomSlectedProduct";
 
@@ -30,6 +30,7 @@ export function Markets() {
   const [activeCat, setActiveCat] = useState(0);
   const [query, setQuery] = useState("");
   const [isSearch, setIsSearch] = useState(false);
+  const [billboardHidden, setBillboardHidden] = useState(false);
   const bp = useBreakpoint();
   const scrollRef = useRef<HTMLDivElement>(null);
   const SCROLL_KEY = "markets-scroll";
@@ -48,12 +49,13 @@ export function Markets() {
       requestAnimationFrame(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = parseInt(saved, 10) || 0;
+          if (scrollRef.current.scrollTop > 180) setBillboardHidden(true);
         }
       });
     }
   }, []);
 
-  // get first 10 products
+  // get first N products in chunks
   useDebounceEffect(
     () => {
       getProductsByChunck({
@@ -65,9 +67,8 @@ export function Markets() {
           chunckStore.setState({ isProductLoading: false });
         })
         .catch((e) =>
-          console.error("An error occure whiles fetching the products", e),
-        )
-        .finally(() => console.log("Data requested successfullt"));
+          console.error("An error occurred while fetching the products", e),
+        );
     },
     1000,
     [marketStore.getState().products, chunckStore.getState().updates],
@@ -75,7 +76,10 @@ export function Markets() {
 
   const handleScroll = () => {
     if (scrollRef.current) {
-      sessionStorage.setItem(SCROLL_KEY, String(scrollRef.current.scrollTop));
+      const st = scrollRef.current.scrollTop;
+      sessionStorage.setItem(SCROLL_KEY, String(st));
+      if (st > 180 && !billboardHidden) setBillboardHidden(true);
+      else if (st <= 10 && billboardHidden) setBillboardHidden(false);
     }
   };
 
@@ -116,22 +120,6 @@ export function Markets() {
             p.shop_name.toLowerCase().includes(query.toLowerCase()),
         );
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          width: "100%",
-          height: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <MarketLoading />
-      </div>
-    );
-  }
-
   const handleActiveCat = (idx: number) => {
     setActiveCat(idx);
   };
@@ -140,23 +128,17 @@ export function Markets() {
     setQuery((e.currentTarget as HTMLInputElement).value ?? "");
   };
 
-  if (filterProduct.length <= 0) {
-    return (
-      <div
-        style={{
-          width: "100%",
-          flex: "1",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Ban color="grey"/>
-        <span style={{color: 'GrayText'}}>Nothing on the market Yet</span>
-      </div>
-    );
-  }
+  const fetchError = state.fetchError;
+
+  const hasProducts = products.length > 0;
+
+  const noProductsForCategory =
+    hasProducts && filterProduct.length === 0 && !query.trim();
+
+  const noResultsAtAll = !hasProducts && !loading && !fetchError;
+
+  const noSearchResults = query.trim() !== "" && filterProduct.length === 0;
+
   return (
     <>
       <div
@@ -169,64 +151,155 @@ export function Markets() {
           flexDirection: "column",
           alignItems: "center",
           padding: "1rem",
+          paddingBottom: "4rem",
           gap: "1rem",
           overflowY: "auto",
         }}
       >
-        <Bilboards />
+        {fetchError && (
+          <div
+            style={{
+              width: "100%",
+              padding: "1rem",
+              borderRadius: ".75rem",
+              background: "var(--bg-danger, #3b1111)",
+              border: "1px solid var(--border-danger, #5c1a1a)",
+              display: "flex",
+              alignItems: "center",
+              gap: ".75rem",
+              color: "var(--text-danger, #f87171)",
+              fontSize: ".9rem",
+            }}
+          >
+            <Ban size={18} />
+            <span>{fetchError}</span>
+          </div>
+        )}
 
-        {/* {Product Section}>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */}
-        <div style={{ display: "flex", width: "100%" }}>
+        <Bilboards hidden={billboardHidden} />
+
+        {/* Sticky search + categories bar */}
+        <div
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            background: "var(--bg-page)",
+            display: "flex",
+            flexDirection: "column",
+            gap: ".75rem",
+            width: "100%",
+            paddingBlock: "8px",
+            boxShadow: billboardHidden ? "0 1px 0 var(--border-default)" : "none",
+            transition: "box-shadow 0.25s ease",
+          }}
+        >
           <input
             placeholder="Search Products..."
             style={{
               width: "100%",
               border: "1px solid var(--border-default)",
               background: "var(--bg-surface)",
-              padding: ".5rem",
+              padding: ".5rem .75rem",
               borderRadius: "1rem",
+              fontSize: ".875rem",
             }}
             onChange={handleSearch}
             onFocus={() => setIsSearch(true)}
           />
+
+          <div
+            style={{
+              display: "flex",
+              gap: ".75rem",
+              alignItems: "center",
+              width: "100%",
+              overflowX: "auto",
+              flex: "0 0 auto",
+              scrollbarWidth: "none",
+            }}
+          >
+            {categories.map((cat, idx) => (
+              <button
+                key={idx}
+                style={{
+                  padding: ".4rem .85rem",
+                  borderRadius: "2rem",
+                  border: "1px solid var(--border-default)",
+                  flex: "0 0 auto",
+                  cursor: "pointer",
+                  fontSize: ".8rem",
+                  fontWeight: 500,
+                  background: activeCat == idx ? "var(--bg-nav-active)" : "transparent",
+                  color:
+                    activeCat == idx
+                      ? "var(--bg-surface)"
+                      : "var(--text-primary)",
+                  transition: "background .3s ease, color .3s ease",
+                }}
+                onClick={() => {
+                  handleActiveCat(idx);
+                  setIsSearch(false);
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "1rem",
-            alignItems: "center",
-            width: "100%",
-            overflowX: "auto",
-            flex: "0 0 auto",
-          }}
-        >
-          {categories.map((cat, idx) => (
-            <button
-              key={idx}
-              style={{
-                padding: ".5rem 1rem",
-                borderRadius: "3rem",
-                border: "1px solid var(--border-default)",
-                flex: "0 0 auto",
-                cursor: "pointer",
-                background: activeCat == idx ? "var(--bg-nav-active)" : "",
-                color:
-                  activeCat == idx
-                    ? "var(--bg-surface)"
-                    : "var(--text-primary)",
-                transition: "background .4s ease",
-              }}
-              onClick={() => {
-                handleActiveCat(idx);
-                setIsSearch(false);
-              }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-        {chunckStore.getState().isProductLoading ? (
+        {loading ? (
+          <MarketLoading info="Loading market data..." />
+        ) : noResultsAtAll ? (
+          <div
+            style={{
+              width: "100%",
+              flex: "1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: ".5rem",
+            }}
+          >
+            <Ban color="grey" />
+            <span style={{ color: "GrayText" }}>Nothing on the market yet</span>
+          </div>
+        ) : noProductsForCategory ? (
+          <div
+            style={{
+              width: "100%",
+              flex: "1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: ".5rem",
+            }}
+          >
+            <Ban color="grey" />
+            <span style={{ color: "GrayText" }}>
+              Nothing for this category
+            </span>
+          </div>
+        ) : noSearchResults ? (
+          <div
+            style={{
+              width: "100%",
+              flex: "1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: ".5rem",
+            }}
+          >
+            <Ban color="grey" />
+            <span style={{ color: "GrayText" }}>
+              No results for "{query}"
+            </span>
+          </div>
+        ) : chunckStore.getState().isProductLoading ? (
           <MarketLoading info="Loading Products ..." />
         ) : (
           <div
@@ -377,41 +450,12 @@ export function Markets() {
           </div>
         )}
 
-        {!isSearch && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              width: "100%",
-              justifyContent: "space-around",
-              marginBlockStart: "auto",
-            }}
-          >
+        {!isSearch &&
+          chunckStore.getState().start > 0 &&
+          filterProduct.length > 0 && (
             <button
               className="click"
-              style={{
-                display: "flex",
-
-                borderRadius: "1rem",
-                background:
-                  chunckStore.getState().isProductLoading ||
-                  chunckStore.getState().updates <= 0
-                    ? "grey"
-                    : "var(--bg-nav-active)",
-                padding: "1rem",
-                justifyContent: "center",
-                cursor:
-                  chunckStore.getState().isProductLoading ||
-                  chunckStore.getState().updates <= 0
-                    ? "not-allowed"
-                    : "pointer",
-                alignItems: "center",
-                gap: ".4rem",
-              }}
-              disabled={
-                chunckStore.getState().isProductLoading ||
-                chunckStore.getState().updates <= 0
-              }
+              disabled={chunckStore.getState().isProductLoading}
               onClick={() =>
                 updateChunck({
                   start: chunckStore.getState().start - chunckSize,
@@ -420,38 +464,34 @@ export function Markets() {
                   isProductLoading: true,
                 })
               }
+              style={{
+                margin: "0 auto",
+                padding: ".5rem 1.5rem",
+                borderRadius: "2rem",
+                border: "1px solid var(--border-default)",
+                background: "var(--bg-surface)",
+                cursor: chunckStore.getState().isProductLoading ? "not-allowed" : "pointer",
+                opacity: chunckStore.getState().isProductLoading ? 0.4 : 1,
+                display: "flex",
+                alignItems: "center",
+                gap: ".35rem",
+                fontSize: ".8rem",
+                fontWeight: 500,
+                color: "var(--text-primary)",
+                transition: "opacity .2s",
+              }}
             >
-              <ArrowLeft color="var(--bg-surface)" />
-              <span style={{ color: "var(--bg-surface)" }}>
-                Previous Products
-              </span>
+              <ChevronLeft size={15} />
+              Load previous
             </button>
+          )}
 
+        {!isSearch &&
+          chunckStore.getState().end <= baseProducts.length &&
+          filterProduct.length > 0 && (
             <button
               className="click"
-              style={{
-                display: "flex",
-
-                borderRadius: "1rem",
-                background:
-                  chunckStore.getState().isProductLoading ||
-                  chunckStore.getState().end > baseProducts.length
-                    ? "grey"
-                    : "var(--bg-nav-active)",
-                padding: "1rem",
-                justifyContent: "center",
-                cursor:
-                  chunckStore.getState().isProductLoading ||
-                  chunckStore.getState().end > baseProducts.length
-                    ? "not-allowed"
-                    : "pointer",
-                alignItems: "center",
-                gap: ".4rem",
-              }}
-              disabled={
-                chunckStore.getState().isProductLoading ||
-                chunckStore.getState().end > baseProducts.length
-              }
+              disabled={chunckStore.getState().isProductLoading}
               onClick={() =>
                 updateChunck({
                   start: chunckStore.getState().end,
@@ -460,12 +500,27 @@ export function Markets() {
                   isProductLoading: true,
                 })
               }
+              style={{
+                margin: "0 auto",
+                padding: ".5rem 1.5rem",
+                borderRadius: "2rem",
+                border: "1px solid var(--border-default)",
+                background: "var(--bg-surface)",
+                cursor: chunckStore.getState().isProductLoading ? "not-allowed" : "pointer",
+                opacity: chunckStore.getState().isProductLoading ? 0.4 : 1,
+                display: "flex",
+                alignItems: "center",
+                gap: ".35rem",
+                fontSize: ".8rem",
+                fontWeight: 500,
+                color: "var(--text-primary)",
+                transition: "opacity .2s",
+              }}
             >
-              <span style={{ color: "var(--bg-surface)" }}>Next Products</span>
-              <ArrowRight color="var(--bg-surface)" />
+              Load more
+              <ChevronRight size={15} />
             </button>
-          </div>
-        )}
+          )}
       </div>
       {selectedProduct && (
         <ProductInfoPanel

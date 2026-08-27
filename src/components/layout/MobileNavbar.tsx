@@ -1,17 +1,18 @@
 import { useState, useContext } from 'react'
 import type { ElementType } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock,  Truck, FileSpreadsheet} from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
+import { preloadRoute } from '@/lib/routePreload'
 
 const primaryItems = [
   { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
-  { path: '/home/market', label: 'Market', icon: ShoppingCart, },
+  { path: '/home/market', label: 'Market', icon: ShoppingCart },
   { path: '/home/inventory', label: 'Stock', icon: Package },
-  { path: '/home/pos', label: 'POS', icon: ShoppingCart },
-  { path: '/home/credit', label: 'Credit', icon: CreditCard },
+  { path: '/home/pos', label: 'POS', icon: CreditCard },
+  { path: '/home/credit', label: 'Credit', icon: Wallet },
 ]
 
 type MoreItem = { path: string; label: string; icon: ElementType; permission?: OrgPermissions; orgMemberOnly?: boolean }
@@ -48,12 +49,38 @@ export function MobileNavbar() {
 
   return (
     <>
+      {/* Backdrop */}
       {open && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 45 }} />
-          <div style={{ position: 'fixed', left: 0, right: 0, bottom: '72px', background: 'var(--bg-surface)', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', boxShadow: 'var(--shadow-menu)', zIndex: 50, padding: '8px 8px 12px' }}>
-            <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'var(--border-default)', margin: '0 auto 8px' }} />
-            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em', margin: '8px 12px 4px' }}>More</p>
+          <div
+            onClick={() => setOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.35)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              zIndex: 45,
+              transition: 'opacity 0.25s ease',
+            }}
+          />
+          {/* More menu sheet */}
+          <div
+            style={{
+              position: 'fixed',
+              left: '12px',
+              right: '12px',
+              bottom: '90px',
+              background: 'var(--bg-surface)',
+              borderRadius: '20px',
+              boxShadow: '0 16px 48px rgba(0,0,0,0.15), 0 0 0 1px var(--border-default)',
+              zIndex: 50,
+              padding: '6px',
+              maxHeight: '50vh',
+              overflowY: 'auto',
+            }}
+          >
+            <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'var(--border-default)', margin: '8px auto 6px' }} />
             {visibleMoreItems.map(item => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
@@ -62,11 +89,19 @@ export function MobileNavbar() {
                   key={item.path}
                   to={item.path}
                   onClick={() => setOpen(false)}
+                  onTouchStart={() => preloadRoute(item.path)}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: '12px', padding: '12px',
-                    borderRadius: '10px', fontSize: '14px', fontWeight: 500, textDecoration: 'none',
-                    color: isActive ? 'var(--bg-surface)' : 'var(--text-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    padding: '13px 16px',
+                    borderRadius: '14px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    textDecoration: 'none',
+                    color: isActive ? 'var(--text-on-dark)' : 'var(--text-primary)',
                     background: isActive ? 'var(--bg-nav-active)' : 'transparent',
+                    transition: 'background 0.15s',
                   }}
                 >
                   <Icon style={{ width: '20px', height: '20px', flexShrink: 0 }} />
@@ -79,7 +114,25 @@ export function MobileNavbar() {
         </>
       )}
 
-      <nav style={{ display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg-surface)', borderTop: '1px solid var(--border-default)', alignItems: 'center', justifyContent: 'space-around', padding: '8px 4px', zIndex: 40 }}>
+      {/* Floating pill navbar */}
+      <nav
+        style={{
+          position: 'fixed',
+          bottom: '16px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '2px',
+          padding: '6px 8px',
+          background: 'var(--bg-surface)',
+          borderRadius: '28px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px var(--border-default)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          zIndex: 40,
+        }}
+      >
         {primaryItems.map((item) => {
           const Icon = item.icon
           const isActive = location.pathname === item.path
@@ -88,29 +141,52 @@ export function MobileNavbar() {
               key={item.path}
               to={item.path}
               onClick={() => setOpen(false)}
+              onTouchStart={() => preloadRoute(item.path)}
               style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,
-                textDecoration: 'none', minWidth: '56px',
-                color: isActive ? 'var(--text-primary)' : 'var(--text-placeholder)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '2px',
+                padding: '8px 12px',
+                borderRadius: '20px',
+                fontSize: '10px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                minWidth: '52px',
+                color: isActive ? 'var(--text-on-dark)' : 'var(--text-muted)',
+                background: isActive ? 'var(--bg-nav-active)' : 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
-              <Icon style={{ width: '20px', height: '20px', color: isActive ? 'var(--text-primary)' : undefined }} />
+              <Icon style={{ width: '20px', height: '20px' }} />
               <span>{item.label}</span>
             </Link>
           )
         })}
 
+        {/* More button with active indicator */}
         <button
           onClick={() => setOpen(p => !p)}
           style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-            padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,
-            background: 'none', border: 'none', cursor: 'pointer', minWidth: '56px',
-            color: isMoreActive ? 'var(--text-primary)' : 'var(--text-placeholder)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '2px',
+            padding: '8px 12px',
+            borderRadius: '20px',
+            fontSize: '10px',
+            fontWeight: 600,
+            background: isMoreActive ? 'var(--bg-nav-active)' : 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            minWidth: '52px',
+            color: isMoreActive ? 'var(--text-on-dark)' : 'var(--text-muted)',
+            transition: 'all 0.2s ease',
           }}
         >
-          <MoreHorizontal style={{ width: '20px', height: '20px', color: isMoreActive ? 'var(--text-primary)' : undefined }} />
+          <MoreHorizontal style={{ width: '20px', height: '20px' }} />
           <span>More</span>
         </button>
       </nav>

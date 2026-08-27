@@ -70,7 +70,7 @@ export default function Home() {
                     <DesktopHeader />
                     <MobileHeader />
 
-                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: location.pathname == '/home/pos' && bp.lg || bp.md ? '0' : '4rem' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: (location.pathname === '/home/pos' && (bp.lg || bp.md)) ? '0' : '5.5rem' }}>
                         <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>}>
                             <Routes>
                                 <Route path="/dashboard" element={<DashboardPage />} />
