@@ -848,10 +848,11 @@ export const api = {
           const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/purchase-orders/${id}/receive`, { method: 'POST' })
           return poFromApi(res)
         }
-        // Approve/cancel are not server operations yet — return the current PO unchanged.
-        const res = await orgRequest<{ orders: Array<Record<string, unknown>> }>(`/organisations/${orgId()}/purchase-orders`)
-        const order = res.orders.find(o => o.id === id)
-        return order ? poFromApi(order) : ({ id, status } as OrgPurchaseOrder)
+        const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/purchase-orders/${id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status }),
+        })
+        return poFromApi(res)
       },
       deletePurchaseOrder: async (id: string) => {
         await orgRequest<void>(`/organisations/${orgId()}/purchase-orders/${id}`, { method: 'DELETE' })
