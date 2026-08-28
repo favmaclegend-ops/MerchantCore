@@ -62,6 +62,9 @@ export default function LoginPage() {
             setIsLoading(false);
             setIsAlert('flex');
             const msg = e?.message || 'Login failed';
+            if (msg.toLowerCase().includes('not verified')) {
+                sessionStorage.setItem('pending_verify_email', email.current!.value);
+            }
             setAlert({ message: msg, type: 'invalid' });
         }
     }

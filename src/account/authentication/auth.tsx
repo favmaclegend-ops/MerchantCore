@@ -80,4 +80,17 @@ async function verifyEmail(email: string, otp: string) {
   return { data, response };
 }
 
-export {register, login, getProfile, verifyEmail};
+// Resend verification code
+async function resendVerification(email: string) {
+  const response = await fetch(`${API_BASE}/auth/resend-verification`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+  const data = await response.json();
+  return { data, response };
+}
+
+export {register, login, getProfile, verifyEmail, resendVerification};

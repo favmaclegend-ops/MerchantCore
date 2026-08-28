@@ -60,6 +60,7 @@ export default function SigninPage() {
             setIsLoading(false);
 
             if (response.ok) {
+                sessionStorage.setItem('pending_verify_email', email.current!.value);
                 setIsAlert('flex');
                 setAlert({ message: data.message, type: 'success' });
                setTimeout(() => {

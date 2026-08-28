@@ -1,6 +1,6 @@
-import { useState, useRef, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { verifyEmail } from "@/account/authentication/auth";
+import { verifyEmail, resendVerification } from "@/account/authentication/auth";
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -31,14 +31,45 @@ const buttonStyle: React.CSSProperties = {
   cursor: 'pointer',
 }
 
+const resendButtonStyle: React.CSSProperties = {
+  ...buttonStyle,
+  background: 'transparent',
+  color: 'var(--text-primary)',
+  border: '1px solid var(--border-input)',
+}
+
+function extractSeconds(detail: string): number | null {
+  const match = detail.match(/(\d+)\s*seconds?/i);
+  return match ? parseInt(match[1], 10) : null;
+}
+
 export default function VerifyEmailPage() {
   const emailRef = useRef<HTMLInputElement>(null);
   const otpRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(60);
   const [verified, setVerified] = useState(false);
   const navigate = useNavigate();
+
+  const pendingEmail = sessionStorage.getItem('pending_verify_email');
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  const resolveEmail = (): string | null => {
+    const enteredEmail = emailRef.current!.value;
+    if (pendingEmail && enteredEmail !== pendingEmail) {
+      setError('Email does not match the address the code was sent to.');
+      return null;
+    }
+    return enteredEmail;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -46,16 +77,45 @@ export default function VerifyEmailPage() {
     setError('');
     setLoading(true);
 
-    const { data, response } = await verifyEmail(emailRef.current!.value, otpRef.current!.value);
+    const enteredEmail = resolveEmail();
+    if (!enteredEmail) {
+      setLoading(false);
+      return;
+    }
+
+    const { data, response } = await verifyEmail(enteredEmail, otpRef.current!.value);
     setLoading(false);
 
     if (response.ok) {
+      sessionStorage.removeItem('pending_verify_email');
       setMessage(data.message);
       setVerified(true);
       setTimeout(() => navigate('/', { replace: true }), 2500);
     } else {
       setError(data.detail || 'Verification failed');
     }
+  };
+
+  const handleResend = async () => {
+    setMessage('');
+    setError('');
+    const enteredEmail = resolveEmail();
+    if (!enteredEmail) return;
+
+    setResending(true);
+    const { data, response } = await resendVerification(enteredEmail);
+    setResending(false);
+
+    if (response.ok) {
+      setCooldown(60);
+      setMessage(data.message);
+      return;
+    }
+
+    const detail = data.detail || 'Failed to resend verification code';
+    const seconds = extractSeconds(detail);
+    if (seconds) setCooldown(seconds);
+    setError(detail);
   };
 
   return (
@@ -68,7 +128,7 @@ export default function VerifyEmailPage() {
       <form onSubmit={handleSubmit}>
         <div style={fieldStyle}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '8px' }}>Email address</label>
-          <input ref={emailRef} type="email" style={inputStyle} placeholder="you@example.com" required />
+          <input ref={emailRef} type="email" style={inputStyle} placeholder="you@example.com" required defaultValue={pendingEmail ?? ''} />
         </div>
 
         <div style={fieldStyle}>
@@ -94,6 +154,19 @@ export default function VerifyEmailPage() {
           </button>
         )}
       </form>
+
+      {!verified && (
+        <div style={{ marginTop: '16px', textAlign: 'center' }}>
+          <button
+            type="button"
+            style={{ ...resendButtonStyle, opacity: cooldown > 0 || resending ? 0.5 : 1 }}
+            disabled={cooldown > 0 || resending || loading}
+            onClick={handleResend}
+          >
+            {resending ? 'Sending...' : cooldown > 0 ? `Resend code (${cooldown}s)` : 'Resend code'}
+          </button>
+        </div>
+      )}
 
       {verified && (
         <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--border-default)' }}>
