@@ -443,3 +443,20 @@ The market cart lived only in the `marketCartStore` in-memory singleton created 
 - Added hydration: `loadInitialCartItems()` reads `localStorage["market_cart_v1"]` at module load (guarded), validates each entry's shape, and seeds the store.
 - Added persistence: `marketCartStore.subscribe(persistCartItems)` writes the cart to `localStorage` on every state change (guarded for private mode/quota). Explicit `clearMarketCart()` empties it and the empty state is also persisted.
 - The discount-offer "Proceed to Add to Cart" flow (Bug 15) automatically benefits — discount-priced lines persist exactly like any other line.
+
+---
+
+## Bug 17 — Chat poll flooding the backend every few seconds (Medium)
+
+### Problem
+`chatStore.ts` refreshed chat via a 4-second `setInterval` (`refreshStore`) with no websocket in place — and each tick re-fetched **all thread headers + every message of every thread**. `useChatStore()` was mounted in three places (`ChatListPage`, `ChatThreadPage`, `ShopPage`), so on the desktop chat view the list + thread panes ran **two parallel intervals**, and on any shop page a poll ran even though the user wasn't in chat. The poll also ignored tab visibility, so background tabs kept hitting the API every few seconds. While not a timer *leak* (cleanup ran on unmount), it was redundant traffic that overworks the server.
+
+### Fix — single shared, visibility-gated, route-aware poll (`chatStore.ts`)
+- Polling is now a **module-level, ref-counted shared interval** (`acquirePoll`/`releasePoll`): N mounted `useChatStore()` hooks share exactly ONE interval. Desktop list + thread panes therefore dedupe to one poll instead of two.
+- **Visibility-gated**: the interval is created only while the tab is visible, skips a tick when hidden, and does an immediate `refreshStore()` when the tab becomes visible again (`visibilitychange`).
+- **Overlap-guarded**: `refreshInFlight` skips a tick if the previous refresh is still running, so slow backends don't accumulate a backlog of requests.
+- **Route-aware**: `useChatStore({ poll: false })` opts out of polling entirely — `ShopPage` uses it (it only registers the buyer session; it still gets fresh data on the initial load and via the `market-chat` event + `startThread`).
+- Cadence is a named constant (`CHAT_POLL_MS = 4000`) so it's tunable to reduce traffic further if desired (e.g. 8000).
+
+### Notes
+- The notification providers (`notification_provider.tsx`, `org_notification_provider.tsx`) poll every **30s** with correct cleanup — normal, not a leak.

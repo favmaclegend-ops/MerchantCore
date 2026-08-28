@@ -26,7 +26,7 @@ export function ShopPage () {
     const { loading } = useMarketData();
     const { shops, products } = useStore(marketStore);
     const { isOwner } = useShopOwner();
-    useChatStore(); // registers the buyer chat session so Message can start threads
+    useChatStore({ poll: false }); // registers the buyer chat session, but no live polling here
     const [editing, setEditing] = useState<"profile" | "background" | null>(null);
     const [viewing, setViewing] = useState<string | null>(null);
     const [shareOpen, setShareOpen] = useState(false);

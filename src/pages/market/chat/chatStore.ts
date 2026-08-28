@@ -19,7 +19,7 @@
  *   notifyChatChanged()       -> re-render subscribers (e.g. after a send)
  */
 
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Authcontext } from '@/context/auth_context'
 import { getOrgSession } from '@/data/organisations'
 import {
@@ -230,10 +230,74 @@ async function refreshStore(): Promise<void> {
   notifyChatChanged()
 }
 
-export function useChatStore(): { threads: ChatThread[]; unread: number; loading: boolean } {
+// Shared, ref-counted poller. Multiple `useChatStore()` mounts (the list + thread
+// panes mounted together on desktop, or sessions anyone registered on shop pages)
+// share ONE interval instead of each running their own 4s poll. Polling is also
+// paused while the tab is hidden and skips a tick if a previous refresh is still
+// in flight — stopping redundant background traffic from hitting the chat API
+// every few seconds. Cadence can be tuned below.
+const CHAT_POLL_MS = 4000
+
+let sharedInterval: ReturnType<typeof setInterval> | null = null
+let pollRefCount = 0
+let visibilityBound = false
+let refreshInFlight = false
+
+function isDocumentVisible(): boolean {
+  return typeof document === 'undefined' || document.visibilityState !== 'hidden'
+}
+
+async function pollRefresh(): Promise<void> {
+  if (refreshInFlight || !current || !isDocumentVisible()) return
+  refreshInFlight = true
+  try {
+    await refreshStore()
+  } finally {
+    refreshInFlight = false
+  }
+}
+
+function onVisibilityChange(): void {
+  if (document.visibilityState !== 'visible') return
+  void pollRefresh()
+  if (pollRefCount > 0 && !sharedInterval) startSharedInterval()
+}
+
+function startSharedInterval(): void {
+  if (sharedInterval) return
+  sharedInterval = setInterval(() => void pollRefresh(), CHAT_POLL_MS)
+}
+
+function acquirePoll(): void {
+  pollRefCount += 1
+  if (pollRefCount > 1) return
+  if (!visibilityBound) {
+    visibilityBound = true
+    document.addEventListener('visibilitychange', onVisibilityChange)
+  }
+  if (isDocumentVisible()) startSharedInterval()
+}
+
+function releasePoll(): void {
+  pollRefCount = Math.max(0, pollRefCount - 1)
+  if (pollRefCount > 0) return
+  if (sharedInterval) {
+    clearInterval(sharedInterval)
+    sharedInterval = null
+  }
+  if (visibilityBound) {
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+    visibilityBound = false
+  }
+}
+
+export function useChatStore({ poll = true }: { poll?: boolean } = {}): {
+  threads: ChatThread[]
+  unread: number
+  loading: boolean
+} {
   const { user } = useContext(Authcontext)
   const [, force] = useState(0)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     const org = getOrgSession()
@@ -250,17 +314,12 @@ export function useChatStore(): { threads: ChatThread[]; unread: number; loading
     void refreshStore()
     const sync = () => force((n) => n + 1)
     window.addEventListener('market-chat', sync)
-
-    // Realtime-ish refresh: poll for new threads/messages while a participant
-    // is active (no websocket in place yet). Stops when unmounted.
-    pollRef.current = setInterval(() => {
-      if (current) void refreshStore()
-    }, 4000)
+    if (poll) acquirePoll()
     return () => {
       window.removeEventListener('market-chat', sync)
-      if (pollRef.current) clearInterval(pollRef.current)
+      if (poll) releasePoll()
     }
-  }, [])
+  }, [poll])
 
   return { threads: getThreads(), unread: getUnreadCount(), loading: !loaded }
 }
