@@ -32,6 +32,8 @@ import {
   LocationAutocomplete,
   type LocationSelection,
 } from "./LocationAutocomplete";
+import { useInstance } from "elk-components";
+import { store } from "@/context/store";
 
 export function UploadToShopModal({ onClose }: { onClose: () => void }) {
   const bp = useBreakpoint();
@@ -166,9 +168,9 @@ function CreateShopForm({
   const [addressSelection, setAddressSelection] = useState<LocationSelection | null>(null);
   const [citySelection, setCitySelection] = useState<LocationSelection | null>(null);
   const [locationNote, setLocationNote] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-
+  
+  
+  
   const fieldStyle: CSSProperties = {
     width: "100%",
     padding: ".6rem .75rem",
@@ -182,11 +184,12 @@ function CreateShopForm({
 
   const submit = async () => {
     if (!name.trim()) {
-      setError("Shop name is required.");
+      store.setState({error: "Shop name is required."});
       return;
     }
-    setBusy(true);
-    setError("");
+
+    store.setState({busy: true});
+    store.setState({error: ""})
     setLocationNote("");
     let lat: number | undefined;
     let lng: number | undefined;
@@ -219,7 +222,7 @@ function CreateShopForm({
       lat,
       lng,
     });
-    setBusy(false);
+    store.setState({busy: false});
     onCreated(shop);
   };
 
@@ -311,7 +314,7 @@ function CreateShopForm({
         </p>
       )}
 
-      {error && (
+      {store.getState().error && (
         <p
           style={{
             margin: 0,
@@ -319,14 +322,14 @@ function CreateShopForm({
             color: "var(--text-danger)",
           }}
         >
-          {error}
+          {store.getState().error}
         </p>
       )}
 
       <button
         className="click"
         onClick={submit}
-        disabled={busy}
+        disabled={store.getState().busy}
         style={{
           display: "flex",
           alignItems: "center",
@@ -335,7 +338,7 @@ function CreateShopForm({
           width: "100%",
           padding: ".85rem",
           borderRadius: "1rem",
-          cursor: busy ? "wait" : "pointer",
+          cursor: store.getState().busy ? "wait" : "pointer",
           background: "var(--bg-nav-active)",
           border: "none",
           marginTop: ".25rem",
@@ -356,12 +359,11 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
   const posApi = orgUser ? api.org : api;
   const bp = useBreakpoint();
   const [products, setProducts] = useState<PosSourceProduct[] | null>(null);
-  const [error, setError] = useState("");
+ 
   const [mode, setMode] = useState<"all" | "selected">("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [uploadedIds, setUploadedIds] = useState<string[]>([]);
   const [success, setSuccess] = useState("");
-  const [busy, setBusy] = useState(false);
   const [openVariants, setOpenVariants] = useState<string | null>(null);
   const [variantDrafts, setVariantDrafts] = useState<Record<string, VariantDraft[]>>({});
 
@@ -397,9 +399,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
       })
       .catch(() => {
         if (mounted)
-          setError(
-            "Could not load your POS items. Check your connection and try again.",
-          );
+          store.setState({error:"Could not load your POS items. Check your connection and try again.",})
       });
     return () => {
       mounted = false;
@@ -416,13 +416,13 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
     if (missingImage.length > 0) {
       const names = missingImage.map((p) => `"${p.name}"`).join(", ");
       setSuccess("");
-      setError(
+      store.setState({error:
         `Sorry, please select an image for ${missingImage.length === 1 ? "this product" : "these products"} before uploading: ${names}`,
-      );
+      })
       return;
     }
-    setBusy(true);
-    setError("");
+    store.setState({busy: true});
+    store.setState({error: ""})
     try {
       const withVariants = list.map((p) => ({ ...p, variants: toVariantInput(p) }));
       const added = await uploadProductsToShop(ownerKey, withVariants);
@@ -435,11 +435,9 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
       );
       setTimeout(() => setSuccess(""), 4000);
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Upload failed, please try again.",
-      );
+      store.setState({error: e instanceof Error ? e.message : "Upload failed, please try again.",});
     } finally {
-      setBusy(false);
+      store.setState({busy: true});
     }
   };
 
@@ -450,7 +448,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
       )
     )
       return;
-    setError("");
+    store.setState({error: ""})
     if (await removeProductFromMarket(ownerKey, product.id)) {
       syncUserMarketData();
       const ids = await getUploadedSourceIds(ownerKey);
@@ -458,7 +456,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
       setSuccess(`"${product.name}" removed from ${shop.shop_name}.`);
       setTimeout(() => setSuccess(""), 4000);
     } else {
-      setError(`Could not remove "${product.name}" — it is not your upload.`);
+      store.setState({error:`Could not remove "${product.name}" — it is not your upload.`});
     }
   };
 
@@ -494,7 +492,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
     return cleaned.length ? cleaned : undefined;
   };
 
-  if (products === null && !error) {
+  if (products === null && !store.getState().error) {
     return (
       <div
         style={{
@@ -538,7 +536,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
         />
       </div>
 
-      {error && (
+      {store.getState().error && (
         <p
           style={{
             margin: 0,
@@ -550,7 +548,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
             border: "1px solid var(--border-danger)",
           }}
         >
-          {error}
+          {store.getState().error}
         </p>
       )}
 
@@ -657,7 +655,7 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
 
       <button
         className="click"
-        disabled={busy || (mode === "all" ? available.length === 0 : selected.size === 0)}
+        disabled={store.getState().busy || (mode === "all" ? available.length === 0 : selected.size === 0)}
         onClick={() =>
           doUpload(mode === "all" ? available : available.filter((p) => selected.has(p.id)))
         }
@@ -670,21 +668,21 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
           padding: ".85rem",
           borderRadius: "1rem",
           cursor:
-            busy || (mode === "all" ? available.length === 0 : selected.size === 0)
+            store.getState().busy || (mode === "all" ? available.length === 0 : selected.size === 0)
               ? "not-allowed"
               : "pointer",
           background: "var(--bg-nav-active)",
           border: "none",
-          opacity: busy || (mode === "all" ? available.length === 0 : selected.size === 0) ? 0.5 : 1,
+          opacity: store.getState().busy || (mode === "all" ? available.length === 0 : selected.size === 0) ? 0.5 : 1,
         }}
       >
-        {busy ? (
+        {store.getState().busy ? (
           <Loader2 size={18} className="spin" color="var(--bg-surface)" />
         ) : (
           <Upload size={18} color="var(--bg-surface)" />
         )}
         <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
-          {busy
+          {store.getState().busy
             ? "Uploading..."
             : mode === "all"
               ? `Upload all (${available.length})`

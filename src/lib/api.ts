@@ -1,3 +1,4 @@
+import { store } from '@/context/store'
 import { getOrgSession, type OrgMember, type OrgRegisterInput, type OrgSession } from '@/data/organisations'
 import type {
   CheckoutInput,
@@ -92,8 +93,11 @@ async function anonRequest<T>(path: string, options?: RequestInit): Promise<T> {
 // Organisation requests authenticate with the member JWT stored in the org session —
 // never with the personal account's localStorage token.
 function requireOrgSession(): OrgSession {
+
   const session = getOrgSession()
-  if (!session?.token) throw new Error('No active organisation session')
+  if (!session?.token) {
+    store.setState({error: 'Sorry Cannot Create Shop. No active Organization session', busy: false})
+    throw new Error('No active organization session')}
   return session
 }
 
@@ -103,6 +107,7 @@ function orgId(): string {
 
 async function orgRequest<T>(path: string, options?: RequestInit): Promise<T> {
   const session = requireOrgSession()
+  
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
