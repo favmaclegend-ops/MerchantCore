@@ -123,7 +123,7 @@ export function CustomersPage() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder="Search customers..."
-        style={{ width: '100%', height: '40px', padding: '0 14px', border: '1px solid var(--border-default)', borderRadius: '8px', fontSize: '13px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+        style={{ width: '100%', height: '40px', padding: '0 14px', border: '1px solid var(--border-default)', borderRadius: '8px', fontSize: '16px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
       />
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: bp.xl ? '16px' : '12px' }}>

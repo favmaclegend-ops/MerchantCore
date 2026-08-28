@@ -212,7 +212,7 @@ export function Markets() {
               background: "var(--bg-surface)",
               padding: ".5rem .75rem",
               borderRadius: "1rem",
-              fontSize: ".875rem",
+              fontSize: "16px",
             }}
             onChange={handleSearch}
             onFocus={() => setIsSearch(true)}

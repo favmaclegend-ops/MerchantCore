@@ -351,3 +351,112 @@ After creating the backend API, the entire frontend market layer was rewritten t
 | `app/routers/org_auth.py` | `resend_org_code` now looks up the super admin member via `OrgMember.role == "super-admin"` and sends the new OTP to `admin_member.email` instead of the user-provided email. Rate limiting and lookup also keyed to `org.id` instead of `email` |
 
 ---
+
+## Bug 15 — Market Chat Discount Offer: "Offer is missing required details" (Critical)
+
+### Problem
+A seller sends a discount offer from the `DiscountPanel`. When the buyer taps the **"Order This Item"** button on the discount bubble, the order panel rejects it with:
+
+> **"This offer is missing required details and can no longer be used."**
+
+### Root Cause
+`src/pages/market/chat/actions/DiscountPanel.tsx` built the outgoing discount message like this:
+
+```ts
+discountLink: generalStore.getState().discountLink ?? "test_123456",
+```
+
+`generalStore.discountLink` is initialised to `""` and was **never set** by the panel. The `??` (nullish coalescing) operator only falls back when the left side is `null`/`undefined` — **not** on an empty string. So the fallback `"test_123456"` never fired, and the offer was sent with `discountLink: ""`. The full failure chain:
+
+1. Message sent with `discount_link = ""` → stored empty by the backend.
+2. `refreshStore` (4s poll) maps `m.discount_link || undefined` → `undefined` for the buyer.
+3. `DiscountMessageBubble.openOrder()` builds the target with `discountLink: message.discountLink ?? ""` → `""`.
+4. `DiscountOrderPanel` validates `if (!target.discountLink || !target.newPrice)` → `!""` is true → shows "missing required details".
+
+A secondary issue: normal text messages in `ChatThreadPage` re-sent **stale** discount fields from the last offer (including the old link), leaking discount data into ordinary messages.
+
+### Fix
+- `src/pages/market/chat/actions/DiscountPanel.tsx` — added `generateDiscountLink()` (produces `disc-<uuid>` with a fallback). The send handler now builds all values in local variables, sets them in `generalStore`, and passes them **directly** to `sendMessage` (no stale store reads). Also renamed the local price variable to avoid shadowing the `newPrice` ref.
+- `src/pages/market/chat/ChatThreadPage.tsx` — normal (non-discount) sends now pass empty discount fields so stale offer data (link/image/prices/product) is never attached to a plain message.
+
+### How the discount offer now flows end-to-end
+1. **Owner** opens a chat thread → taps `+` → *Negotiate* → *New Discount* (`DiscountPanel`).
+2. `DiscountPanel` loads the owner's on-market inventory items, generates a unique `disc-<uuid>` link, and `sendMessage({ type: "discount", discountLink, discountImage, product_id, oldPrice, newPrice })` sends an encrypted message whose plaintext is `"<name> at a discount price of <amount>"`.
+3. **Backend** (`app/routers/chat.py` / `app/services/chat.py` / `app/models/chat.py`) stores the structured, non-encrypted discount fields alongside the ciphertext and returns them in `_message_api`. Existing callers keep working because the new service params default (`message_type="normal"`, rest `""`) and the model columns are nullable.
+4. **Both sides** map the discount fields back from the API in `refreshStore`, so the bubble survives the 4s poll (`type: message_type === "discount"`).
+5. **Buyer** sees `DiscountMessageBubble` (image, `% OFF` badge, struck old price, discount price, 24h countdown, **Order This Item** button — disabled once expired).
+6. Tapping **Order This Item** opens `DiscountOrderPanel`, which authenticates the offer (link present + within the 24h window from `sentAt`), fetches the shop product via `api.market.getShop(shopId)` (matched by `source_id === product_id` or market `id`), shows the real product, and the **"Proceed to Add to Cart with Discount Price"** button calls `addDiscountedProductToCart` (bakes the discount price into the cart line). Checkout then charges the discount price.
+
+### Known issue (unrelated, tracked separately)
+On small screens the chat thread scroll container can be clipped depending on the wrapping layout; the messages list itself uses `flex: 1; overflowY: auto` in `ChatThreadPage`. Not part of the discount bug.
+
+---
+
+## How to add a new chat bubble type (reusable flow)
+
+Every message is an **encrypted chat message with optional structured metadata**. Messages are discriminated client-side by `ChatMessage.type` (currently `"normal" | "discount"`). To add a new bubble (e.g. `"product"`, `"invoice"`, `"location"`), follow this flow:
+
+### 1. Backend — persist the structured fields
+- **Model** `app/models/chat.py`: add nullable columns with defaults to `ChatMessage` (keeps old rows + existing callers working).
+- **Router** `app/routers/chat.py::send_message`: read the new snake_case body keys (e.g. `"product-id"`) and pass them to `chat.send_encrypted_message(...)`.
+- **Service** `app/services/chat.py::send_encrypted_message`: add the new params **with defaults** and store them on the model instance.
+- **Serialiser** `app/services/chat.py::_message_api`: include the new fields so the frontend can restore them after refresh.
+
+### 2. Frontend API layer — `chatApi.ts`
+- Add the new fields (optional) to `ChatApiMessage`.
+- Add matching params to `apiSendMessage(...)` and append them to the POST body with the snake_case keys.
+
+### 3. Frontend store — `chatStore.ts`
+- Add optional fields to the `ChatMessage` interface.
+- Populate them in the **optimistic push** (inside `sendMessage`).
+- **Critically**, map them back in `refreshStore` from the API response. If you skip this, the bubble renders only until the next 4s poll then loses its data.
+- Optionally add the new `type` to the `'normal' | 'discount'` union.
+
+### 4. Frontend UI
+- Create `XxxMessageBubble({ message, shopId, shopName })` in `src/pages/market/chat/ChatComponents.tsx`.
+- Render it in `ChatThreadPage` with a type discriminator:
+  ```tsx
+  {thread.messages.map((m) =>
+    m.type === "discount" ? (
+      <DiscountMessageBubble key={m.id} message={m} shopId={thread.shopId} shopName={thread.shopName} />
+    ) : m.type === "xxx" ? (
+      <XxxMessageBubble key={m.id} message={m} />
+    ) : (
+      <MessageBubble key={m.id} message={m} />
+    ),
+  )}
+  ```
+
+### 5. Panels / actions (when the bubble opens something)
+- Add a field to `src/pages/market/store/generalStore.ts` (e.g. `discountOrder`), render the panel in `ChatThreadPage` when set, and have the bubble / action button set it via `generalStore.setState(...)`.
+- Follow the existing modal pattern: fixed overlay + backdrop blur, `onClick={close}`, inner `onClick={(e) => e.stopPropagation()}`.
+
+---
+
+## Bug 16 — Market Cart resets when leaving/reloading the market (Medium)
+
+### Problem
+The market cart lived only in the `marketCartStore` in-memory singleton created at module import. It survived route changes within a session (module state), but a full page reload cleared it. On a real phone/browser the cart contents were lost whenever the app was closed or preloaded/DOM was torn down.
+
+### Fix — global store + localStorage persistence (`src/pages/market/cart.ts`)
+- The store is a **module-level singleton** (`createStore`), so every consumer (`useStore(marketCartStore)` in `MarketPage`, the floating cart button, etc.) reads the same state and re-renders on change — the cart is global no matter which page is mounted.
+- Added hydration: `loadInitialCartItems()` reads `localStorage["market_cart_v1"]` at module load (guarded), validates each entry's shape, and seeds the store.
+- Added persistence: `marketCartStore.subscribe(persistCartItems)` writes the cart to `localStorage` on every state change (guarded for private mode/quota). Explicit `clearMarketCart()` empties it and the empty state is also persisted.
+- The discount-offer "Proceed to Add to Cart" flow (Bug 15) automatically benefits — discount-priced lines persist exactly like any other line.
+
+---
+
+## Bug 17 — Chat poll flooding the backend every few seconds (Medium)
+
+### Problem
+`chatStore.ts` refreshed chat via a 4-second `setInterval` (`refreshStore`) with no websocket in place — and each tick re-fetched **all thread headers + every message of every thread**. `useChatStore()` was mounted in three places (`ChatListPage`, `ChatThreadPage`, `ShopPage`), so on the desktop chat view the list + thread panes ran **two parallel intervals**, and on any shop page a poll ran even though the user wasn't in chat. The poll also ignored tab visibility, so background tabs kept hitting the API every few seconds. While not a timer *leak* (cleanup ran on unmount), it was redundant traffic that overworks the server.
+
+### Fix — single shared, visibility-gated, route-aware poll (`chatStore.ts`)
+- Polling is now a **module-level, ref-counted shared interval** (`acquirePoll`/`releasePoll`): N mounted `useChatStore()` hooks share exactly ONE interval. Desktop list + thread panes therefore dedupe to one poll instead of two.
+- **Visibility-gated**: the interval is created only while the tab is visible, skips a tick when hidden, and does an immediate `refreshStore()` when the tab becomes visible again (`visibilitychange`).
+- **Overlap-guarded**: `refreshInFlight` skips a tick if the previous refresh is still running, so slow backends don't accumulate a backlog of requests.
+- **Route-aware**: `useChatStore({ poll: false })` opts out of polling entirely — `ShopPage` uses it (it only registers the buyer session; it still gets fresh data on the initial load and via the `market-chat` event + `startThread`).
+- Cadence is a named constant (`CHAT_POLL_MS = 4000`) so it's tunable to reduce traffic further if desired (e.g. 8000).
+
+### Notes
+- The notification providers (`notification_provider.tsx`, `org_notification_provider.tsx`) poll every **30s** with correct cleanup — normal, not a leak.

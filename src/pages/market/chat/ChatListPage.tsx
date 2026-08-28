@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, MessagesSquare, Trash2 } from 'lucide-react'
+import { ArrowLeft, MessagesSquare, Plus, Trash2 } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import {
   deleteThread,
@@ -60,7 +60,7 @@ export function ChatListPage() {
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          borderBottom: '1px solid var(--border-default)',
+          paddingBlockStart: '2rem'
         }}
       >
         <a
@@ -77,19 +77,25 @@ export function ChatListPage() {
         <h2
           style={{
             margin: 0,
-            fontSize: 19,
+            fontSize: 25,
             fontWeight: 700,
             color: 'var(--text-primary)',
             flex: 1,
           }}
         >
-          Chats
+          Negotiation
         </h2>
         {unread > 0 && (
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             {unread} unread
           </span>
         )}
+
+        <div style={{display: 'flex', alignItems: 'center'}}>
+          <button style={{background: 'var(--bg-nav-active)', padding: '.2rem', borderRadius: '1rem'}}>
+            <Plus color='var(--bg-surface)'/>
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -117,10 +123,10 @@ export function ChatListPage() {
         {filtered.length === 0 ? (
           <EmptyState
             icon={<MessagesSquare size={34} />}
-            title={threads.length === 0 ? 'No conversations yet' : 'No chats match your search'}
+            title={threads.length === 0 ? 'No Negotiation yet' : 'No chats match your search'}
             subtitle={
               threads.length === 0
-                ? 'Open any shop in the market and press the Message button to start a chat.'
+                ? 'Open any shop in the market and press the Message button to start a negotiation.'
                 : 'Try a different name or clear the search.'
             }
           />

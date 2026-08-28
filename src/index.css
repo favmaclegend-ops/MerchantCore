@@ -79,6 +79,7 @@
   --shadow-menu: 0 10px 25px rgba(0,0,0,0.1);
   --default-spreadsheet-bg: white;
   --default-spreadsheet-txt: black;
+  --text-message: white
 
 }
 
@@ -99,7 +100,7 @@
   --bg-info: #1e293b;
   --bg-highlighted: #40444749;
   --bg-scroll-thumb: #00a2ff2f;
-
+  --text-message: white;
 
   --text-primary: #f5f7fb;
   --text-secondary: #e7eef8;
@@ -238,4 +239,10 @@ body {
 
 .click:active {
   transform: scale(.9);
+}
+
+@media (max-width: 600px) {
+  *::-webkit-scrollbar {
+    display: none;
+  }
 }

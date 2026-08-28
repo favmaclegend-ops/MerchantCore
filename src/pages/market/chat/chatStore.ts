@@ -19,7 +19,7 @@
  *   notifyChatChanged()       -> re-render subscribers (e.g. after a send)
  */
 
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Authcontext } from '@/context/auth_context'
 import { getOrgSession } from '@/data/organisations'
 import {
@@ -50,6 +50,23 @@ export interface ChatMessage {
   senderName: string
   status: ChatMessageStatus
   sentAt: string // ISO timestamp
+  type?: 'normal' | 'discount'
+  discountImage?: string
+  discountLink?: string
+  product_id?: string
+  oldPrice?: string
+  newPrice?: string
+}
+
+export interface DiscountMessage {
+  id: string,
+  itemName: string,
+  from: ChatSender,
+  senderName: string,
+  status: ChatMessageStatus,
+  sentAt: string
+  oldPrice: string,
+  newPrice: string
 }
 
 export interface ChatThread {
@@ -65,7 +82,8 @@ export interface ChatThread {
   threadId: string
   threadKey: string // base64 AES-256 thread key
   participantKey: string
-  isOwner: boolean
+  isOwner: boolean,
+
 }
 
 export interface ThreadInput {
@@ -191,6 +209,12 @@ async function refreshStore(): Promise<void> {
                 : api.shop_name || 'Shop',
             status: mine && isLastOwn && otherUnread === 0 ? 'delivered' : 'sent',
             sentAt: m.sent_at || '',
+            type: m.message_type === 'discount' ? 'discount' : undefined,
+            discountImage: m.message_image_url || undefined,
+            discountLink: m.discount_link || undefined,
+            product_id: m.product_id || undefined,
+            oldPrice: m.old_price || undefined,
+            newPrice: m.new_price || undefined,
           })
         }
       } catch {
@@ -206,10 +230,74 @@ async function refreshStore(): Promise<void> {
   notifyChatChanged()
 }
 
-export function useChatStore(): { threads: ChatThread[]; unread: number; loading: boolean } {
+// Shared, ref-counted poller. Multiple `useChatStore()` mounts (the list + thread
+// panes mounted together on desktop, or sessions anyone registered on shop pages)
+// share ONE interval instead of each running their own 4s poll. Polling is also
+// paused while the tab is hidden and skips a tick if a previous refresh is still
+// in flight — stopping redundant background traffic from hitting the chat API
+// every few seconds. Cadence can be tuned below.
+const CHAT_POLL_MS = 4000
+
+let sharedInterval: ReturnType<typeof setInterval> | null = null
+let pollRefCount = 0
+let visibilityBound = false
+let refreshInFlight = false
+
+function isDocumentVisible(): boolean {
+  return typeof document === 'undefined' || document.visibilityState !== 'hidden'
+}
+
+async function pollRefresh(): Promise<void> {
+  if (refreshInFlight || !current || !isDocumentVisible()) return
+  refreshInFlight = true
+  try {
+    await refreshStore()
+  } finally {
+    refreshInFlight = false
+  }
+}
+
+function onVisibilityChange(): void {
+  if (document.visibilityState !== 'visible') return
+  void pollRefresh()
+  if (pollRefCount > 0 && !sharedInterval) startSharedInterval()
+}
+
+function startSharedInterval(): void {
+  if (sharedInterval) return
+  sharedInterval = setInterval(() => void pollRefresh(), CHAT_POLL_MS)
+}
+
+function acquirePoll(): void {
+  pollRefCount += 1
+  if (pollRefCount > 1) return
+  if (!visibilityBound) {
+    visibilityBound = true
+    document.addEventListener('visibilitychange', onVisibilityChange)
+  }
+  if (isDocumentVisible()) startSharedInterval()
+}
+
+function releasePoll(): void {
+  pollRefCount = Math.max(0, pollRefCount - 1)
+  if (pollRefCount > 0) return
+  if (sharedInterval) {
+    clearInterval(sharedInterval)
+    sharedInterval = null
+  }
+  if (visibilityBound) {
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+    visibilityBound = false
+  }
+}
+
+export function useChatStore({ poll = true }: { poll?: boolean } = {}): {
+  threads: ChatThread[]
+  unread: number
+  loading: boolean
+} {
   const { user } = useContext(Authcontext)
   const [, force] = useState(0)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     const org = getOrgSession()
@@ -226,17 +314,12 @@ export function useChatStore(): { threads: ChatThread[]; unread: number; loading
     void refreshStore()
     const sync = () => force((n) => n + 1)
     window.addEventListener('market-chat', sync)
-
-    // Realtime-ish refresh: poll for new threads/messages while a participant
-    // is active (no websocket in place yet). Stops when unmounted.
-    pollRef.current = setInterval(() => {
-      if (current) void refreshStore()
-    }, 4000)
+    if (poll) acquirePoll()
     return () => {
       window.removeEventListener('market-chat', sync)
-      if (pollRef.current) clearInterval(pollRef.current)
+      if (poll) releasePoll()
     }
-  }, [])
+  }, [poll])
 
   return { threads: getThreads(), unread: getUnreadCount(), loading: !loaded }
 }
@@ -264,8 +347,20 @@ export async function startThread(shop: ThreadInput): Promise<ChatThread> {
   return thread
 }
 
+
+interface SendMessage {
+  shopId: string,
+  text: string,
+  discountLink: string,
+  discountImage: string,
+  type: 'normal' | 'discount',
+  oldPrice?: string,
+  newPrice?: string,
+  product_id?: string
+
+}
 /** Encrypt and send a message in the cached thread for a shop. */
-export async function sendMessage(shopId: string, text: string): Promise<ChatThread> {
+export async function sendMessage({shopId, text, type, discountImage, product_id, discountLink, oldPrice, newPrice}: SendMessage): Promise<ChatThread> {
   const thread = getThread(shopId)
   if (!thread) throw new Error('No conversation to send to')
   const trimmed = text.trim()
@@ -278,12 +373,18 @@ export async function sendMessage(shopId: string, text: string): Promise<ChatThr
     senderName: current?.name || '',
     status: 'sending',
     sentAt: now,
+    discountLink: discountLink ?? "",
+    discountImage: discountImage ?? "",
+    type: type ?? 'normal',
+    oldPrice: oldPrice ?? "",
+    newPrice: newPrice ?? "",
+    
   })
   thread.updatedAt = now
   notifyChatChanged()
   let sent: ChatApiMessage
   try {
-    sent = await apiSendMessage(thread.threadId, trimmed, thread.threadKey)
+    sent = await apiSendMessage(thread.threadId, trimmed, thread.threadKey, type, discountImage ?? "", product_id ?? "", oldPrice ?? "", newPrice ?? "", discountLink ?? "")
     thread.messages = thread.messages.map((m) =>
       m.id === optimisticId
         ? { ...m, id: sent.id, status: 'sent', sentAt: sent.sent_at || now }

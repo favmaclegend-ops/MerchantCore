@@ -342,6 +342,7 @@ export function POSPage() {
                 borderRadius: ".4rem",
                 border: " 1px solid var(--border-default)",
                 padding: ".4rem",
+                fontSize: '16px',
               }}
               onChange={handleSearch}
             />

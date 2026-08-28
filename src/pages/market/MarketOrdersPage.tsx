@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle2, XCircle, Clock, RefreshCw } from "lucide-react
 import { api } from "@/lib/api";
 import { fetchMyOrders, marketOrdersStore, type MarketOrder } from "./marketApi";
 import { valueFormater } from "./market";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 const base = () =>
   window.location.pathname.startsWith("/market") ? "/market" : "/home/market";
@@ -17,7 +18,7 @@ export function MarketOrdersPage() {
   const [qrTokens, setQrTokens] = useState<Record<string, string>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-
+  const bp = useBreakpoint();
   const allOrders = useMemo(
     () =>
       orders.length > 0 ? orders : localOrders,
@@ -111,12 +112,14 @@ export function MarketOrdersPage() {
     <div style={{ padding: "1.5rem", maxWidth: "860px", margin: "0 auto", width: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <a
+          {
+            !bp.sm &&
+            <a
             href={base()}
             style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-secondary)", textDecoration: "none" }}
           >
             <ArrowLeft style={{ width: 14, height: 14 }} /> Back to market
-          </a>
+          </a>}
           <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
             My Orders
           </h2>
@@ -147,7 +150,7 @@ export function MarketOrdersPage() {
           style={{
             width: "100%",
             padding: "10px 12px",
-            fontSize: "12px",
+            fontSize: "16px",
             color: "var(--text-primary)",
             background: "var(--bg-surface)",
             border: "1px solid var(--border-default)",

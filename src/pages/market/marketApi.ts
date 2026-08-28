@@ -38,7 +38,7 @@ function adaptShop(raw: Record<string, unknown>): MarketStoreShop {
   };
 }
 
-function adaptProduct(raw: Record<string, unknown>, shopName?: string): MarketStoreProduct {
+export function adaptProduct(raw: Record<string, unknown>, shopName?: string): MarketStoreProduct {
   const images = Array.isArray(raw.images)
     ? (raw.images as Array<Record<string, unknown>>).map((i) => String(i.image_url ?? i.image ?? ""))
     : [];
