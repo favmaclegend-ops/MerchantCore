@@ -5,7 +5,6 @@ import {
   deleteThread,
   getThread,
   markThreadRead,
-  notifyChatChanged,
   sendMessage,
   useChatStore,
 } from './chatStore'
@@ -17,7 +16,7 @@ const base = () => (window.location.pathname.startsWith('/market') ? '/market' :
 export function ChatThreadPage() {
   const { shopId = '' } = useParams()
   const navigate = useNavigate()
-  const { unread } = useChatStore()
+  const { unread, loading } = useChatStore()
   const [text, setText] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -27,8 +26,7 @@ export function ChatThreadPage() {
   useEffect(() => {
     if (!shopId) return
     if (getThread(shopId) && getThread(shopId)!.unread > 0) {
-      markThreadRead(shopId)
-      notifyChatChanged()
+      void markThreadRead(shopId)
     }
   }, [shopId, unread])
 
@@ -39,19 +37,21 @@ export function ChatThreadPage() {
 
   const back = () => navigate(`${base()}/chat`)
 
+  const goShop = () => {
+    if (thread?.shopId) navigate(`${base()}/${thread.shopId}`)
+  }
+
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
     const value = text.trim()
     if (!value || !shopId) return
-    sendMessage(shopId, value)
-    notifyChatChanged()
+    void sendMessage(shopId, value).catch(() => {})
     setText('')
   }
 
   const handleDelete = () => {
     if (!window.confirm('Delete this conversation?')) return
-    deleteThread(shopId)
-    notifyChatChanged()
+    void deleteThread(shopId)
     back()
   }
 
@@ -74,8 +74,12 @@ export function ChatThreadPage() {
           <span style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary)' }}>Chat</span>
         </div>
         <EmptyState
-          title="Conversation not found"
-          subtitle="This thread may have expired. Start a new chat from a shop page."
+          title={loading ? 'Loading conversation…' : 'Conversation not found'}
+          subtitle={
+            loading
+              ? 'Opening your secure chat…'
+              : 'This thread may have expired. Start a new chat from a shop page.'
+          }
         />
       </div>
     )
@@ -106,14 +110,27 @@ export function ChatThreadPage() {
           <ArrowLeft size={20} color="var(--text-secondary)" />
         </button>
         <ShopAvatar name={thread.shopName} image={thread.shopImage} size={34} />
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <button
+          onClick={goShop}
+          title="Open store"
+          style={{
+            flex: 1,
+            minWidth: 0,
+            border: 'none',
+            background: 'transparent',
+            padding: 0,
+            textAlign: 'left',
+            cursor: 'pointer',
+            display: 'block',
+          }}
+        >
           <div style={{ fontWeight: 700, fontSize: 14.5, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {thread.shopName}
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
             {thread.updatedAt ? formatFullTime(thread.updatedAt) : 'Market chat'}
           </div>
-        </div>
+        </button>
         <button
           title="Delete conversation"
           onClick={handleDelete}

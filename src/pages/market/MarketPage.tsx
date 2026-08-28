@@ -31,8 +31,7 @@ import type { MarketCheckoutResult, MarketOrderAlert } from "./marketApi";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { MarketOrdersPage } from "./MarketOrdersPage";
 import { MarketScanPage } from "./MarketScanPage";
-import { ChatListPage } from "./chat/ChatListPage";
-import { ChatThreadPage } from "./chat/ChatThreadPage";
+import { ChatRoute } from "./chat/ChatRoute";
 
 interface CartPanelProps {
   cart: MarketCartItem[];
@@ -549,8 +548,8 @@ export function MarketPage() {
       >
         <Routes>
           <Route path="/" element={<Markets />} />
-          <Route path="/chat" element={<ChatListPage />} />
-          <Route path="/chat/:shopId" element={<ChatThreadPage />} />
+          <Route path="/chat" element={<ChatRoute />} />
+          <Route path="/chat/:shopId" element={<ChatRoute />} />
           <Route path="/orders" element={<MarketOrdersPage />} />
           <Route path="/orders/scan" element={<MarketScanPage />} />
           <Route path="/:id/*" element={<ShopPage />} />

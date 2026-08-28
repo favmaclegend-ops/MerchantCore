@@ -33,7 +33,7 @@ function adaptShop(raw: Record<string, unknown>): MarketStoreShop {
     rating: raw.rating != null ? String(raw.rating) : undefined,
     description: raw.description ? String(raw.description) : undefined,
     createdAt: raw.created_at ? String(raw.created_at) : undefined,
-    ownerKey: raw.owner_id ? `user:${raw.owner_id}` : undefined,
+    ownerKey: raw.owner_id ? String(raw.owner_id) : undefined,
     location: loc,
   };
 }

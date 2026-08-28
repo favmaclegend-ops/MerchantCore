@@ -1,249 +1,330 @@
 /**
- * Market Chat — reusable, localStorage-backed chat store.
+ * Market Chat — E2E-encrypted, backend-driven store.
  *
- * The chat lives entirely in the browser for now (UI-first). Every message and
- * thread is persisted under a single key and pruned on load so that any message
- * older than `MESSAGE_TTL_DAYS` (4 days) is stripped.
+ * Replaces the old localStorage demo store. Threads + messages now live in the
+ * dedicated (encrypted) chat database via the chat API. Message bodies are
+ * AES-256-GCM encrypted and can only be read by participants who hold the shared
+ * thread key (recovered from their own RSA private key). The 4-day TTL purge runs
+ * server-side on startup and during reads.
  *
  * Reusable methods:
- *   getThreads()          -> all threads as an array (newest first, after pruning)
- *   getThread(shopId)     -> a single thread or null
- *   startThread(shop)     -> create/lookup the thread for a shop
- *   sendMessage(shopId, text, from) -> append a message to a thread
- *   markThreadRead(shopId)           -> clear unread for a shop
- *   deleteThread(shopId)             -> remove a thread + its messages
- *   getUnreadCount()                 -> number of threads with unread messages
- *   pruneExpired()                   -> strip messages older than the TTL
+ *   useChatStore()            -> { threads, unread, loading }
+ *   startThread(shop)         -> open/create a buyer<->shop thread
+ *   sendMessage(shopId, text) -> encrypt + send a message
+ *   markThreadRead(shopId)    -> clear unread for a thread
+ *   deleteThread(shopId)      -> delete a thread
+ *   getThread(shopId)         -> a single thread (from cache)
+ *   getThreads()              -> all threads (newest first)
+ *   getUnreadCount()          -> total unread
+ *   notifyChatChanged()       -> re-render subscribers (e.g. after a send)
  */
 
-import { useEffect, useState } from 'react'
-
-export const MESSAGE_TTL_DAYS = 4
-export const MESSAGE_TTL_MS = MESSAGE_TTL_DAYS * 24 * 60 * 60 * 1000
-
-const STORAGE_KEY = 'market_chat_v1'
+import { useContext, useEffect, useRef, useState } from 'react'
+import { Authcontext } from '@/context/auth_context'
+import { getOrgSession } from '@/data/organisations'
+import {
+  apiDeleteThread,
+  apiListMessages,
+  apiListThreads,
+  apiMarkRead,
+  apiOpenThread,
+  apiSendMessage,
+  registerChatKey,
+  type ChatApiMessage,
+} from './chatApi'
+import {
+  decryptPayload,
+  getOrCreateKeypair,
+  unwrapThreadKey,
+} from './chatCrypto'
+import type { ChatApiThread } from './chatTypes'
 
 export type ChatSender = 'me' | 'shop'
+
+export type ChatMessageStatus = 'sending' | 'sent' | 'delivered'
 
 export interface ChatMessage {
   id: string
   text: string
   from: ChatSender
+  senderName: string
+  status: ChatMessageStatus
   sentAt: string // ISO timestamp
 }
 
 export interface ChatThread {
+  // Public UI shape (used by ChatComponents / pages)
   shopId: string
   shopName: string
   shopImage?: string
+  title: string // display name shown in the chat list (the conversation partner)
   messages: ChatMessage[]
   unread: number
   updatedAt: string
+  // Internal E2E metadata (not rendered directly)
+  threadId: string
+  threadKey: string // base64 AES-256 thread key
+  participantKey: string
+  isOwner: boolean
 }
-
-interface ChatStoreData {
-  threads: Record<string, ChatThread>
-}
-
-// ---------------------------------------------------------------------------
-// Persistence helpers
-// ---------------------------------------------------------------------------
-
-function readStore(): ChatStoreData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { threads: {} }
-    const parsed = JSON.parse(raw) as ChatStoreData
-    return { threads: parsed.threads ?? {} }
-  } catch {
-    return { threads: {} }
-  }
-}
-
-function writeStore(data: ChatStoreData): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-  } catch {
-    // storage may be unavailable (private mode / quota) — fail silently
-  }
-}
-
-function nowIso(): string {
-  return new Date().toISOString()
-}
-
-function newId(prefix: string): string {
-  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
-}
-
-// ---------------------------------------------------------------------------
-// TTL pruning
-// ---------------------------------------------------------------------------
-
-/** Strip any message older than the 4-day TTL. Threads left empty are removed. */
-export function pruneExpired(): void {
-  const data = readStore()
-  const cutoff = Date.now() - MESSAGE_TTL_MS
-  let changed = false
-  for (const id of Object.keys(data.threads)) {
-    const thread = data.threads[id]
-    const fresh = (thread.messages ?? []).filter((m) => new Date(m.sentAt).getTime() > cutoff)
-    if (fresh.length !== (thread.messages ?? []).length) changed = true
-    if (fresh.length === 0) {
-      delete data.threads[id]
-      changed = true
-    } else {
-      thread.messages = fresh
-      thread.updatedAt = fresh[fresh.length - 1].sentAt
-    }
-  }
-  if (changed || Object.keys(data.threads).length > 0) writeStore(data)
-}
-
-// ---------------------------------------------------------------------------
-// Public reusable API
-// ---------------------------------------------------------------------------
 
 export interface ThreadInput {
   shopId: string
   shopName: string
   shopImage?: string
+  ownerKey: string
 }
 
-/** All threads, newest activity first (after pruning stale messages). */
-export function getThreads(): ChatThread[] {
-  pruneExpired()
-  const data = readStore()
-  return Object.values(data.threads)
-    .map(normalizeThread)
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+// ---------------------------------------------------------------------------
+// Session + cache
+// ---------------------------------------------------------------------------
+
+interface Participant {
+  key: string
+  name: string
 }
 
-/** A single thread or null. */
+let current: Participant | null = null
+let cache: Record<string, ChatThread> = {}
+let loaded = false
+
+function getThreads(): ChatThread[] {
+  return Object.values(cache).sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  )
+}
+
 export function getThread(shopId: string): ChatThread | null {
-  const thread = readStore().threads[shopId]
-  return thread ? normalizeThread(thread) : null
-}
-
-/**
- * Create (or return) the thread for a shop. Persisting a thread is what makes
- * the shop appear on the default chat list page.
- */
-export function startThread(shop: ThreadInput): ChatThread {
-  const data = readStore()
-  const existing = data.threads[shop.shopId]
-  const now = nowIso()
-  const created: ChatThread = existing ?? {
-    shopId: shop.shopId,
-    shopName: shop.shopName,
-    shopImage: shop.shopImage,
-    messages: [],
-    unread: 0,
-    updatedAt: now,
-  }
-  if (!existing) {
-    created.shopName = shop.shopName
-    created.shopImage = shop.shopImage
-    data.threads[shop.shopId] = created
-    writeStore(data)
-  }
-  return normalizeThread(existing ?? created)
-}
-
-/** Append a message to a shop's thread (creating it when needed). */
-export function sendMessage(shopId: string, text: string): ChatThread {
-  const trimmed = text.trim()
-  const data = readStore()
-  const existing = data.threads[shopId]
-  const now = nowIso()
-  const message: ChatMessage = { id: newId('msg'), text: trimmed, from: 'me', sentAt: now }
-  if (!existing) {
-    // Fallback: no thread yet — create one with a generic name.
-    data.threads[shopId] = {
-      shopId,
-      shopName: shopId,
-      messages: [message],
-      unread: 1,
-      updatedAt: now,
-    }
-  } else {
-    existing.messages.push(message)
-    existing.updatedAt = now
-    existing.unread = (existing.unread ?? 0) + 1
-  }
-  writeStore(data)
-  return normalizeThread(data.threads[shopId])
-}
-
-/** Mark a shop's thread as read. Returns the current unread count for the feed. */
-export function markThreadRead(shopId: string): void {
-  const data = readStore()
-  const thread = data.threads[shopId]
-  if (!thread) return
-  thread.unread = 0
-  writeStore(data)
-}
-
-export function deleteThread(shopId: string): void {
-  const data = readStore()
-  if (data.threads[shopId]) {
-    delete data.threads[shopId]
-    writeStore(data)
-  }
+  return cache[shopId] ?? null
 }
 
 export function getUnreadCount(): number {
-  const data = readStore()
-  return Object.values(data.threads).reduce((sum, t) => sum + (t.unread ?? 0), 0)
+  return Object.values(cache).reduce((sum, t) => sum + (t.unread ?? 0), 0)
 }
 
-function normalizeThread(thread: ChatThread): ChatThread {
-  return {
-    ...thread,
-    messages: (thread.messages ?? []).filter((m) => m && m.text != null),
-    unread: thread.unread ?? 0,
-  }
-}
-
-// ---------------------------------------------------------------------------
-// React bindings (reusable hook)
-// ---------------------------------------------------------------------------
-
-/** Subscribe to the chat store in React components. Re-renders on any write. */
-export function useChatStore(): { threads: ChatThread[]; unread: number } {
-  const [, force] = useState(0)
-  useEffect(() => {
-    const sync = () => force((n) => n + 1)
-    window.addEventListener('market-chat', sync)
-    return () => window.removeEventListener('market-chat', sync)
-  }, [])
-  return { threads: getThreads(), unread: getUnreadCount() }
-}
-
-/** Notify React subscribers that the store changed. */
-export function notifyChatChanged(): void {
-  pruneExpired()
+function notifyChatChanged(): void {
   window.dispatchEvent(new Event('market-chat'))
 }
 
 // ---------------------------------------------------------------------------
-// Seeding (demo content for review)
+// Participant + refresh
 // ---------------------------------------------------------------------------
 
-/** Seed a thread with historic messages (used by the demo). Idempotent per shop. */
-export function seedThread(shop: ThreadInput, messages: ChatMessage[], unread = 0): void {
-  pruneExpired()
-  const data = readStore()
-  const existing = data.threads[shop.shopId]
-  if (existing && existing.messages.length > 0) return
-  const latest = messages.reduce((acc, m) => (m.sentAt > acc ? m.sentAt : acc), messages[0]?.sentAt ?? nowIso())
-  data.threads[shop.shopId] = {
-    shopId: shop.shopId,
-    shopName: shop.shopName,
-    shopImage: shop.shopImage,
-    messages,
-    unread,
-    updatedAt: latest,
-  }
-  writeStore(data)
+export function setParticipant(key: string | null, name: string): void {
+  const next = key ? { key, name } : null
+  if (current?.key === next?.key) return
+  current = next
+  void refreshStore()
 }
+
+async function storeThread(api: ChatApiThread, privateKeyPem: string): Promise<ChatThread | null> {
+  if (!current) return null
+  const isOwner = api.owner_key === current.key
+  // Prefer the wrap minted for this participant. Fall back to the other wrap so
+  // a single browser that switches between a personal (buyer) and org (owner)
+  // account (sharing one keypair) can still recover the thread key.
+  const wraps = isOwner
+    ? [api.thread_key_wrapped_owner, api.thread_key_wrapped_buyer]
+    : [api.thread_key_wrapped_buyer, api.thread_key_wrapped_owner]
+  let threadKey: string | null = null
+  for (const wrapped of wraps) {
+    if (!wrapped) continue
+    try {
+      threadKey = await unwrapThreadKey(privateKeyPem, wrapped)
+      if (threadKey) break
+    } catch {
+      // try the next wrap
+    }
+  }
+  if (!threadKey) return null
+  const thread: ChatThread = {
+    shopId: api.shop_id,
+    shopName: api.shop_name,
+    shopImage: api.shop_image || undefined,
+    title: isOwner ? api.buyer_name || 'Customer' : api.shop_name,
+    messages: [],
+    unread: isOwner ? api.unread_owner : api.unread_buyer,
+    updatedAt: api.last_message_at || api.created_at || '',
+    threadId: api.id,
+    threadKey,
+    participantKey: current.key,
+    isOwner,
+  }
+  cache[thread.shopId] = thread
+  return thread
+}
+
+async function refreshStore(): Promise<void> {
+  const session = current
+  if (!session) {
+    loaded = false
+    return
+  }
+  try {
+    const { privateKeyPem, publicKeyPem } = await getOrCreateKeypair()
+    await registerChatKey(publicKeyPem)
+    const rows = await apiListThreads()
+    const next: Record<string, ChatThread> = {}
+    for (const api of rows) {
+      const thread = await storeThread(api, privateKeyPem)
+      if (!thread) continue
+      try {
+        const otherUnread = thread.isOwner ? api.unread_buyer : api.unread_owner
+        const { messages } = await apiListMessages(api.id)
+        for (const [i, m] of messages.entries()) {
+          let text = ''
+          try {
+            text = await decryptPayload(thread.threadKey, m.ciphertext, m.iv)
+          } catch {
+            text = ''
+          }
+          const mine = m.sender_key === session.key
+          const isLastOwn = mine && (i === messages.length - 1 || messages[i + 1]?.sender_key !== session.key)
+          thread.messages.push({
+            id: m.id,
+            text,
+            from: mine ? 'me' : 'shop',
+            senderName: mine
+              ? session.name
+              : m.sender_key === api.buyer_key
+                ? api.buyer_name || 'Customer'
+                : api.shop_name || 'Shop',
+            status: mine && isLastOwn && otherUnread === 0 ? 'delivered' : 'sent',
+            sentAt: m.sent_at || '',
+          })
+        }
+      } catch {
+        // messages for this thread unavailable — keep an empty thread
+      }
+      next[thread.shopId] = thread
+    }
+    cache = next
+    loaded = true
+  } catch {
+    // keep the previous cache on transient failure
+  }
+  notifyChatChanged()
+}
+
+export function useChatStore(): { threads: ChatThread[]; unread: number; loading: boolean } {
+  const { user } = useContext(Authcontext)
+  const [, force] = useState(0)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    const org = getOrgSession()
+    if (user?.id) {
+      setParticipant(`user:${user.id}`, user.full_name || user.username || 'Buyer')
+    } else if (org) {
+      setParticipant(`org:${org.orgId}`, org.member.name || org.member.username || 'Shop')
+    } else {
+      setParticipant(null, '')
+    }
+  }, [user?.id, user?.full_name, user?.username])
+
+  useEffect(() => {
+    void refreshStore()
+    const sync = () => force((n) => n + 1)
+    window.addEventListener('market-chat', sync)
+
+    // Realtime-ish refresh: poll for new threads/messages while a participant
+    // is active (no websocket in place yet). Stops when unmounted.
+    pollRef.current = setInterval(() => {
+      if (current) void refreshStore()
+    }, 4000)
+    return () => {
+      window.removeEventListener('market-chat', sync)
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [])
+
+  return { threads: getThreads(), unread: getUnreadCount(), loading: !loaded }
+}
+
+// ---------------------------------------------------------------------------
+// Imperative actions
+// ---------------------------------------------------------------------------
+
+/** Open (or create) the buyer<->shop thread and cache it locally. */
+export async function startThread(shop: ThreadInput): Promise<ChatThread> {
+  if (!current) {
+    throw new Error('Please sign in with a customer account to message this shop.')
+  }
+  const { privateKeyPem, publicKeyPem } = await getOrCreateKeypair()
+  await registerChatKey(publicKeyPem)
+  const api = await apiOpenThread({
+    shop_id: shop.shopId,
+    shop_name: shop.shopName,
+    shop_image: shop.shopImage,
+    owner_key: shop.ownerKey,
+  })
+  const thread = await storeThread(api, privateKeyPem)
+  if (!thread) throw new Error('Could not open chat thread')
+  notifyChatChanged()
+  return thread
+}
+
+/** Encrypt and send a message in the cached thread for a shop. */
+export async function sendMessage(shopId: string, text: string): Promise<ChatThread> {
+  const thread = getThread(shopId)
+  if (!thread) throw new Error('No conversation to send to')
+  const trimmed = text.trim()
+  const now = new Date().toISOString()
+  const optimisticId = `local-${Date.now()}`
+  thread.messages.push({
+    id: optimisticId,
+    text: trimmed,
+    from: 'me',
+    senderName: current?.name || '',
+    status: 'sending',
+    sentAt: now,
+  })
+  thread.updatedAt = now
+  notifyChatChanged()
+  let sent: ChatApiMessage
+  try {
+    sent = await apiSendMessage(thread.threadId, trimmed, thread.threadKey)
+    thread.messages = thread.messages.map((m) =>
+      m.id === optimisticId
+        ? { ...m, id: sent.id, status: 'sent', sentAt: sent.sent_at || now }
+        : m,
+    )
+  } catch (err) {
+    thread.messages = thread.messages.filter((m) => m.id !== optimisticId)
+    notifyChatChanged()
+    throw err
+  }
+  const lastIdx = thread.messages.length - 1
+  if (lastIdx >= 0) thread.messages[lastIdx].status = 'sent'
+  notifyChatChanged()
+  return thread
+}
+
+/** Mark a thread read for the current participant. */
+export async function markThreadRead(shopId: string): Promise<void> {
+  const thread = getThread(shopId)
+  if (!thread) return
+  try {
+    await apiMarkRead(thread.threadId)
+  } catch {
+    // non-fatal
+  }
+  thread.unread = 0
+  notifyChatChanged()
+}
+
+/** Delete a thread (server + local cache). */
+export async function deleteThread(shopId: string): Promise<void> {
+  const thread = getThread(shopId)
+  if (thread?.threadId) {
+    try {
+      await apiDeleteThread(thread.threadId)
+    } catch {
+      // non-fatal — still remove locally
+    }
+  }
+  delete cache[shopId]
+  notifyChatChanged()
+}
+
+export { notifyChatChanged }

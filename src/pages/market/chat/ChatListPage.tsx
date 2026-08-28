@@ -1,15 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, MessagesSquare, Trash2 } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import {
   deleteThread,
-  notifyChatChanged,
   useChatStore,
   type ChatThread,
 } from './chatStore'
 import { EmptyState, SearchInput, ThreadListItem } from './ChatComponents'
-import { seedDemoChats } from './demoChat'
 
 const base = () => (window.location.pathname.startsWith('/market') ? '/market' : '/home/market')
 
@@ -17,31 +15,29 @@ export function ChatListPage() {
   const navigate = useNavigate()
   const bp = useBreakpoint()
   const [searchParams] = useSearchParams()
+  const location = useLocation()
   const { threads, unread } = useChatStore()
   const [query, setQuery] = useState('')
 
-  // Seed demo conversations once so the UI can be reviewed.
-  useEffect(() => {
-    seedDemoChats()
-  }, [])
-
-  const activeShopId = searchParams.get('active') || undefined
+  const activeShopId =
+    searchParams.get('active') || (() => {
+      const m = location.pathname.match(/\/chat\/([^/]+)/)
+      return m ? decodeURIComponent(m[1]) : undefined
+    })()
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return threads
-    return threads.filter((t) => t.shopName.toLowerCase().includes(q))
+    return threads.filter((t) => (t.title || t.shopName).toLowerCase().includes(q))
   }, [threads, query])
 
   const openThread = (shopId: string) => {
     navigate(`${base()}/chat/${shopId}`)
   }
 
-  const removeThread = (e: React.MouseEvent, shopId: string) => {
-    e.stopPropagation()
+  const removeThread = (shopId: string) => {
     if (!window.confirm('Delete this conversation?')) return
-    deleteThread(shopId)
-    notifyChatChanged()
+    void deleteThread(shopId)
   }
 
   return (
@@ -153,39 +149,208 @@ export function ChatListPage() {
                       : 'none',
                 }}
               >
-                <ThreadListItem
+                <ChatTile
                   thread={thread}
                   active={thread.shopId === activeShopId}
-                  onClick={() => openThread(thread.shopId)}
+                  onOpen={() => openThread(thread.shopId)}
+                  onDelete={() => removeThread(thread.shopId)}
                 />
-                <button
-                  title="Delete conversation"
-                  onClick={(e) => removeThread(e, thread.shopId)}
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    right: 12,
-                    transform: 'translateY(-50%)',
-                    width: 34,
-                    height: 34,
-                    border: 'none',
-                    borderRadius: '50%',
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-muted)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: bp.sm ? 0 : 1,
-                  }}
-                >
-                  <Trash2 size={15} />
-                </button>
               </div>
             ))}
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+const SWIPE_REVEAL = 72
+const DELETE_WIDTH = 76
+
+function ChatTile({
+  thread,
+  active,
+  onOpen,
+  onDelete,
+}: {
+  thread: ChatThread
+  active: boolean
+  onOpen: () => void
+  onDelete: () => void
+}) {
+  const startX = useRef<number | null>(null)
+  const startTranslate = useRef(0)
+  const swiped = useRef(false)
+  const [dx, setDx] = useState(0)
+  const [open, setOpen] = useState(false)
+  const [menu, setMenu] = useState(false)
+  const [dragging, setDragging] = useState(false)
+  const bp = useBreakpoint()
+
+  const handled = (() => {
+    if (open) return -DELETE_WIDTH
+    return dx
+  })()
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX
+    startTranslate.current = open ? -DELETE_WIDTH : 0
+    swiped.current = false
+    setDragging(true)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startX.current === null) return
+    const delta = e.touches[0].clientX - startX.current
+    if (Math.abs(delta) > 6) swiped.current = true
+    const next = Math.max(-DELETE_WIDTH - 8, Math.min(0, startTranslate.current + delta))
+    setDx(next)
+  }
+
+  const handleTouchEnd = () => {
+    startX.current = null
+    setDragging(false)
+    if (swiped.current) {
+      if (-dx >= SWIPE_REVEAL) {
+        setOpen(true)
+        setDx(0)
+      } else {
+        setOpen(false)
+        setDx(0)
+      }
+    } else {
+      setOpen(false)
+      setDx(0)
+    }
+  }
+
+  const handleClick = () => {
+    if (swiped.current) {
+      swiped.current = false
+      return
+    }
+    if (menu) {
+      setMenu(false)
+      return
+    }
+    if (open) {
+      setOpen(false)
+      return
+    }
+    onOpen()
+  }
+
+  const deleteIt = () => {
+    setOpen(false)
+    setMenu(false)
+    onDelete()
+  }
+
+  return (
+    <div
+      style={{ position: 'relative', width: '100%', minWidth: 0, overflow: 'hidden' }}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        setMenu((m) => !m)
+      }}
+    >
+      {/* Revealed delete action behind the tile (swipe-left reveal) */}
+      <div
+        role="button"
+        aria-label="Delete conversation"
+        onClick={(e) => {
+          e.stopPropagation()
+          deleteIt()
+        }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: DELETE_WIDTH,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#e5484d',
+          color: '#fff',
+          cursor: 'pointer',
+        }}
+      >
+        <Trash2 size={18} />
+      </div>
+
+      {/* Sliding content */}
+      <div
+        onClick={handleClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        style={{
+          position: 'relative',
+          width: '100%',
+          minWidth: 0,
+          transform: `translateX(${handled}px)`,
+          transition: dragging ? 'none' : 'transform .2s ease',
+          background: 'var(--bg-surface)',
+          touchAction: 'pan-y',
+        }}
+      >
+        <ThreadListItem thread={thread} active={active} onClick={() => {}} />
+      </div>
+
+      {/* Right-click / long-press style context menu */}
+      {menu && (
+        <div
+          role="button"
+          aria-label="Close menu"
+          onClick={(e) => {
+            e.stopPropagation()
+            setMenu(false)
+          }}
+          style={{ position: 'fixed', inset: 0, zIndex: 30, background: 'transparent' }}
+        />
+      )}
+      {menu && (
+        <div
+          style={{
+            position: 'absolute',
+            right: 12,
+            top: bp.sm ? '52%' : '100%',
+            marginTop: 4,
+            zIndex: 40,
+            minWidth: 170,
+            borderRadius: 10,
+            overflow: 'hidden',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            boxShadow: '0 8px 24px rgba(0,0,0,.18)',
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              deleteIt()
+            }}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              border: 'none',
+              background: 'transparent',
+              color: '#e5484d',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 13.5,
+              textAlign: 'left',
+            }}
+          >
+            <Trash2 size={15} />
+            Delete conversation
+          </button>
+        </div>
+      )}
     </div>
   )
 }

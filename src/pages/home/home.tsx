@@ -31,7 +31,7 @@ export default function Home() {
     const { user, orgUser, loading, logout } = useContext(Authcontext)
     const bp = useBreakpoint()
 
-    const isChatThreadPage = location.pathname.match(/\/market\/chat\/.+/)
+    const isChatThreadPage = location.pathname.match(/\/market\/chat(\/|$)/)
     const hideFrame = !!isChatThreadPage
 
     if (loading) {

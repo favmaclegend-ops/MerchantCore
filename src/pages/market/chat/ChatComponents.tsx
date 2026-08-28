@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Search, MessagesSquare, X } from 'lucide-react'
+import { Check, CheckCheck, Search, MessagesSquare, X } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import type { ChatMessage } from './chatStore'
 import { formatRelativeTime, initials } from './chatFormat'
@@ -34,35 +34,80 @@ export function ShopAvatar({ name, image, size = 44 }: { name: string; image?: s
 export function MessageBubble({ message }: { message: ChatMessage }) {
   const mine = message.from === 'me'
   return (
-    <div style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 10 }}>
-      <div
-        style={{
-          maxWidth: 'min(78%, 420px)',
-          padding: '9px 13px',
-          borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-          background: mine ? 'var(--bg-nav-active)' : 'var(--bg-secondary)',
-          color: mine ? 'var(--bg-surface)' : 'var(--text-primary)',
-          fontSize: '13.5px',
-          lineHeight: 1.45,
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word',
-          boxShadow: '0 1px 2px rgba(0,0,0,.06)',
-        }}
-      >
-        {message.text}
-        <span
+    <div style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 14 }}>
+      <div style={{ maxWidth: 'min(78%, 420px)', display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start' }}>
+        {!mine && message.senderName && (
+          <span
+            style={{
+              fontSize: 11.5,
+              fontWeight: 600,
+              color: 'var(--bg-nav-active)',
+              marginBottom: 3,
+              padding: '0 4px',
+            }}
+          >
+            {message.senderName}
+          </span>
+        )}
+        <div
           style={{
-            display: 'block',
-            marginTop: 4,
-            fontSize: 10,
-            opacity: 0.72,
-            textAlign: 'right',
+            maxWidth: 'min(100%, 420px)',
+            padding: '9px 13px',
+            borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+            background: mine ? 'var(--bg-nav-active)' : 'var(--bg-secondary)',
+            color: mine ? 'var(--bg-surface)' : 'var(--text-primary)',
+            fontSize: '13.5px',
+            lineHeight: 1.45,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            boxShadow: '0 1px 2px rgba(0,0,0,.06)',
           }}
         >
-          {formatRelativeTime(message.sentAt)}
-        </span>
+          {message.text}
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              marginTop: 4,
+              fontSize: 10,
+              opacity: 0.72,
+              justifyContent: 'flex-end',
+            }}
+          >
+            <span>{formatRelativeTime(message.sentAt)}</span>
+            {mine && <MessageStatusIcon status={message.status} />}
+          </span>
+        </div>
       </div>
     </div>
+  )
+}
+
+export function MessageStatusIcon({ status }: { status: ChatMessage['status'] }) {
+  if (status === 'sending') {
+    return (
+      <>
+        <style>{'@keyframes chatspin { to { transform: rotate(360deg); } }'}</style>
+        <span
+          aria-label="Sending"
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: '50%',
+            border: '1.5px solid currentColor',
+            borderTopColor: 'transparent',
+            display: 'inline-block',
+            animation: 'chatspin 0.8s linear infinite',
+          }}
+        />
+      </>
+    )
+  }
+  return status === 'delivered' ? (
+    <CheckCheck size={13} aria-label="Delivered" style={{ display: 'block' }} />
+  ) : (
+    <Check size={13} aria-label="Sent" style={{ display: 'block' }} />
   )
 }
 
@@ -71,13 +116,15 @@ export function ThreadListItem({
   active,
   onClick,
 }: {
-  thread: { shopName: string; shopImage?: string; messages: ChatMessage[]; unread: number; updatedAt: string }
+  thread: { title: string; shopImage?: string; isOwner: boolean; messages: ChatMessage[]; unread: number; updatedAt: string }
   active?: boolean
   onClick: () => void
 }) {
   const bp = useBreakpoint()
   const last = thread.messages[thread.messages.length - 1]
-  const preview = last ? `${last.from === 'me' ? 'You: ' : ''}${last.text}` : 'No messages yet'
+  const preview = last
+    ? `${last.from === 'me' ? `You${last.status === 'sending' ? ' (sending)' : ''}: ` : last.senderName ? `${last.senderName}: ` : ''}${last.text}`
+    : 'No messages yet'
 
   const compact = bp.sm
   const avatarSize = compact ? 40 : 49
@@ -106,7 +153,7 @@ export function ThreadListItem({
         transition: 'background .12s ease',
       }}
     >
-      <ShopAvatar name={thread.shopName} image={thread.shopImage} size={avatarSize} />
+      <ShopAvatar name={thread.title} image={thread.isOwner ? undefined : thread.shopImage} size={avatarSize} />
 
       <div style={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden' }}>
         {/* Row 1: name (left) + timestamp (right) */}
@@ -122,7 +169,7 @@ export function ThreadListItem({
               minWidth: 0,
             }}
           >
-            {thread.shopName}
+            {thread.title}
           </span>
           {thread.updatedAt && (
             <span

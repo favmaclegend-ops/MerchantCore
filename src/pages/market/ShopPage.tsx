@@ -15,7 +15,7 @@ import { ShopPageReabon } from "./components/ShopPageReabon";
 import { OverView } from "./components/OverView";
 import { Products } from "./components/Products";
 import { MarketLoading } from "./components/MarketLoading";
-import { startThread, notifyChatChanged } from "./chat/chatStore";
+import { startThread, notifyChatChanged, useChatStore } from "./chat/chatStore";
 
 
 export function ShopPage () {
@@ -26,10 +26,13 @@ export function ShopPage () {
     const { loading } = useMarketData();
     const { shops, products } = useStore(marketStore);
     const { isOwner } = useShopOwner();
+    useChatStore(); // registers the buyer chat session so Message can start threads
     const [editing, setEditing] = useState<"profile" | "background" | null>(null);
     const [viewing, setViewing] = useState<string | null>(null);
     const [shareOpen, setShareOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+    const chatLoadingRef = useRef(false);
+    const [chatError, setChatError] = useState("");
     const shareRef = useRef<HTMLDivElement>(null);
 
     const shopUrl = typeof window !== 'undefined'
@@ -232,19 +235,35 @@ export function ShopPage () {
                                     </div>
                                 )}
                             </div>
-                            <button className="click" onClick={() => {
-                                const basePath = location.pathname.startsWith('/market') ? '/market' : '/home/market';
-                                startThread({
-                                    shopId: shop.shop_id,
-                                    shopName: shop.shop_name || 'Shop',
-                                    shopImage: shop.shopProfileImage,
-                                });
-                                notifyChatChanged();
-                                navigate(`${basePath}/chat/${shop.shop_id}`);
+                            <button className="click" onClick={async () => {
+                                if (chatLoadingRef.current) return;
+                                setChatError("");
+                                chatLoadingRef.current = true;
+                                try {
+                                    await startThread({
+                                        shopId: shop.shop_id,
+                                        shopName: shop.shop_name || 'Shop',
+                                        shopImage: shop.shopProfileImage,
+                                        ownerKey: shop.ownerKey || '',
+                                    });
+                                    notifyChatChanged();
+                                    const basePath = location.pathname.startsWith('/market') ? '/market' : '/home/market';
+                                    navigate(`${basePath}/chat/${shop.shop_id}`);
+                                } catch (e) {
+                                    console.error("Failed to start chat:", e);
+                                    setChatError(e instanceof Error ? e.message : 'Could not start chat. Please sign in as a customer to message this shop.');
+                                } finally {
+                                    chatLoadingRef.current = false;
+                                }
                             }} style={{display: 'flex', padding: bp.sm ? '.6rem .8rem' : '1rem', alignItems: 'center', cursor: 'pointer', gap: '.5rem', borderRadius: '1rem', background: 'var(--bg-nav-active)', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.2)'}}>
                                 <MessageCircle size={bp.sm ? 18 : 24} color="var(--bg-surface)"/>
                                 {!bp.sm && <span style={{color: 'var(--bg-surface)'}}>Message</span>}
                             </button>
+                            {chatError && (
+                                <p style={{ margin: '8px 0 0 0', fontSize: '.78rem', color: 'var(--text-danger)', maxWidth: 260, lineHeight: 1.4 }}>
+                                    {chatError}
+                                </p>
+                            )}
                         </div>
                     
                     </div>

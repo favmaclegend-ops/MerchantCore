@@ -41,7 +41,7 @@ permission (Super Admin / Admin / Finance Manager) · `[dev]` mock-backed until 
 | **Customers** | Directory CRUD, spending/tier, add-to-credit | `src/pages/customers/CustomersPage.tsx` |
 | **Credit Ledger** | Debtors, balances, payments, overdue/critical status | `src/pages/credit/CreditLedgerPage.tsx` |
 | **Calculator** | In-app utility | `src/pages/calculator/` |
-| **Market** | Shop browsing, product catalog, cart & checkout with per-shop order alerts, billboard ads | `src/pages/market/` (see §5e) |
+| **Market** | Shop browsing, product catalog, cart & checkout with per-shop order alerts, billboard ads, and E2E-encrypted shop chat | `src/pages/market/` (see §5e, §5f) |
 | **Spreadsheet (External)** | FortuneSheet workbook workspace — create, autosave, save (Ctrl+S), import/export `.xlsx`/`.csv`, deep-linked editor | `src/pages/spreadsheet/external/` |
 | **Settings** | App preferences | `src/pages/settings/` |
 
@@ -223,6 +223,63 @@ in-app **billboard** that plays short video adverts.
   ```
 
   See `README.md` → "Market & Billboard Ads" for the endpoint mapping and integration checklist.
+
+## 5f. Market Chat (end-to-end encrypted) — `[all users]`
+
+`src/pages/market/chat/` · `chatApi.ts` · `chatStore.ts` · `chatCrypto.ts` · `chatTypes.ts` ·
+`ChatRoute.tsx` · `ChatListPage.tsx` · `ChatThreadPage.tsx`
+
+A WhatsApp-style shop-messaging feature (`/market/chat` list + `/market/chat/:shopId` thread)
+backed by the **real chat API** (see `API.md` §6) with **end-to-end encryption** — the server can
+never read message contents:
+
+- **Identity**: a personal user is a **buyer** (`user:<id>`); an org member is a **shop owner**
+  (`org:<org_id>`). A buyer starts a conversation from a shop's **Message** button
+  (`startThread`), which registers the buyer's RSA public key, opens (or reuses) the thread, and
+  navigates to the thread page. Only buyers can start threads. **Owners** see the conversations
+  buyers started with their shop in the same chat UI — `useChatStore` resolves the participant from
+  the personal `Authcontext.user` (`user:<id>`) **or** the org session (`org:<orgId>`), so both
+  roles load their threads.
+- **Encryption** (`chatCrypto.ts`, Web Crypto): per-participant **RSA-2048 / OAEP-SHA256** keypair,
+  a per-thread symmetric key **AES-256-GCM** for message bodies, and the thread key stored only as
+  ciphertext wrapped under each participant's RSA public key. The private key lives in localStorage
+  and never leaves the client; message bodies are decrypted locally after fetching. When a role's
+  own wrap is missing (e.g. the owner's key wasn't registered when the thread was created),
+  `storeThread` **falls back to the other participant's wrap** — so a single browser switching
+  between a personal buyer and the org owner (sharing one keypair) can still recover the thread key.
+- **Realtime**: while the chat is open, `useChatStore` **polls the API every ~4s** (no websocket in
+  place yet), so messages sent by the other participant appear without a manual refresh.
+- **State** (`chatStore.ts`): `useChatStore()` exposes `{ threads, unread, loading }`; reusable
+  actions `startThread`, `sendMessage`, `markThreadRead`, `deleteThread`, `getThread(s)`,
+  `getUnreadCount`, `notifyChatChanged`. A user signed in only as an org member (no personal buyer
+  session) gets a clear "sign in with a customer account to message this shop" prompt from the shop
+  **Message** button.
+- **Widescreen layout** (`ChatRoute.tsx`): on wide screens (`useBreakpoint().lg`) the chat renders a
+  **two-column grid** — a left column with the list of stores that have open conversations and a
+  right column with the selected conversation panel (a placeholder prompts to pick a conversation).
+  On narrow screens it keeps the single-page flow (list page, then full-screen thread once opened).
+  The open conversation is highlighted in the list from the URL `/chat/:shopId`.
+- **Thread page** (`ChatThreadPage.tsx`): loads + decrypts the conversation (loading state), sends
+  the buyer's messages (E2E-encrypted), and shows the **shop name as a clickable link** that
+  navigates back to the shop page. Each **outgoing message shows a delivery tick** (WhatsApp-style):
+  a blue double-check when the other participant has read the conversation, a single check once it's
+  stored server-side, and a spinner while it's still sending (`sending`/`sent`/`delivered` status on
+  `ChatMessage`, driven by the other side's unread count).
+- **List page** (`ChatListPage.tsx`): a WhatsApp-style list sorted by newest activity. Each tile
+  shows the **actual conversation partner** as the title — the buyer name for a shop owner viewing,
+  the shop name for a buyer viewing (`ChatThread.title`, so the list shows the person/org you're
+  chatting with, not always the shop) — plus the **last-message time**, an **unread-count indicator**
+  badge, and a preview that prefixes the sender's name. Deleting a conversation uses **no visible
+  button**: on desktop you **right-click** a tile to open a context menu, and on mobile you **swipe
+  the tile left** to reveal a red delete action (`ChatTile` in `ChatListPage.tsx`).
+- **Embedding**: the chat routes hide the app frame (header/nav/gap) via the `hideFrame` regex
+  `/\/market\/chat(\/|$)/` in `home.tsx`, and the cart is hidden on chat routes so the thread stays
+  clean.
+- **Identity for API calls** (`chatApi.ts`): `getChatToken()` uses the personal JWT
+  (`localStorage 'token'`) first, else the org session token, so both buyers and owners authenticate
+  against `/chat/*`.
+- **Data lifecycle**: threads/messages live in a dedicated `chat.db` and are purged server-side
+  after a **4-day TTL** on startup and during reads (freshly-created empty threads are retained).
 
 ## 6. Platform-wide
 
