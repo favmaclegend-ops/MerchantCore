@@ -23,6 +23,7 @@ import { useContext, useEffect, useState } from 'react'
 import { Authcontext } from '@/context/auth_context'
 import { getOrgSession } from '@/data/organisations'
 import {
+  apiDeleteMessage,
   apiDeleteThread,
   apiListMessages,
   apiListThreads,
@@ -31,6 +32,7 @@ import {
   apiSendMessage,
   registerChatKey,
   type ChatApiMessage,
+  type DeleteMessageScope,
 } from './chatApi'
 import {
   decryptPayload,
@@ -425,6 +427,20 @@ export async function deleteThread(shopId: string): Promise<void> {
     }
   }
   delete cache[shopId]
+  notifyChatChanged()
+}
+
+export async function deleteMessage(
+  threadId: string,
+  messageId: string,
+  scope: DeleteMessageScope = 'me',
+): Promise<void> {
+  const thread = Object.values(cache).find((entry) => entry.threadId === threadId)
+  if (!thread) return
+
+  await apiDeleteMessage(threadId, messageId, scope)
+  thread.messages = thread.messages.filter((message) => message.id !== messageId)
+  thread.updatedAt = new Date().toISOString()
   notifyChatChanged()
 }
 

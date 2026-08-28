@@ -1,20 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Info, Plus, Send, Trash2 } from "lucide-react";
 import {
+  deleteMessage,
   deleteThread,
   getThread,
   markThreadRead,
   sendMessage,
   useChatStore,
 } from "./chatStore";
-import { DiscountMessageBubble, EmptyState, MessageBubble, ShopAvatar } from "./ChatComponents";
+import {
+  DiscountMessageBubble,
+  EmptyState,
+  MessageActionPanel,
+  MessageBubble,
+  ShopAvatar,
+} from "./ChatComponents";
 import { formatFullTime } from "./chatFormat";
 import { generalStore } from "../store/generalStore";
 import NegotiationPanel from "./actions/NegotiationPanel";
 import { useStore } from "elk-components";
 import DiscountPanel from "./actions/DiscountPanel";
 import DiscountOrderPanel from "./actions/DiscountOrderPanel";
+import { Authcontext } from "@/context";
 
 const base = () =>
   window.location.pathname.startsWith("/market") ? "/market" : "/home/market";
@@ -22,12 +30,42 @@ const base = () =>
 export function ChatThreadPage() {
   const { shopId = "" } = useParams();
   const navigate = useNavigate();
+  const {orgUser} = useContext(Authcontext)
   const { unread, loading } = useChatStore();
   const [text, setText] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
+  const [menuTarget, setMenuTarget] = useState<{ id: string; rect: DOMRect } | null>(null);
+  const [panelRect, setPanelRect] = useState<DOMRect | null>(null);
   useStore(generalStore);
 
   const thread = getThread(shopId);
+
+  const activeMessage = menuTarget
+    ? thread?.messages.find((m) => m.id === menuTarget.id) ?? null
+    : null;
+
+  const openMenu = (id: string, rect: DOMRect) => {
+    setMenuTarget({ id, rect });
+    setPanelRect(listRef.current?.getBoundingClientRect() ?? null);
+  };
+
+  useEffect(() => {
+    if (!menuTarget) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuTarget(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuTarget]);
+
+  useEffect(() => {
+    if (!menuTarget) return;
+    const updateRect = () => {
+      if (listRef.current) setPanelRect(listRef.current.getBoundingClientRect());
+    };
+    window.addEventListener("resize", updateRect);
+    return () => window.removeEventListener("resize", updateRect);
+  }, [menuTarget]);
 
   // Mark read + scroll when opening or when messages change.
   useEffect(() => {
@@ -232,8 +270,43 @@ export function ChatThreadPage() {
       {/* Messages */}
       <div
         ref={listRef}
-        style={{ flex: 1, overflowY: "auto", padding: "16px" }}
+        style={{
+          flex: 1,
+          overflowY: menuTarget ? "hidden" : "auto",
+          padding: "16px",
+          position: "relative",
+        }}
+        onScroll={() => setMenuTarget(null)}
       >
+        {menuTarget && activeMessage && panelRect && (
+          <>
+            <div
+              onClick={() => setMenuTarget(null)}
+              style={{
+                position: "fixed",
+                left: panelRect.left,
+                top: panelRect.top,
+                width: panelRect.width,
+                height: panelRect.height,
+                zIndex: 10,
+                background: "rgba(2, 6, 23, 0.24)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+              }}
+            />
+            <MessageActionPanel
+              mine={activeMessage.from === "me"}
+              rect={menuTarget.rect}
+              onClose={() => setMenuTarget(null)}
+              onDeleteForMe={() => {
+                void deleteMessage(thread.threadId, activeMessage.id, "me");
+              }}
+              onDeleteForEveryone={() => {
+                void deleteMessage(thread.threadId, activeMessage.id, "everyone");
+              }}
+            />
+          </>
+        )}
         {thread.messages.map((m) =>
           m.type === "discount" ? (
             <DiscountMessageBubble
@@ -241,9 +314,16 @@ export function ChatThreadPage() {
               message={m}
               shopId={thread.shopId}
               shopName={thread.shopName}
+              active={menuTarget?.id === m.id}
+              onOpenMenu={(rect) => openMenu(m.id, rect)}
             />
           ) : (
-            <MessageBubble key={m.id} message={m} />
+            <MessageBubble
+              key={m.id}
+              message={m}
+              active={menuTarget?.id === m.id}
+              onOpenMenu={(rect) => openMenu(m.id, rect)}
+            />
           ),
         )}
       </div>
@@ -265,7 +345,9 @@ export function ChatThreadPage() {
 
         }}
       >
-        <button
+        {
+          orgUser &&
+          <button
           type="button"
           onClick={() => {
             generalStore.setState({ isNegotiationPanel: true });
@@ -280,7 +362,7 @@ export function ChatThreadPage() {
           }}
         >
           <Plus />
-        </button>
+        </button>}
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}

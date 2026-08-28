@@ -1,5 +1,5 @@
-import { useEffect, useState, useContext } from 'react'
-import { Plus, Edit2, Trash2, Lock, Store, ShoppingCart, Edit } from 'lucide-react'
+import { useEffect, useRef, useState, useContext } from 'react'
+import { Plus, Edit2, Trash2, Lock, Store, ShoppingCart } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context'
@@ -44,9 +44,186 @@ function normalizeProducts(products: Product[]): Product[] {
   return products.map(p => ({ ...p, status: stockStatus(p.stock) }))
 }
 
-let isDrag = false;
-let posListener = 0;
-let threshSwitcher = -100;
+const REVEAL_WIDTH = 132
+const SNAP_THRESHOLD = 64
+
+function ProductRow({
+  product,
+  uploaded,
+  canEdit,
+  format,
+  onEdit,
+  onDelete,
+  onRemoveFromMarket,
+}: {
+  product: Product
+  uploaded: boolean
+  canEdit: boolean
+  format: (n: number) => string
+  onEdit: (p: Product) => void
+  onDelete: (id: string) => void
+  onRemoveFromMarket: (p: Product) => void
+}) {
+  const bp = useBreakpoint()
+  // Offset is per-row so dragging one card never moves the others.
+  const [offset, setOffset] = useState(0)
+  const [dragging, setDragging] = useState(false)
+  const offsetRef = useRef(0)
+  const gesture = useRef<{ startX: number; base: number; active: boolean }>({
+    startX: 0,
+    base: 0,
+    active: false,
+  })
+
+  const setOffsetBoth = (v: number) => {
+    offsetRef.current = v
+    setOffset(v)
+  }
+
+  const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!bp.sm) return
+    const t = e.touches[0]
+    gesture.current = { startX: t.clientX, base: offsetRef.current, active: true }
+    setDragging(true)
+  }
+
+  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!bp.sm || !gesture.current.active) return
+    // Distance relative to where the finger started, clamped to the reveal width.
+    const delta = e.touches[0].clientX - gesture.current.startX
+    const next = Math.min(0, Math.max(-REVEAL_WIDTH, gesture.current.base + delta))
+    setOffsetBoth(next)
+  }
+
+  const endGesture = () => {
+    if (!gesture.current.active) return
+    gesture.current.active = false
+    setDragging(false)
+    // Snap open only when the swipe actually crossed the threshold.
+    setOffsetBoth(offsetRef.current <= -SNAP_THRESHOLD ? -REVEAL_WIDTH : 0)
+  }
+
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      {bp.sm && canEdit && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: REVEAL_WIDTH,
+            boxSizing: 'border-box',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '6px',
+            padding: '0 10px',
+            borderRadius: '16px',
+            background: 'var(--bg-tertiary)',
+          }}
+        >
+          <button
+            aria-label="Edit"
+            onTouchStart={(e) => e.stopPropagation()}
+            onClick={() => onEdit(product)}
+            style={{ display: 'flex', padding: '1rem', background: 'var(--bg-nav-active)', color: 'var(--bg-surface)', borderRadius: '.5rem', border: 'none', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            <Edit2 style={{ width: '18px', height: '18px' }} />
+          </button>
+          <button
+            aria-label="Delete"
+            onTouchStart={(e) => e.stopPropagation()}
+            onClick={() => onDelete(product.id)}
+            style={{ display: 'flex', padding: '1rem', background: 'rgba(255, 0, 0, 0.42)', color: 'var(--text-danger)', borderRadius: '.5rem', border: 'none', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            <Trash2 style={{ width: '18px', height: '18px' }} />
+          </button>
+        </div>
+      )}
+
+      <div
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={endGesture}
+        onTouchCancel={endGesture}
+        style={{
+          width: '100%',
+          boxSizing: 'border-box',
+          position: 'relative',
+          zIndex: 1,
+          padding: '16px',
+          borderRadius: '16px',
+          background: 'var(--bg-surface)',
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          border: uploaded ? '1px solid var(--border-info)' : '1px solid transparent',
+          boxShadow: 'var(--shadow-card)',
+          transform: `translateX(${offset}px)`,
+          transition: dragging ? 'none' : 'transform 0.18s ease',
+          touchAction: 'pan-y',
+        }}
+      >
+        <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '10px', flexShrink: 0, overflow: 'hidden' }}>
+          {product.image ? (
+            <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-muted)' }}>{product.name.substring(0, 1)}</span>
+          )}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>{product.name}</h2>
+            {!bp.sm && <span style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{product.category}</span>}
+            <span style={{
+              padding: '2px 6px', fontSize: '10px', fontWeight: 500, borderRadius: '4px',
+              background: product.status === 'in-stock' ? 'var(--bg-success)' : product.status === 'low-stock' ? 'var(--bg-warning)' : 'var(--bg-danger)',
+              color: product.status === 'in-stock' ? 'var(--text-success)' : product.status === 'low-stock' ? 'var(--text-warning)' : 'var(--text-danger)',
+            }}>
+              {product.status === 'in-stock' ? 'In Stock' : product.status === 'low-stock' ? 'Low' : 'Out'}
+            </span>
+            {uploaded && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 6px', fontSize: '10px', fontWeight: 600, borderRadius: '4px', color: 'var(--text-info)', background: 'var(--bg-info)' }}>
+                <Store style={{ width: '10px', height: '10px' }} />
+                On market
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '16px', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: 'clamp(.5rem, 1svw, .8rem)' }}>SKU: {product.sku}</span>
+            <span style={{ fontSize: 'clamp(.5rem, 1svw, .8rem)' }}>Stock: {product.stock}</span>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{format(product.price)}</p>
+        </div>
+        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+          {!bp.sm && uploaded && (
+            <button
+              onClick={() => onRemoveFromMarket(product)}
+              title="Remove from market"
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 8px', fontSize: '11px', fontWeight: 500, color: 'var(--text-danger)', background: 'var(--bg-danger)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+            >
+              <Store style={{ width: '13px', height: '13px' }} />
+              Remove from market
+            </button>
+          )}
+          {!bp.sm && canEdit ? (
+            <>
+              <button onClick={() => onEdit(product)} style={{ padding: '6px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                <Edit2 style={{ width: '14px', height: '14px' }} />
+              </button>
+              <button onClick={() => onDelete(product.id)} style={{ padding: '6px', color: 'var(--text-danger)', background: 'var(--bg-danger)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                <Trash2 style={{ width: '14px', height: '14px' }} />
+              </button>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function InventoryPage() {
   const bp = useBreakpoint()
@@ -67,7 +244,6 @@ export function InventoryPage() {
   const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(new Set())
   const [marketMsg, setMarketMsg] = useState('')
   const [shopId, setShopId] = useState<string | undefined>(undefined)
-  const [actWidth, setActWidth] = useState(0);
 
   const refreshUploaded = async () => {
     const ids = await getUploadedSourceIds(ownerKey)
@@ -173,58 +349,6 @@ export function InventoryPage() {
     maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '14px',
   }
 
-  // MOBILE handle action
-  const initializeDragLeft = (e: TouchEvent) => {
-    const target = e.currentTarget as HTMLDivElement
-    const width = target.getBoundingClientRect().width
-    const threshold = e.touches[0].clientX - width
-
-
-    if (threshold <= threshSwitcher) {return}
-    if(!bp.sm) {return}
-
-    isDrag = true;
-    console.log("threshold:",threshold)
-  }
-
-  const onDragLeft = (e: TouchEvent) =>  {
-    if (isDrag) {
-      const target = e.currentTarget as HTMLDivElement
-      const width = target.getBoundingClientRect().width
-     
-
-      const moveX = e.targetTouches[0].clientX - width
-      // console.log("MoveX:",moveX )
-      posListener = moveX
-     
-
-      if (moveX <= -150) {
-        threshSwitcher = -500
-        target.style.transform = `translateX(-150px)`
-      setActWidth(-150)
-
-        return
-      }
-     
-
-      setActWidth(posListener)
-      target.style.transform = `translateX(${moveX}px)`
-    }
-  }
-
-  const cancelDrag = (e: TouchEvent) => {
-    isDrag = false
-    const target = e.currentTarget as HTMLDivElement
-
-    if (posListener > -200) {
-      target.style.transform = `translateX(0)`
-        threshSwitcher = -100
-      setActWidth(0)
-
-    }
-
-  }
-
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px', gap: '16px' }}>
       <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -301,83 +425,18 @@ export function InventoryPage() {
               {marketMsg}
             </div>
           )}
-          {filtered.map((product: Product) => {
-            const uploaded = uploadedSourceIds.has(product.id)
-            return (
-              // container
-              <div key={product.id} style={{display: 'flex', alignItems: 'center', width: '100%',}}>
-            <div onTouchStart={(e) => initializeDragLeft(e as unknown as TouchEvent)} onTouchEnd={(e) => cancelDrag(e as unknown as TouchEvent)} onTouchMove={(e) => onDragLeft(e as unknown as TouchEvent)} key={product.id} style={{ width: '100%', flex: "0 0 auto", padding: '16px', borderRadius: '16px', background: 'var(--bg-surface)', display: 'flex', gap: '12px', alignItems: 'center', border: uploaded ? '1px solid var(--border-info)' : '1px solid transparent', boxShadow: 'var(--shadow-card)' }}>
-              <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '10px', flexShrink: 0, overflow: 'hidden' }}>
-                {product.image ? (
-                  <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-muted)' }}>{product.name.substring(0, 1)}</span>
-                )}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <h2 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>{product.name}</h2>
-                  {!bp.sm && <span style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{product.category}</span>}
-                  <span style={{
-                    padding: '2px 6px', fontSize: '10px', fontWeight: 500, borderRadius: '4px',
-                    background: product.status === 'in-stock' ? 'var(--bg-success)' : product.status === 'low-stock' ? 'var(--bg-warning)' : 'var(--bg-danger)',
-                    color: product.status === 'in-stock' ? 'var(--text-success)' : product.status === 'low-stock' ? 'var(--text-warning)' : 'var(--text-danger)',
-                  }}>
-                    {product.status === 'in-stock' ? 'In Stock' : product.status === 'low-stock' ? 'Low' : 'Out'}
-                  </span>
-                  {uploaded && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 6px', fontSize: '10px', fontWeight: 600, borderRadius: '4px', color: 'var(--text-info)', background: 'var(--bg-info)' }}>
-                      <Store style={{ width: '10px', height: '10px' }} />
-                      On market
-                    </span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '16px', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                  <span style={{fontSize: 'clamp(.5rem, 1svw, .8rem)'}}>SKU: {product.sku}</span>
-                  <span style={{fontSize: 'clamp(.5rem, 1svw, .8rem)'}}>Stock: {product.stock}</span>
-                </div>
-              </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{format(product.price)}</p>
-              </div>
-              <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                {!bp.sm && uploaded && (
-                  <button
-                    onClick={() => handleRemoveFromMarket(product)}
-                    title="Remove from market"
-                    style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 8px', fontSize: '11px', fontWeight: 500, color: 'var(--text-danger)', background: 'var(--bg-danger)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-                  >
-                    <Store style={{ width: '13px', height: '13px' }} />
-                    Remove from market
-                  </button>
-                )}
-                {!bp.sm && canEdit ? (
-                  <>
-                    <button onClick={() => openEdit(product)} style={{ padding: '6px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
-                      <Edit2 style={{ width: '14px', height: '14px' }} />
-                    </button>
-                    <button onClick={() => handleDelete(product.id)} style={{ padding: '6px', color: 'var(--text-danger)', background: 'var(--bg-danger)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
-                      <Trash2 style={{ width: '14px', height: '14px' }} />
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            </div>
-            
-            { canEdit &&
-              <div style={{display: 'flex', marginInline: 'auto', marginInlineStart: '1rem', gap: '.5rem', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto', width: `100`, transform: `translateX(${actWidth}px)`,  }}>
-                <button onClick={() => openEdit(product)} style={{display: 'flex',  padding: '1rem', background: '#cdcdd5a5', borderRadius: '.5rem', border: 'none', alignItems: 'center', justifyContent: 'center'}}>
-                  <Edit />
-                </button>
-
-                <button onClick={() => handleDelete(product.id)} style={{display: 'flex',  padding: '1rem', background: 'rgba(255, 0, 0, 0.42)', borderRadius: '.5rem', border: 'none', alignItems: 'center', justifyContent: 'center'}}>
-                  <Trash2 color='red' />
-                </button>
-            </div>
-            }
-            </div>
-            )
-          })}
+          {filtered.map((product: Product) => (
+            <ProductRow
+              key={product.id}
+              product={product}
+              uploaded={uploadedSourceIds.has(product.id)}
+              canEdit={canEdit}
+              format={format}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+              onRemoveFromMarket={handleRemoveFromMarket}
+            />
+          ))}
           {filtered.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', padding: '24px' }}>No items found</p>}
         </div>
       </div>

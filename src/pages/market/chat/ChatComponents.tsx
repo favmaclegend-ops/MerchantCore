@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Check,
   CheckCheck,
@@ -66,15 +66,168 @@ export function ShopAvatar({
   );
 }
 
-export function MessageBubble({ message }: { message: ChatMessage }) {
-  const mine = message.from === "me";
+/**
+ * Floating action panel shown directly underneath the right-clicked message.
+ * It stays in viewport coordinates (the bubble lifts above the blur overlay in
+ * place, so `rect` — captured from the bubble at open time — lines it up).
+ */
+export function MessageActionPanel({
+  mine,
+  rect,
+  onClose,
+  onDeleteForMe,
+  onDeleteForEveryone,
+}: {
+  mine: boolean;
+  rect: DOMRect;
+  onClose: () => void;
+  onDeleteForMe: () => void;
+  onDeleteForEveryone: () => void;
+}) {
+  const PANEL_WIDTH = 224;
+  const PANEL_HEIGHT = 136;
+  const EDGE = 12;
+  const GAP = 10;
+
+  const rawLeft = mine ? rect.right - PANEL_WIDTH : rect.left;
+  const left = Math.max(
+    EDGE,
+    Math.min(rawLeft, window.innerWidth - PANEL_WIDTH - EDGE),
+  );
+  const belowTop = rect.bottom + GAP;
+  const top =
+    belowTop + PANEL_HEIGHT <= window.innerHeight - EDGE
+      ? belowTop
+      : Math.max(EDGE, rect.top - PANEL_HEIGHT - GAP);
+
   return (
     <div
+      role="menu"
+      onClick={(event) => event.stopPropagation()}
+      style={{
+        position: "fixed",
+        left,
+        top,
+        zIndex: 1500,
+        width: PANEL_WIDTH,
+        boxSizing: "border-box",
+        padding: 6,
+        borderRadius: 16,
+        background: "rgba(15, 23, 42, 0.97)",
+        border: "1px solid rgba(148, 163, 184, 0.38)",
+        boxShadow: "0 18px 36px rgba(15, 23, 42, 0.32)",
+      }}
+    >
+      <div
+        style={{
+          padding: "6px 12px 8px",
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: 0.4,
+          textTransform: "uppercase",
+          color: "rgba(148, 163, 184, 0.9)",
+        }}
+      >
+        Message actions
+      </div>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onClose();
+          onDeleteForMe();
+        }}
+        style={{
+          width: "100%",
+          border: "none",
+          background: "transparent",
+          color: "#f8fafc",
+          fontSize: 14,
+          fontWeight: 600,
+          borderRadius: 12,
+          padding: "10px 12px",
+          textAlign: "left",
+          cursor: "pointer",
+        }}
+      >
+        Delete for me
+      </button>
+      <button
+        type="button"
+        disabled={!mine}
+        onClick={(event) => {
+          event.stopPropagation();
+          onClose();
+          onDeleteForEveryone();
+        }}
+        style={{
+          width: "100%",
+          border: "none",
+          background: "transparent",
+          color: mine ? "#fca5a5" : "rgba(248, 250, 252, 0.5)",
+          fontSize: 14,
+          fontWeight: 600,
+          borderRadius: 12,
+          padding: "10px 12px",
+          textAlign: "left",
+          cursor: mine ? "pointer" : "default",
+          opacity: mine ? 1 : 0.72,
+        }}
+      >
+        Delete for everyone
+      </button>
+    </div>
+  );
+}
+
+export function MessageBubble({
+  message,
+  active,
+  onOpenMenu,
+}: {
+  message: ChatMessage;
+  active: boolean;
+  onOpenMenu: (rect: DOMRect) => void;
+}) {
+  const mine = message.from === "me";
+  const bp = useBreakpoint();
+  const longPressTimer = useRef<number | null>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  const clearLongPress = () => {
+    if (longPressTimer.current !== null) {
+      window.clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleLongPressStart = () => {
+    if (!bp.sm || !rowRef.current) return;
+    clearLongPress();
+    longPressTimer.current = window.setTimeout(() => {
+      onOpenMenu(rowRef.current!.getBoundingClientRect());
+    }, 550);
+  };
+
+  return (
+    <div
+      ref={rowRef}
       style={{
         display: "flex",
         justifyContent: mine ? "flex-end" : "flex-start",
         marginBottom: 14,
+        position: "relative",
+        zIndex: active ? 20 : undefined,
       }}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        clearLongPress();
+        onOpenMenu(event.currentTarget.getBoundingClientRect());
+      }}
+      onTouchStart={handleLongPressStart}
+      onTouchEnd={clearLongPress}
+      onTouchCancel={clearLongPress}
+      onTouchMove={clearLongPress}
     >
       <div
         style={{
@@ -96,7 +249,9 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
             lineHeight: 1.45,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
-            boxShadow: "0 1px 2px rgba(0,0,0,.06)",
+            boxShadow: active
+              ? "0 0 0 2px rgba(148, 163, 184, 0.85), 0 10px 26px rgba(15, 23, 42, 0.35)"
+              : "0 1px 2px rgba(0,0,0,.06)",
           }}
         >
           {message.text}
@@ -124,12 +279,19 @@ export function DiscountMessageBubble({
   message,
   shopId,
   shopName,
+  active,
+  onOpenMenu,
 }: {
   message: ChatMessage;
   shopId?: string;
   shopName?: string;
+  active: boolean;
+  onOpenMenu: (rect: DOMRect) => void;
 }) {
   const mine = message.from === "me";
+  const bp = useBreakpoint();
+  const longPressTimer = useRef<number | null>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
   const [now, setNow] = useState(() => Date.now());
   const expired = isDiscountExpired(message.sentAt, now);
 
@@ -138,6 +300,21 @@ export function DiscountMessageBubble({
     const t = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(t);
   }, [expired]);
+
+  const clearLongPress = () => {
+    if (longPressTimer.current !== null) {
+      window.clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleLongPressStart = () => {
+    if (!bp.sm || !rowRef.current) return;
+    clearLongPress();
+    longPressTimer.current = window.setTimeout(() => {
+      onOpenMenu(rowRef.current!.getBoundingClientRect());
+    }, 550);
+  };
 
   const oldNum = parseFloat(message.oldPrice ?? "");
   const newNum = parseFloat(message.newPrice ?? "");
@@ -166,11 +343,23 @@ export function DiscountMessageBubble({
 
   return (
     <div
+      ref={rowRef}
       style={{
         display: "flex",
         justifyContent: mine ? "flex-end" : "flex-start",
         marginBottom: 14,
+        position: "relative",
+        zIndex: active ? 20 : undefined,
       }}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        clearLongPress();
+        onOpenMenu(event.currentTarget.getBoundingClientRect());
+      }}
+      onTouchStart={handleLongPressStart}
+      onTouchEnd={clearLongPress}
+      onTouchCancel={clearLongPress}
+      onTouchMove={clearLongPress}
     >
       <div
         style={{
@@ -188,7 +377,9 @@ export function DiscountMessageBubble({
             borderRadius: mine ? "18px 18px 5px 18px" : "18px 18px 18px 5px",
             background: "var(--bg-surface)",
             border: "1px solid var(--border-default)",
-            boxShadow: "0 4px 18px rgba(0,0,0,.08)",
+            boxShadow: active
+              ? "0 0 0 2px rgba(148, 163, 184, 0.85), 0 10px 26px rgba(15, 23, 42, 0.35)"
+              : "0 4px 18px rgba(0,0,0,.08)",
           }}
         >
           {/* Hero image */}
