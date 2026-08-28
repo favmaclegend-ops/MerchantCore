@@ -80,6 +80,55 @@ export interface ChatApiMessage {
   sent_at: string | null;
 }
 
+export type DeleteMessageScope = "me" | "everyone";
+
+export async function apiDeleteMessage(
+  threadId: string,
+  messageId: string,
+  scope: DeleteMessageScope = "me",
+): Promise<{ message: string; thread_id: string; message_id: string }> {
+  const requestOptions: RequestInit = {
+    method: "PATCH",
+    headers: headers(),
+  };
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/chat/threads/${threadId}/messages/${messageId}`,
+      {
+        ...requestOptions,
+        body: JSON.stringify({ scope }),
+      },
+    );
+
+    if (!res.ok) {
+      const fallback = await fetch(
+        `${API_BASE}/chat/threads/${threadId}/messages/${messageId}`,
+        requestOptions,
+      );
+
+      if (!fallback.ok) {
+        const err = await fallback.json().catch(() => ({ detail: fallback.statusText }));
+        throw new Error(err.detail || "Request failed");
+      }
+
+      return fallback.json();
+    }
+
+    return res.json();
+  } catch (error) {
+    if (error instanceof Error) throw error;
+    const fallbackError = new Error("Request failed");
+    Object.assign(fallbackError, { cause: error });
+    throw fallbackError;
+  }
+}
+
+/** Delete a thread. */
+export async function apiDeleteThread(threadId: string): Promise<void> {
+  await chatRequest(`/chat/threads/${threadId}`, { method: "DELETE" });
+}
+
 /** List messages for a thread (each still encrypted at this point). */
 export async function apiListMessages(
   threadId: string,
@@ -121,9 +170,4 @@ export async function apiSendMessage(
 /** Mark a thread read for the current participant. */
 export async function apiMarkRead(threadId: string): Promise<void> {
   await chatRequest(`/chat/threads/${threadId}/read`, { method: "POST" });
-}
-
-/** Delete a thread. */
-export async function apiDeleteThread(threadId: string): Promise<void> {
-  await chatRequest(`/chat/threads/${threadId}`, { method: "DELETE" });
 }
