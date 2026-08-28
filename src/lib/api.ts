@@ -45,13 +45,8 @@ import type {
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
 console.log(API_BASE) // debugging
 
-// Only public (unauthenticated) endpoints may be called without a token. Organisation logins
-// have their own token (see below), so personal-login calls without a token are rejected here
-// instead of reaching the backend "anyhow".
-const PUBLIC_PATHS = ['/auth/login', '/auth/register', '/auth/verify-email']
-
 function getHeaders(): Record<string, string> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') || getOrgSession()?.token
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -59,11 +54,6 @@ function getHeaders(): Record<string, string> {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = localStorage.getItem('token')
-  const isPublic = PUBLIC_PATHS.some(p => path === p || path.startsWith(`${p}?`))
-  if (!token && !isPublic) {
-    throw new Error('Not authenticated. The live server is only available to normal (personal) logins.')
-  }
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: { ...getHeaders(), ...(options?.headers as Record<string, string>) },
@@ -1006,5 +996,29 @@ export const api = {
       orgRequest<Record<string, unknown>>(`/market/products/${productId}`, { method: 'PATCH', body: JSON.stringify(data) }),
     deleteProduct: (productId: string) =>
       orgRequest<void>(`/market/products/${productId}`, { method: 'DELETE' }),
+
+    // Buyer (personal user JWT) — place & list own orders
+    placeOrders: (groups: Array<Record<string, unknown>>) =>
+      request<{ orders: Array<Record<string, unknown>>; alerts: Array<Record<string, unknown>> }>(
+        '/market/orders', { method: 'POST', body: JSON.stringify({ groups }) },
+      ),
+    getMyOrders: (status?: string) => {
+      const q = status ? `?status=${encodeURIComponent(status)}` : ''
+      return request<{ orders: Array<Record<string, unknown>>; total: number }>(`/market/orders${q}`)
+    },
+    getMyOrderQrToken: (orderId: string) =>
+      request<{ token: string; order_id: string }>(`/market/orders/${orderId}/qrcode`),
+
+    // Org (member JWT) — supply chain orders tab
+    getOrgMarketOrders: (status?: string) => {
+      const q = status ? `?status=${encodeURIComponent(status)}` : ''
+      return orgRequest<{ orders: Array<Record<string, unknown>>; total: number }>(`/market/orders/org${q}`)
+    },
+    getOrderQrToken: (orderId: string) =>
+      orgRequest<{ token: string; order_id: string }>(`/market/orders/org/${orderId}/qrcode`),
+    scanCompleteOrder: (token: string) =>
+      orgRequest<Record<string, unknown>>('/market/orders/org/scan', { method: 'POST', body: JSON.stringify({ token }) }),
+    cancelMarketOrder: (orderId: string) =>
+      orgRequest<Record<string, unknown>>(`/market/orders/org/${orderId}/cancel`, { method: 'POST' }),
   },
 }

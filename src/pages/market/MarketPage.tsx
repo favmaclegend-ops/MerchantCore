@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Link, Route, Routes } from "react-router-dom";
 import { ShopPage } from "./ShopPage";
 import { useStore } from "elk-components";
 import {
@@ -29,6 +29,8 @@ import {
 import { marketOrdersStore, submitMarketOrder } from "./marketApi";
 import type { MarketCheckoutResult, MarketOrderAlert } from "./marketApi";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { MarketOrdersPage } from "./MarketOrdersPage";
+import { MarketScanPage } from "./MarketScanPage";
 
 interface CartPanelProps {
   cart: MarketCartItem[];
@@ -39,6 +41,14 @@ interface CartPanelProps {
   onClose?: () => void;
   onCheckout: () => void;
   onOpenLog: () => void;
+  delivery: DeliveryInfo;
+  setDelivery: (d: DeliveryInfo) => void;
+}
+
+export interface DeliveryInfo {
+  name: string;
+  phone: string;
+  address: string;
 }
 
 const paymentButtons = [
@@ -46,6 +56,17 @@ const paymentButtons = [
   { label: "Card", icon: CreditCard },
   { label: "Mobile", icon: Smartphone },
 ];
+
+const fieldStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "7px 10px",
+  fontSize: "12px",
+  color: "var(--text-primary)",
+  background: "var(--bg-secondary)",
+  border: "1px solid var(--border-default)",
+  borderRadius: "4px",
+  outline: "none",
+};
 
 function CartPanel({
   cart,
@@ -56,6 +77,8 @@ function CartPanel({
   onClose,
   onCheckout,
   onOpenLog,
+  delivery,
+  setDelivery,
 }: CartPanelProps) {
   const bp = useBreakpoint();
   return (
@@ -328,6 +351,44 @@ function CartPanel({
       <div
         style={{
           padding: "12px",
+          borderTop: "1px solid var(--bg-tertiary)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "11px",
+            fontWeight: 600,
+            color: "var(--text-primary)",
+          }}
+        >
+          Delivery details
+        </span>
+        <input
+          value={delivery.name}
+          onChange={(e) => setDelivery({ ...delivery, name: e.target.value })}
+          placeholder="Recipient name"
+          style={fieldStyle}
+        />
+        <input
+          value={delivery.phone}
+          onChange={(e) => setDelivery({ ...delivery, phone: e.target.value })}
+          placeholder="Phone number"
+          style={fieldStyle}
+        />
+        <input
+          value={delivery.address}
+          onChange={(e) => setDelivery({ ...delivery, address: e.target.value })}
+          placeholder="Delivery address"
+          style={fieldStyle}
+        />
+      </div>
+
+      <div
+        style={{
+          padding: "12px",
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
           gap: "6px",
@@ -384,6 +445,7 @@ function CartPanel({
         >
           <History style={{ width: "12px", height: "12px" }} /> Log
         </button>
+        <OrdersLink />
       </div>
 
       <div style={{ padding: "0 12px 12px" }}>
@@ -419,6 +481,7 @@ export function MarketPage() {
   const { orders } = useStore(marketOrdersStore);
   const { requireAuth } = useRequireAuth();
   const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [delivery, setDelivery] = useState<DeliveryInfo>({ name: "", phone: "", address: "" });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [showLog, setShowLog] = useState(false);
@@ -435,6 +498,9 @@ export function MarketPage() {
       const result = await submitMarketOrder({
         items: cart,
         payment_method: paymentMethod,
+        delivery_name: delivery.name.trim() || undefined,
+        delivery_phone: delivery.phone.trim() || undefined,
+        delivery_address: delivery.address.trim() || undefined,
       });
       clearMarketCart();
       setLastOrder(result);
@@ -461,6 +527,8 @@ export function MarketPage() {
     checkingOut,
     onCheckout: handleCheckout,
     onOpenLog: () => setShowLog(true),
+    delivery,
+    setDelivery,
   };
 
   return (
@@ -477,6 +545,8 @@ export function MarketPage() {
       >
         <Routes>
           <Route path="/" element={<Markets />} />
+          <Route path="/orders" element={<MarketOrdersPage />} />
+          <Route path="/orders/scan" element={<MarketScanPage />} />
           <Route path="/:id/*" element={<ShopPage />} />
         </Routes>
 
@@ -645,13 +715,13 @@ export function MarketPage() {
                     margin: 0,
                   }}
                 >
-                  No orders yet — checkout to send an order alert to the shops.
+                  No orders yet — checkout to place an order.
                 </p>
               )}
 
               {orders.map((order) => (
                 <div
-                  key={order.order_id}
+                  key={order.id}
                   style={{
                     padding: "12px",
                     borderRadius: "10px",
@@ -674,7 +744,7 @@ export function MarketPage() {
                         margin: 0,
                       }}
                     >
-                      {order.order_id}
+                      {order.id.slice(0, 8)}
                     </strong>
                     <span
                       style={{
@@ -684,8 +754,8 @@ export function MarketPage() {
                         letterSpacing: ".04em",
                       }}
                     >
-                      {order.payment_method} ·{" "}
-                      {new Date(order.createdAt).toLocaleString()}
+                      {order.payment_method ?? "Cash"} ·{" "}
+                      {order.created_at ? new Date(order.created_at).toLocaleString() : ""}
                     </span>
                   </div>
                   <p
@@ -695,14 +765,25 @@ export function MarketPage() {
                       margin: "4px 0 0 0",
                     }}
                   >
-                    {order.items.length} item(s) · NLE
+                    {order.items.length} item(s) · Status: {order.status} · NLE
                     {valueFormater(order.total.toString())}
                   </p>
-                  <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
-                    {order.alerts.map((alert) => (
-                      <ShopAlert key={alert.shop_id} alert={alert} />
-                    ))}
-                  </div>
+                  <Link
+                    to={`${marketBasePath()}/orders`}
+                    style={{
+                      display: "inline-block",
+                      marginTop: "8px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      color: "var(--bg-surface)",
+                      background: "var(--bg-nav-active)",
+                      padding: "5px 12px",
+                      borderRadius: "6px",
+                      textDecoration: "none",
+                    }}
+                  >
+                    View orders
+                  </Link>
                 </div>
               ))}
             </div>
@@ -830,5 +911,34 @@ function ShopAlert({ alert }: { alert: MarketOrderAlert }) {
         NLE{valueFormater(alert.amount.toString())}
       </span>
     </div>
+  );
+}
+
+function marketBasePath(): string {
+  return window.location.pathname.startsWith("/market") ? "/market" : "/home/market";
+}
+
+function OrdersLink() {
+  return (
+    <Link
+      to={`${marketBasePath()}/orders`}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "4px",
+        padding: "6px 0",
+        fontSize: "10px",
+        fontWeight: 500,
+        background: "var(--bg-secondary)",
+        border: "1px solid var(--border-default)",
+        borderRadius: "4px",
+        cursor: "pointer",
+        color: "var(--text-secondary)",
+        textDecoration: "none",
+      }}
+    >
+      <History style={{ width: "12px", height: "12px" }} /> Orders
+    </Link>
   );
 }

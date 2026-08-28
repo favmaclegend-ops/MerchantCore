@@ -34,7 +34,7 @@ function sessionFor(token = 'org-jwt'): OrgSession {
   }
 }
 
-describe('api server guard (real server is normal-login only)', () => {
+describe('api server guard (live server available to all logins)', () => {
   beforeEach(() => {
     localStorage.clear()
     vi.stubGlobal('fetch', vi.fn())
@@ -44,14 +44,14 @@ describe('api server guard (real server is normal-login only)', () => {
     vi.unstubAllGlobals()
   })
 
-  it('rejects every non-public endpoint without a token, before calling fetch', async () => {
+  it('no longer blocks unauthenticated calls — sends the request and lets the backend respond', async () => {
     const fetchMock = vi.mocked(fetch)
-    await expect(api.getProfile()).rejects.toThrow(
-      'Not authenticated. The live server is only available to normal (personal) logins.',
-    )
-    await expect(api.getProducts()).rejects.toThrow('Not authenticated')
-    await expect(api.getDashboardStats()).rejects.toThrow('Not authenticated')
-    expect(fetchMock).not.toHaveBeenCalled()
+    fetchMock.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve({}) } as Response)
+    await expect(api.getProfile()).resolves.toBeDefined()
+    expect(fetchMock).toHaveBeenCalled()
+    const [, init] = fetchMock.mock.calls[0]
+    expect(init?.headers).toBeDefined()
+    expect(init?.headers).not.toHaveProperty('Authorization')
   })
 
   it('allows public auth endpoints without a token', async () => {
@@ -62,6 +62,24 @@ describe('api server guard (real server is normal-login only)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock.mock.calls[0][0]).toBe(`${API_BASE}/auth/login`)
     expect(fetchMock.mock.calls[0][1]?.method).toBe('POST')
+  })
+
+  it('attaches the organisation session token when no personal token is present', async () => {
+    const fetchMock = vi.mocked(fetch)
+    setOrgSession({
+      orgId: 'ORG-001',
+      orgName: 'Kofi Stores',
+      member: {
+        id: 'M-001', name: 'Kofi Mensah', email: 'kofi@example.com', username: 'kofi',
+        password: '', phone: '', role: 'super-admin', jobTitle: 'Owner',
+        isActive: true, dataBlocked: false, disabled: false,
+      },
+      token: 'org-jwt',
+    })
+    fetchMock.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve({ id: 'x' }) } as Response)
+    await api.getProfile()
+    const [, init] = fetchMock.mock.calls[0]
+    expect((init?.headers as Record<string, string>)?.Authorization).toBe('Bearer org-jwt')
   })
 
   it('attaches the bearer token for authenticated requests', async () => {
