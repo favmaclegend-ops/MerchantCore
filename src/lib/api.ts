@@ -1,3 +1,4 @@
+import { store } from '@/context/store'
 import { getOrgSession, type OrgMember, type OrgRegisterInput, type OrgSession } from '@/data/organisations'
 import type {
   CheckoutInput,
@@ -44,13 +45,8 @@ import type {
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1'
 console.log(API_BASE) // debugging
 
-// Only public (unauthenticated) endpoints may be called without a token. Organisation logins
-// have their own token (see below), so personal-login calls without a token are rejected here
-// instead of reaching the backend "anyhow".
-const PUBLIC_PATHS = ['/auth/login', '/auth/register', '/auth/verify-email']
-
 function getHeaders(): Record<string, string> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') || getOrgSession()?.token
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -58,11 +54,6 @@ function getHeaders(): Record<string, string> {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = localStorage.getItem('token')
-  const isPublic = PUBLIC_PATHS.some(p => path === p || path.startsWith(`${p}?`))
-  if (!token && !isPublic) {
-    throw new Error('Not authenticated. The live server is only available to normal (personal) logins.')
-  }
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: { ...getHeaders(), ...(options?.headers as Record<string, string>) },
@@ -92,8 +83,11 @@ async function anonRequest<T>(path: string, options?: RequestInit): Promise<T> {
 // Organisation requests authenticate with the member JWT stored in the org session —
 // never with the personal account's localStorage token.
 function requireOrgSession(): OrgSession {
+
   const session = getOrgSession()
-  if (!session?.token) throw new Error('No active organisation session')
+  if (!session?.token) {
+    store.setState({error: 'Sorry Cannot Create Shop. No active Organization session', busy: false})
+    throw new Error('No active organization session')}
   return session
 }
 
@@ -103,6 +97,7 @@ function orgId(): string {
 
 async function orgRequest<T>(path: string, options?: RequestInit): Promise<T> {
   const session = requireOrgSession()
+  
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
@@ -853,10 +848,11 @@ export const api = {
           const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/purchase-orders/${id}/receive`, { method: 'POST' })
           return poFromApi(res)
         }
-        // Approve/cancel are not server operations yet — return the current PO unchanged.
-        const res = await orgRequest<{ orders: Array<Record<string, unknown>> }>(`/organisations/${orgId()}/purchase-orders`)
-        const order = res.orders.find(o => o.id === id)
-        return order ? poFromApi(order) : ({ id, status } as OrgPurchaseOrder)
+        const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/purchase-orders/${id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status }),
+        })
+        return poFromApi(res)
       },
       deletePurchaseOrder: async (id: string) => {
         await orgRequest<void>(`/organisations/${orgId()}/purchase-orders/${id}`, { method: 'DELETE' })
@@ -1001,5 +997,29 @@ export const api = {
       orgRequest<Record<string, unknown>>(`/market/products/${productId}`, { method: 'PATCH', body: JSON.stringify(data) }),
     deleteProduct: (productId: string) =>
       orgRequest<void>(`/market/products/${productId}`, { method: 'DELETE' }),
+
+    // Buyer (personal user JWT) — place & list own orders
+    placeOrders: (groups: Array<Record<string, unknown>>) =>
+      request<{ orders: Array<Record<string, unknown>>; alerts: Array<Record<string, unknown>> }>(
+        '/market/orders', { method: 'POST', body: JSON.stringify({ groups }) },
+      ),
+    getMyOrders: (status?: string) => {
+      const q = status ? `?status=${encodeURIComponent(status)}` : ''
+      return request<{ orders: Array<Record<string, unknown>>; total: number }>(`/market/orders${q}`)
+    },
+    getMyOrderQrToken: (orderId: string) =>
+      request<{ token: string; order_id: string }>(`/market/orders/${orderId}/qrcode`),
+
+    // Org (member JWT) — supply chain orders tab
+    getOrgMarketOrders: (status?: string) => {
+      const q = status ? `?status=${encodeURIComponent(status)}` : ''
+      return orgRequest<{ orders: Array<Record<string, unknown>>; total: number }>(`/market/orders/org${q}`)
+    },
+    getOrderQrToken: (orderId: string) =>
+      orgRequest<{ token: string; order_id: string }>(`/market/orders/org/${orderId}/qrcode`),
+    scanCompleteOrder: (token: string) =>
+      orgRequest<Record<string, unknown>>('/market/orders/org/scan', { method: 'POST', body: JSON.stringify({ token }) }),
+    cancelMarketOrder: (orderId: string) =>
+      orgRequest<Record<string, unknown>>(`/market/orders/org/${orderId}/cancel`, { method: 'POST' }),
   },
 }

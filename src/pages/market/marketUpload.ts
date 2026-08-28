@@ -120,26 +120,60 @@ export const updateShopProfileBackground = async (
   imageUrl: string,
 ): Promise<MarketShopDraft | undefined> => setShopImage(ownerKey, imageUrl, "background_image");
 
-// Get source IDs of products already uploaded to the market by this owner.
-export const getUploadedSourceIds = async (ownerKey: string): Promise<string[]> => {
+// Get the owner's uploaded market products with their source + market ids.
+export const getUploadedProducts = async (
+  ownerKey: string,
+): Promise<Array<{ source_id: string; id: string }>> => {
   try {
     const shop = await getMyShop(ownerKey);
     if (!shop?.id) return [];
     const res = await api.market.getShop(shop.id);
     const products = Array.isArray(res.products) ? res.products : [];
-    return products.map((p: Record<string, unknown>) => String(p.source_id ?? ""));
+    return products.map((p: Record<string, unknown>) => ({
+      source_id: String(p.source_id ?? ""),
+      id: String(p.id ?? ""),
+    }));
   } catch {
     return [];
   }
 };
 
-// Remove a product from the market by its backend product id.
+// Get source IDs (POS/inventory product ids) already uploaded to the market
+// by this owner. Used to disable duplicate uploads and flag "On market" items.
+export const getUploadedSourceIds = async (ownerKey: string): Promise<string[]> => {
+  const uploaded = await getUploadedProducts(ownerKey);
+  return uploaded.map((u) => u.source_id).filter(Boolean);
+};
+
+// Map POS/inventory source id -> market product id for the owner's shop.
+export const getUploadedSourceMap = async (
+  ownerKey: string,
+): Promise<Record<string, string>> => {
+  const uploaded = await getUploadedProducts(ownerKey);
+  const map: Record<string, string> = {};
+  for (const u of uploaded) {
+    if (u.source_id && u.id) map[u.source_id] = u.id;
+  }
+  return map;
+};
+
+const resolveMarketProductId = async (
+  ownerKey: string,
+  sourceId: string,
+): Promise<string | null> => {
+  const map = await getUploadedSourceMap(ownerKey);
+  return map[sourceId] ?? null;
+};
+
+// Remove a product from the market by its POS/inventory (source) id.
 export const removeProductFromMarket = async (
-  _ownerKey: string,
-  productId: string,
+  ownerKey: string,
+  sourceId: string,
 ): Promise<boolean> => {
   try {
-    await api.market.deleteProduct(productId);
+    const marketProductId = await resolveMarketProductId(ownerKey, sourceId);
+    if (!marketProductId) return false;
+    await api.market.deleteProduct(marketProductId);
     return true;
   } catch {
     return false;
@@ -148,8 +182,8 @@ export const removeProductFromMarket = async (
 
 // Sync inventory edits to the market product on the backend.
 export const updateMarketProductFromInventory = async (
-  _ownerKey: string,
-  productId: string,
+  ownerKey: string,
+  sourceId: string,
   changes: {
     name: string;
     price: number;
@@ -159,7 +193,9 @@ export const updateMarketProductFromInventory = async (
   },
 ): Promise<boolean> => {
   try {
-    await api.market.updateProduct(productId, {
+    const marketProductId = await resolveMarketProductId(ownerKey, sourceId);
+    if (!marketProductId) return false;
+    await api.market.updateProduct(marketProductId, {
       name: changes.name,
       price: changes.price,
       in_stock: changes.stock > 0,

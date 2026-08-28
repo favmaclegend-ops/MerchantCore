@@ -38,13 +38,13 @@ export function MobileHeader() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
+  const state = useStore(marketStore)
   const isShopPage = /^\/home\/market\/[^/]+/.test(location.pathname) ||
     /^\/market\/[^/]+/.test(location.pathname)
 
   let title = pageConfig[location.pathname]?.title ?? ''
 
   if (isShopPage) {
-    const state = useStore(marketStore)
     const segments = location.pathname.split('/')
     const shopId = segments[segments.indexOf('market') + 1]
     const shop = state.shops?.[shopId]

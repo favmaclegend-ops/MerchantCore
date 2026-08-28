@@ -6,7 +6,7 @@ import type {
   MarketStoreProduct,
   MarketStoreShop,
 } from "./demoMarketStore";
-import type { MarketCartItem } from "./cart";
+import { DEFAULT_TAX_RATE, type MarketCartItem } from "./cart";
 
 // ---------------------------------------------------------------------------
 // Backend → Frontend adapters
@@ -33,7 +33,7 @@ function adaptShop(raw: Record<string, unknown>): MarketStoreShop {
     rating: raw.rating != null ? String(raw.rating) : undefined,
     description: raw.description ? String(raw.description) : undefined,
     createdAt: raw.created_at ? String(raw.created_at) : undefined,
-    ownerKey: raw.owner_id ? `user:${raw.owner_id}` : undefined,
+    ownerKey: raw.owner_id ? String(raw.owner_id) : undefined,
     location: loc,
   };
 }
@@ -67,6 +67,7 @@ function adaptProduct(raw: Record<string, unknown>, shopName?: string): MarketSt
     variants: variants.length > 0 ? variants : undefined,
     description: raw.description ? String(raw.description) : undefined,
     uploadedAt: raw.created_at ? String(raw.created_at) : undefined,
+    sourceId: raw.source_id ? String(raw.source_id) : undefined,
   };
 }
 
@@ -114,7 +115,7 @@ export const fetchMarketData = async (): Promise<MarketStore> => {
 
 export const syncUserMarketData = (): void => {
   fetchMarketData()
-    .then((data) => marketStore.setState(data))
+    .then((data) => marketStore.setState({ ...data, fetchError: null }))
     .catch(() => {});
 };
 
@@ -153,7 +154,7 @@ export const fetchCategories = async (): Promise<string[]> => {
 };
 
 // ---------------------------------------------------------------------------
-// Order / checkout (still client-side — no order backend yet)
+// Order / checkout — backed by the backend market order API
 // ---------------------------------------------------------------------------
 
 export interface MarketOrderAlert {
@@ -168,6 +169,30 @@ export interface MarketOrderAlert {
 export interface MarketCheckoutInput {
   items: MarketCartItem[];
   payment_method: string;
+  delivery_name?: string;
+  delivery_phone?: string;
+  delivery_address?: string;
+}
+
+/** A backend market order (one per shop group). */
+export interface MarketOrder {
+  id: string;
+  buyer_id: string;
+  buyer_name: string;
+  buyer_email: string;
+  shop_id: string;
+  org_id: string;
+  status: "pending" | "completed" | "cancelled";
+  payment_method: string | null;
+  subtotal: number;
+  tax: number;
+  total: number;
+  items: Array<Record<string, unknown>>;
+  delivery_name: string | null;
+  delivery_phone: string | null;
+  delivery_address: string | null;
+  completed_at: string | null;
+  created_at: string | null;
 }
 
 export interface MarketCheckoutResult {
@@ -179,10 +204,11 @@ export interface MarketCheckoutResult {
   tax: number;
   total: number;
   alerts: MarketOrderAlert[];
+  orders: MarketOrder[];
 }
 
 export interface MarketOrdersState extends Record<string, unknown> {
-  orders: MarketCheckoutResult[];
+  orders: MarketOrder[];
 }
 
 import { createStore } from "elk-components";
@@ -196,60 +222,98 @@ export const groupCartItemsByShop = (
     return groups;
   }, {});
 
-export const submitMarketOrder = (
+export const adaptOrder = (raw: Record<string, unknown>): MarketOrder => ({
+  id: String(raw.id ?? ""),
+  buyer_id: String(raw.buyer_id ?? ""),
+  buyer_name: String(raw.buyer_name ?? ""),
+  buyer_email: String(raw.buyer_email ?? ""),
+  shop_id: String(raw.shop_id ?? ""),
+  org_id: String(raw.org_id ?? ""),
+  status: (raw.status as MarketOrder["status"]) ?? "pending",
+  payment_method: raw.payment_method ? String(raw.payment_method) : null,
+  subtotal: Number(raw.subtotal ?? 0),
+  tax: Number(raw.tax ?? 0),
+  total: Number(raw.total ?? 0),
+  items: Array.isArray(raw.items) ? (raw.items as Array<Record<string, unknown>>) : [],
+  delivery_name: raw.delivery_name ? String(raw.delivery_name) : null,
+  delivery_phone: raw.delivery_phone ? String(raw.delivery_phone) : null,
+  delivery_address: raw.delivery_address ? String(raw.delivery_address) : null,
+  completed_at: raw.completed_at ? String(raw.completed_at) : null,
+  created_at: raw.created_at ? String(raw.created_at) : null,
+});
+
+export const fetchMyOrders = async (
+  status?: string,
+): Promise<MarketOrder[]> => {
+  const res = await api.market.getMyOrders(status);
+  return (res.orders ?? []).map(adaptOrder);
+};
+
+export const submitMarketOrder = async (
   input: MarketCheckoutInput,
 ): Promise<MarketCheckoutResult> => {
   if (input.items.length === 0) {
-    return Promise.reject(new Error("Cannot checkout an empty cart"));
+    throw new Error("Cannot checkout an empty cart");
   }
-  const subtotal = input.items.reduce(
-    (sum, item) => sum + parseFloat(item.product_price) * item.quantity,
-    0,
-  );
-  const tax = subtotal * 0.05;
-  const total = subtotal + tax;
-  const createdAt = new Date().toISOString();
-  const order_id = `MC-ORD-${createdAt.replace(/\D/g, "").slice(0, 14)}-${Math.floor(
-    Math.random() * 9999,
-  )}`;
+  const products = marketStore.getState().products;
+  const productById = new Map(products.map((p) => [p.product_id, p]));
 
-  const alerts: MarketOrderAlert[] = Object.values(
-    groupCartItemsByShop(input.items),
-  ).map((group) => {
-    const shops = marketStore.getState().shops;
-    const shop = shops[group[0].shop_id];
-    const amount = group.reduce(
+  const groups = Object.values(groupCartItemsByShop(input.items)).map((group) => {
+    const subtotal = group.reduce(
       (sum, item) => sum + parseFloat(item.product_price) * item.quantity,
       0,
     );
-    const names = group.map((item) => item.product_name).join(", ");
+    const tax = subtotal * (DEFAULT_TAX_RATE ?? 0.05);
     return {
       shop_id: group[0].shop_id,
-      shop_name: group[0].shop_name,
-      owner: shop?.owner ?? "",
-      message: `New market order for ${group[0].shop_name} · ${group.reduce(
-        (sum, item) => sum + item.quantity,
-        0,
-      )} item(s): ${names}`,
-      amount,
-      sentAt: createdAt,
+      payment_method: input.payment_method,
+      delivery_name: input.delivery_name,
+      delivery_phone: input.delivery_phone,
+      delivery_address: input.delivery_address,
+      items: group.map((item) => {
+        const src = productById.get(item.product_id);
+        return {
+          product_id: item.product_id,
+          source_id: src?.sourceId ?? undefined,
+          name: item.product_name,
+          price: parseFloat(item.product_price),
+          quantity: item.quantity,
+          variant_id: item.variant_id,
+        };
+      }),
+      subtotal,
+      tax,
+      total: subtotal + tax,
     };
   });
 
+  const createdAt = new Date().toISOString();
+  const res = await api.market.placeOrders(groups);
+  const orders = (res.orders ?? []).map(adaptOrder);
+  const alerts: MarketOrderAlert[] = (res.alerts ?? []).map((a) => ({
+    shop_id: String(a.shop_id ?? ""),
+    shop_name: String(a.shop_name ?? ""),
+    owner: "",
+    message: String(a.message ?? ""),
+    amount: Number(a.amount ?? 0),
+    sentAt: String(a.sentAt ?? createdAt),
+  }));
+
   const result: MarketCheckoutResult = {
-    order_id,
+    order_id: orders[0]?.id ?? `MC-ORD-${Date.now()}`,
     createdAt,
     payment_method: input.payment_method,
     items: input.items,
-    subtotal,
-    tax,
-    total,
+    subtotal: groups.reduce((s, g) => s + g.subtotal, 0),
+    tax: groups.reduce((s, g) => s + g.tax, 0),
+    total: groups.reduce((s, g) => s + g.total, 0),
     alerts,
+    orders,
   };
 
   marketOrdersStore.setState({
-    orders: [result, ...marketOrdersStore.getState().orders],
+    orders: [...orders, ...marketOrdersStore.getState().orders],
   });
 
-  return Promise.resolve(result);
+  return result;
 };

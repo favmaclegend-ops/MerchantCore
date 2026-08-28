@@ -55,6 +55,12 @@ export function Markets() {
     }
   }, []);
 
+  // Mark the chunk as reloading whenever the market feed changes so the grid
+  // shows a spinner instead of a false "empty" while the chunk page recomputes.
+  useEffect(() => {
+    chunckStore.setState({ isProductLoading: true });
+  }, [state.products]);
+
   // get first N products in chunks
   useDebounceEffect(
     () => {
@@ -130,10 +136,14 @@ export function Markets() {
 
   const fetchError = state.fetchError;
 
-  const hasProducts = products.length > 0;
+  // "Has products" is decided from the whole market feed (state.products), not the
+  // chunked page below, so we never show a false "empty" while a chunk is loading.
+  const hasProducts = (state.products ?? []).length > 0;
+
+  const isProductLoading = chunckStore.getState().isProductLoading;
 
   const noProductsForCategory =
-    hasProducts && filterProduct.length === 0 && !query.trim();
+    hasProducts && !isProductLoading && filterProduct.length === 0 && !query.trim();
 
   const noResultsAtAll = !hasProducts && !loading && !fetchError;
 
@@ -265,6 +275,8 @@ export function Markets() {
             <Ban color="grey" />
             <span style={{ color: "GrayText" }}>Nothing on the market yet</span>
           </div>
+        ) : isProductLoading ? (
+          <MarketLoading info="Loading Products ..." />
         ) : noProductsForCategory ? (
           <div
             style={{
@@ -299,8 +311,6 @@ export function Markets() {
               No results for "{query}"
             </span>
           </div>
-        ) : chunckStore.getState().isProductLoading ? (
-          <MarketLoading info="Loading Products ..." />
         ) : (
           <div
             style={{

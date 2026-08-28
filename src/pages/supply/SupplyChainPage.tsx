@@ -10,8 +10,9 @@ import { InventoryTracking } from './InventoryTracking'
 import { PurchaseOrders } from './PurchaseOrders'
 import { Suppliers } from './Suppliers'
 import { ShippingLogistics } from './ShippingLogistics'
+import { MarketOrders } from './MarketOrders'
 
-type TabId = 'overview' | 'inventory' | 'purchase-orders' | 'suppliers' | 'shipping'
+type TabId = 'overview' | 'inventory' | 'purchase-orders' | 'suppliers' | 'shipping' | 'market-orders'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -19,6 +20,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'purchase-orders', label: 'Purchase Orders' },
   { id: 'suppliers', label: 'Suppliers' },
   { id: 'shipping', label: 'Shipping & Logistics' },
+  { id: 'market-orders', label: 'Orders' },
 ]
 
 export function SupplyChainPage() {
@@ -103,6 +105,7 @@ export function SupplyChainPage() {
           {active === 'purchase-orders' && <PurchaseOrders state={state} products={products} reload={reload} notify={notify} />}
           {active === 'suppliers' && <Suppliers state={state} products={products} reload={reload} notify={notify} />}
           {active === 'shipping' && <ShippingLogistics state={state} reload={reload} notify={notify} />}
+          {active === 'market-orders' && <MarketOrders notify={notify} />}
         </>
       ) : null}
     </div>

@@ -18,19 +18,22 @@ export function useMarketData() {
     if (!marketDataPromise) {
       marketDataPromise = Promise.race([
         fetchMarketData().then((data) => {
-          if (mounted) marketStore.setState({ ...data, fetchError: null });
+          // The store is module-level, so it must be set even if the effect
+          // that started this fetch was torn down (React StrictMode runs
+          // effects twice in dev) — otherwise the market would look empty.
+          marketStore.setState({ ...data, fetchError: null });
+          return data;
         }),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("timeout")), FETCH_TIMEOUT_MS),
         ),
       ]).catch((err) => {
-        if (!mounted) return;
         const msg =
           err?.message === "timeout"
             ? "Connection timed out. Please check your internet connection."
             : "Failed to load market data. Please check your connection.";
         marketStore.setState({ fetchError: msg });
-        setError(msg);
+        if (mounted) setError(msg);
         marketDataPromise = null;
       });
     }

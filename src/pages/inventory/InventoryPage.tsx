@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from 'react'
-import { Plus, Edit2, Trash2, Lock, Store, ShoppingCart } from 'lucide-react'
+import { Plus, Edit2, Trash2, Lock, Store, ShoppingCart, Edit } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context'
@@ -44,6 +44,10 @@ function normalizeProducts(products: Product[]): Product[] {
   return products.map(p => ({ ...p, status: stockStatus(p.stock) }))
 }
 
+let isDrag = false;
+let posListener = 0;
+let threshSwitcher = -100;
+
 export function InventoryPage() {
   const bp = useBreakpoint()
   const { format, currency } = useContext(CurrencyContext)
@@ -63,6 +67,7 @@ export function InventoryPage() {
   const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(new Set())
   const [marketMsg, setMarketMsg] = useState('')
   const [shopId, setShopId] = useState<string | undefined>(undefined)
+  const [actWidth, setActWidth] = useState(0);
 
   const refreshUploaded = async () => {
     const ids = await getUploadedSourceIds(ownerKey)
@@ -168,6 +173,58 @@ export function InventoryPage() {
     maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '14px',
   }
 
+  // MOBILE handle action
+  const initializeDragLeft = (e: TouchEvent) => {
+    const target = e.currentTarget as HTMLDivElement
+    const width = target.getBoundingClientRect().width
+    const threshold = e.touches[0].clientX - width
+
+
+    if (threshold <= threshSwitcher) {return}
+    if(!bp.sm) {return}
+
+    isDrag = true;
+    console.log("threshold:",threshold)
+  }
+
+  const onDragLeft = (e: TouchEvent) =>  {
+    if (isDrag) {
+      const target = e.currentTarget as HTMLDivElement
+      const width = target.getBoundingClientRect().width
+     
+
+      const moveX = e.targetTouches[0].clientX - width
+      // console.log("MoveX:",moveX )
+      posListener = moveX
+     
+
+      if (moveX <= -150) {
+        threshSwitcher = -500
+        target.style.transform = `translateX(-150px)`
+      setActWidth(-150)
+
+        return
+      }
+     
+
+      setActWidth(posListener)
+      target.style.transform = `translateX(${moveX}px)`
+    }
+  }
+
+  const cancelDrag = (e: TouchEvent) => {
+    isDrag = false
+    const target = e.currentTarget as HTMLDivElement
+
+    if (posListener > -200) {
+      target.style.transform = `translateX(0)`
+        threshSwitcher = -100
+      setActWidth(0)
+
+    }
+
+  }
+
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px', gap: '16px' }}>
       <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -247,7 +304,9 @@ export function InventoryPage() {
           {filtered.map((product: Product) => {
             const uploaded = uploadedSourceIds.has(product.id)
             return (
-            <div key={product.id} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: 'var(--bg-surface)', display: 'flex', gap: '12px', alignItems: 'center', border: uploaded ? '1px solid var(--border-info)' : '1px solid transparent', boxShadow: 'var(--shadow-card)' }}>
+              // container
+              <div key={product.id} style={{display: 'flex', alignItems: 'center', width: '100%',}}>
+            <div onTouchStart={(e) => initializeDragLeft(e as unknown as TouchEvent)} onTouchEnd={(e) => cancelDrag(e as unknown as TouchEvent)} onTouchMove={(e) => onDragLeft(e as unknown as TouchEvent)} key={product.id} style={{ width: '100%', flex: "0 0 auto", padding: '16px', borderRadius: '16px', background: 'var(--bg-surface)', display: 'flex', gap: '12px', alignItems: 'center', border: uploaded ? '1px solid var(--border-info)' : '1px solid transparent', boxShadow: 'var(--shadow-card)' }}>
               <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: '10px', flexShrink: 0, overflow: 'hidden' }}>
                 {product.image ? (
                   <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -258,7 +317,7 @@ export function InventoryPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <h2 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>{product.name}</h2>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{product.category}</span>
+                  {!bp.sm && <span style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: '4px' }}>{product.category}</span>}
                   <span style={{
                     padding: '2px 6px', fontSize: '10px', fontWeight: 500, borderRadius: '4px',
                     background: product.status === 'in-stock' ? 'var(--bg-success)' : product.status === 'low-stock' ? 'var(--bg-warning)' : 'var(--bg-danger)',
@@ -274,8 +333,8 @@ export function InventoryPage() {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '16px', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                  <span>SKU: {product.sku}</span>
-                  <span>Stock: {product.stock}</span>
+                  <span style={{fontSize: 'clamp(.5rem, 1svw, .8rem)'}}>SKU: {product.sku}</span>
+                  <span style={{fontSize: 'clamp(.5rem, 1svw, .8rem)'}}>Stock: {product.stock}</span>
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -292,7 +351,7 @@ export function InventoryPage() {
                     Remove from market
                   </button>
                 )}
-                {canEdit ? (
+                {!bp.sm && canEdit ? (
                   <>
                     <button onClick={() => openEdit(product)} style={{ padding: '6px', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
                       <Edit2 style={{ width: '14px', height: '14px' }} />
@@ -303,6 +362,19 @@ export function InventoryPage() {
                   </>
                 ) : null}
               </div>
+            </div>
+            
+            { canEdit &&
+              <div style={{display: 'flex', marginInline: 'auto', marginInlineStart: '1rem', gap: '.5rem', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto', width: `100`, transform: `translateX(${actWidth}px)`,  }}>
+                <button onClick={() => openEdit(product)} style={{display: 'flex',  padding: '1rem', background: '#cdcdd5a5', borderRadius: '.5rem', border: 'none', alignItems: 'center', justifyContent: 'center'}}>
+                  <Edit />
+                </button>
+
+                <button onClick={() => handleDelete(product.id)} style={{display: 'flex',  padding: '1rem', background: 'rgba(255, 0, 0, 0.42)', borderRadius: '.5rem', border: 'none', alignItems: 'center', justifyContent: 'center'}}>
+                  <Trash2 color='red' />
+                </button>
+            </div>
+            }
             </div>
             )
           })}
