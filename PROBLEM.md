@@ -430,3 +430,16 @@ Every message is an **encrypted chat message with optional structured metadata**
 ### 5. Panels / actions (when the bubble opens something)
 - Add a field to `src/pages/market/store/generalStore.ts` (e.g. `discountOrder`), render the panel in `ChatThreadPage` when set, and have the bubble / action button set it via `generalStore.setState(...)`.
 - Follow the existing modal pattern: fixed overlay + backdrop blur, `onClick={close}`, inner `onClick={(e) => e.stopPropagation()}`.
+
+---
+
+## Bug 16 — Market Cart resets when leaving/reloading the market (Medium)
+
+### Problem
+The market cart lived only in the `marketCartStore` in-memory singleton created at module import. It survived route changes within a session (module state), but a full page reload cleared it. On a real phone/browser the cart contents were lost whenever the app was closed or preloaded/DOM was torn down.
+
+### Fix — global store + localStorage persistence (`src/pages/market/cart.ts`)
+- The store is a **module-level singleton** (`createStore`), so every consumer (`useStore(marketCartStore)` in `MarketPage`, the floating cart button, etc.) reads the same state and re-renders on change — the cart is global no matter which page is mounted.
+- Added hydration: `loadInitialCartItems()` reads `localStorage["market_cart_v1"]` at module load (guarded), validates each entry's shape, and seeds the store.
+- Added persistence: `marketCartStore.subscribe(persistCartItems)` writes the cart to `localStorage` on every state change (guarded for private mode/quota). Explicit `clearMarketCart()` empties it and the empty state is also persisted.
+- The discount-offer "Proceed to Add to Cart" flow (Bug 15) automatically benefits — discount-priced lines persist exactly like any other line.

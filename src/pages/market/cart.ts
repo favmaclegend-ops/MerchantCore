@@ -19,7 +19,48 @@ export interface MarketCartState extends Record<string, unknown> {
   items: MarketCartItem[];
 }
 
-export const marketCartStore = createStore<MarketCartState>({ items: [] });
+// ---------------------------------------------------------------------------
+// Persistence — the cart lives in a module-level (global) store so it survives
+// any page unmount/remount, and is mirrored to localStorage so it also survives
+// full reloads and returns next time the app is opened.
+// ---------------------------------------------------------------------------
+
+const CART_STORAGE_KEY = "market_cart_v1";
+
+function loadInitialCartItems(): MarketCartItem[] {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (i): i is MarketCartItem =>
+        !!i &&
+        typeof (i as MarketCartItem).product_id === "string" &&
+        typeof (i as MarketCartItem).product_price === "string" &&
+        typeof (i as MarketCartItem).quantity === "number",
+    );
+  } catch {
+    return [];
+  }
+}
+
+function persistCartItems(): void {
+  try {
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify(marketCartStore.getState().items ?? []),
+    );
+  } catch {
+    // storage unavailable (private mode / quota) — cart stays in memory only
+  }
+}
+
+export const marketCartStore = createStore<MarketCartState>({
+  items: loadInitialCartItems(),
+});
+
+marketCartStore.subscribe(persistCartItems);
 
 export const DEFAULT_TAX_RATE = 0.05;
 
