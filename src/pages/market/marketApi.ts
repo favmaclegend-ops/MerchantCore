@@ -114,7 +114,7 @@ export const fetchMarketData = async (): Promise<MarketStore> => {
 
 export const syncUserMarketData = (): void => {
   fetchMarketData()
-    .then((data) => marketStore.setState(data))
+    .then((data) => marketStore.setState({ ...data, fetchError: null }))
     .catch(() => {});
 };
 

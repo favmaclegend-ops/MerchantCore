@@ -32,7 +32,6 @@ import {
   LocationAutocomplete,
   type LocationSelection,
 } from "./LocationAutocomplete";
-import { useInstance } from "elk-components";
 import { store } from "@/context/store";
 
 export function UploadToShopModal({ onClose }: { onClose: () => void }) {
