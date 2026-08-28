@@ -15,6 +15,7 @@ import { ShopPageReabon } from "./components/ShopPageReabon";
 import { OverView } from "./components/OverView";
 import { Products } from "./components/Products";
 import { MarketLoading } from "./components/MarketLoading";
+import { startThread, notifyChatChanged } from "./chat/chatStore";
 
 
 export function ShopPage () {
@@ -231,7 +232,16 @@ export function ShopPage () {
                                     </div>
                                 )}
                             </div>
-                            <button className="click" style={{display: 'flex', padding: bp.sm ? '.6rem .8rem' : '1rem', alignItems: 'center', cursor: 'pointer', gap: '.5rem', borderRadius: '1rem', background: 'var(--bg-nav-active)', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.2)'}}>
+                            <button className="click" onClick={() => {
+                                const basePath = location.pathname.startsWith('/market') ? '/market' : '/home/market';
+                                startThread({
+                                    shopId: shop.shop_id,
+                                    shopName: shop.shop_name || 'Shop',
+                                    shopImage: shop.shopProfileImage,
+                                });
+                                notifyChatChanged();
+                                navigate(`${basePath}/chat/${shop.shop_id}`);
+                            }} style={{display: 'flex', padding: bp.sm ? '.6rem .8rem' : '1rem', alignItems: 'center', cursor: 'pointer', gap: '.5rem', borderRadius: '1rem', background: 'var(--bg-nav-active)', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,.2)'}}>
                                 <MessageCircle size={bp.sm ? 18 : 24} color="var(--bg-surface)"/>
                                 {!bp.sm && <span style={{color: 'var(--bg-surface)'}}>Message</span>}
                             </button>

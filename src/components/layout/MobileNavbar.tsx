@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react'
 import type { ElementType } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
@@ -20,6 +20,7 @@ type MoreItem = { path: string; label: string; icon: ElementType; permission?: O
 const moreItems: MoreItem[] = [
   { path: '/home/customers', label: 'Customers', icon: Users },
   { path: '/home/market/orders', label: 'Orders', icon: ReceiptText },
+  { path: '/home/market/chat', label: 'Chat', icon: MessageCircle },
   { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
   { path: '/home/hrm', label: 'HRM', icon: Contact, permission: 'hrm' },
   { path: '/home/supply', label: 'Supply Chain', icon: Truck, permission: 'supply' },

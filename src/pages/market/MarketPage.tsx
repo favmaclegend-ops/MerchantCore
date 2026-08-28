@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { ShopPage } from "./ShopPage";
 import { useStore } from "elk-components";
 import {
@@ -31,6 +31,8 @@ import type { MarketCheckoutResult, MarketOrderAlert } from "./marketApi";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { MarketOrdersPage } from "./MarketOrdersPage";
 import { MarketScanPage } from "./MarketScanPage";
+import { ChatListPage } from "./chat/ChatListPage";
+import { ChatThreadPage } from "./chat/ChatThreadPage";
 
 interface CartPanelProps {
   cart: MarketCartItem[];
@@ -477,6 +479,8 @@ function CartPanel({
 
 export function MarketPage() {
   const bp = useBreakpoint();
+  const location = useLocation();
+  const isChatRoute = /\/market\/chat(\/|$)/.test(location.pathname);
   const { items: cart } = useStore(marketCartStore);
   const { orders } = useStore(marketOrdersStore);
   const { requireAuth } = useRequireAuth();
@@ -536,7 +540,7 @@ export function MarketPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: bp.mlg ? "1fr 400px" : "1fr",
+          gridTemplateColumns: bp.mlg && !isChatRoute ? "1fr 400px" : "1fr",
           width: "100%",
           height: "100%",
           overflow: "hidden",
@@ -545,14 +549,17 @@ export function MarketPage() {
       >
         <Routes>
           <Route path="/" element={<Markets />} />
+          <Route path="/chat" element={<ChatListPage />} />
+          <Route path="/chat/:shopId" element={<ChatThreadPage />} />
           <Route path="/orders" element={<MarketOrdersPage />} />
           <Route path="/orders/scan" element={<MarketScanPage />} />
           <Route path="/:id/*" element={<ShopPage />} />
         </Routes>
 
-        {bp.mlg ? (
+        {!isChatRoute && bp.mlg ? (
           <CartPanel {...cartPanelProps} />
         ) : (
+          !isChatRoute && (
           <button
             onClick={() => setIsCartOpen(true)}
             style={{
@@ -577,9 +584,10 @@ export function MarketPage() {
             <ShoppingCart style={{ width: "16px", height: "16px" }} />
             Cart ({cart.length})
           </button>
+          )
         )}
 
-        {!bp.mlg && isCartOpen && (
+        {!isChatRoute && !bp.mlg && isCartOpen && (
           <div
             style={{
               position: "fixed",

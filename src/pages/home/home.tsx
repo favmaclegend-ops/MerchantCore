@@ -31,6 +31,9 @@ export default function Home() {
     const { user, orgUser, loading, logout } = useContext(Authcontext)
     const bp = useBreakpoint()
 
+    const isChatThreadPage = location.pathname.match(/\/market\/chat\/.+/)
+    const hideFrame = !!isChatThreadPage
+
     if (loading) {
         return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
     }
@@ -65,12 +68,12 @@ export default function Home() {
     return (
         <>
             <div style={{ display: 'flex', width: '100%', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
-                <DesktopSidebar />
+                {!hideFrame && <DesktopSidebar />}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden', width: '100%' }}>
-                    <DesktopHeader />
-                    <MobileHeader />
+                    {!hideFrame && <DesktopHeader />}
+                    {!hideFrame && <MobileHeader />}
 
-                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: (location.pathname === '/home/pos' && (bp.lg || bp.md)) ? '0' : '5.5rem' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: (hideFrame || (location.pathname === '/home/pos' && (bp.lg || bp.md))) ? '0' : '5.5rem' }}>
                         <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>}>
                             <Routes>
                                 <Route path="/dashboard" element={<DashboardPage />} />
@@ -92,7 +95,7 @@ export default function Home() {
                         </Suspense>
                     </div>
 
-                    <MobileNavbar />
+                    {!hideFrame && <MobileNavbar />}
                 </div>
             </div>
         </>
