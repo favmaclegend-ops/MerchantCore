@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Info, Plus, Send, Trash2 } from "lucide-react";
 import {
@@ -22,6 +22,7 @@ import NegotiationPanel from "./actions/NegotiationPanel";
 import { useStore } from "elk-components";
 import DiscountPanel from "./actions/DiscountPanel";
 import DiscountOrderPanel from "./actions/DiscountOrderPanel";
+import { Authcontext } from "@/context";
 
 const base = () =>
   window.location.pathname.startsWith("/market") ? "/market" : "/home/market";
@@ -29,6 +30,7 @@ const base = () =>
 export function ChatThreadPage() {
   const { shopId = "" } = useParams();
   const navigate = useNavigate();
+  const {orgUser} = useContext(Authcontext)
   const { unread, loading } = useChatStore();
   const [text, setText] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
@@ -343,7 +345,9 @@ export function ChatThreadPage() {
 
         }}
       >
-        <button
+        {
+          orgUser &&
+          <button
           type="button"
           onClick={() => {
             generalStore.setState({ isNegotiationPanel: true });
@@ -358,7 +362,7 @@ export function ChatThreadPage() {
           }}
         >
           <Plus />
-        </button>
+        </button>}
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
