@@ -122,3 +122,22 @@ export const getMarketCartTotals = (
 
 export const getMarketCartCount = (items: MarketCartItem[]): number =>
   items.reduce((sum, item) => sum + item.quantity, 0);
+
+/**
+ * Add a product to the cart at a discounted price (used for conversation
+ * discount offers). The discounted price is baked into the cart line so the
+ * normal checkout flow charges the reduced amount instead of the list price.
+ */
+export const addDiscountedProductToCart = (
+  product: MarketStoreProduct,
+  discountPrice: string,
+  quantity: number = 1,
+): boolean => {
+  const parsed = parseFloat(discountPrice);
+  if (!Number.isFinite(parsed) || parsed < 0) return false;
+  const discounted: MarketStoreProduct = {
+    ...product,
+    product_price: discountPrice,
+  };
+  return addToMarketCart(discounted, quantity, 0);
+};

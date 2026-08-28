@@ -50,7 +50,7 @@ export function timeAgo(iso: string): string {
 
 export const inputStyle: CSSProperties = {
   width: '100%', height: '38px', padding: '0 12px', border: '1px solid var(--border-input)',
-  borderRadius: '8px', fontSize: '13px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box',
+  borderRadius: '8px', fontSize: '16px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box',
 }
 
 export const selectStyle: CSSProperties = { ...inputStyle, padding: '0 8px' }

@@ -1,3 +1,4 @@
+import { AlertCircle, CheckCircle, Info } from "lucide-react"
 import { useEffect } from "react"
 
 interface AlertProps {
@@ -7,20 +8,6 @@ interface AlertProps {
     },
     display: string,
     setdisplay: CallableFunction
-}
-
-interface alertIc {
-    success: string,
-    invalid: string,
-    error: string,
-    warning: string
-}
-
-const alertType: alertIc = {
-    success: 'https://img.icons8.com/?size=100&id=11695&format=png&color=05c505',
-    invalid: 'https://img.icons8.com/?size=100&id=3062&format=png&color=ff0000',
-    error: 'https://img.icons8.com/?size=100&id=360&format=png&color=ff0000',
-    warning: 'https://img.icons8.com/?size=100&id=24549&format=png&color=c8c801',
 }
 
 export default function AlertDialog({ alert, display, setdisplay }: AlertProps) {
@@ -48,7 +35,9 @@ export default function AlertDialog({ alert, display, setdisplay }: AlertProps) 
             gap: '16px',
             zIndex: 9999,
         }}>
-            <img src={alertType[alert.type as keyof alertIc]} style={{ width: '30px', height: '30px' }} />
+            {(alert.type == "success" && <CheckCircle color="green" />) ||
+            (alert.type == "invalid" && <AlertCircle color="red" />) ||
+            (alert.type == "info" && <Info color="yellow" />)}
             <p style={{ color: 'var(--text-primary)', margin: 0, fontSize: '14px' }}>{alert.message}</p>
         </div>
     )

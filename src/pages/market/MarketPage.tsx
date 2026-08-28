@@ -61,7 +61,7 @@ const paymentButtons = [
 const fieldStyle: React.CSSProperties = {
   width: "100%",
   padding: "7px 10px",
-  fontSize: "12px",
+  fontSize: "16px",
   color: "var(--text-primary)",
   background: "var(--bg-secondary)",
   border: "1px solid var(--border-default)",

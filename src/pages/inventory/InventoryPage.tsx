@@ -23,7 +23,7 @@ const inputStyle: React.CSSProperties = {
 
 const LOW_STOCK_THRESHOLD = 20
 
-interface Product {
+export interface Product {
   id: string
   name: string
   sku: string
@@ -277,7 +277,7 @@ export function InventoryPage() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder="Search inventory..."
-        style={{ width: '100%', height: '40px', padding: '0 14px', border: '1px solid var(--border-default)', borderRadius: '8px', fontSize: '13px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+        style={{ width: '100%', height: '40px', padding: '0 14px', border: '1px solid var(--border-default)', borderRadius: '8px', fontSize: '16px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
       />
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', overflowX: 'hidden' }}>
@@ -341,7 +341,7 @@ export function InventoryPage() {
                 <p style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{format(product.price)}</p>
               </div>
               <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                {uploaded && (
+                {!bp.sm && uploaded && (
                   <button
                     onClick={() => handleRemoveFromMarket(product)}
                     title="Remove from market"

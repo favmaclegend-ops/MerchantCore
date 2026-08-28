@@ -50,6 +50,23 @@ export interface ChatMessage {
   senderName: string
   status: ChatMessageStatus
   sentAt: string // ISO timestamp
+  type?: 'normal' | 'discount'
+  discountImage?: string
+  discountLink?: string
+  product_id?: string
+  oldPrice?: string
+  newPrice?: string
+}
+
+export interface DiscountMessage {
+  id: string,
+  itemName: string,
+  from: ChatSender,
+  senderName: string,
+  status: ChatMessageStatus,
+  sentAt: string
+  oldPrice: string,
+  newPrice: string
 }
 
 export interface ChatThread {
@@ -65,7 +82,8 @@ export interface ChatThread {
   threadId: string
   threadKey: string // base64 AES-256 thread key
   participantKey: string
-  isOwner: boolean
+  isOwner: boolean,
+
 }
 
 export interface ThreadInput {
@@ -191,6 +209,12 @@ async function refreshStore(): Promise<void> {
                 : api.shop_name || 'Shop',
             status: mine && isLastOwn && otherUnread === 0 ? 'delivered' : 'sent',
             sentAt: m.sent_at || '',
+            type: m.message_type === 'discount' ? 'discount' : undefined,
+            discountImage: m.message_image_url || undefined,
+            discountLink: m.discount_link || undefined,
+            product_id: m.product_id || undefined,
+            oldPrice: m.old_price || undefined,
+            newPrice: m.new_price || undefined,
           })
         }
       } catch {
@@ -264,8 +288,20 @@ export async function startThread(shop: ThreadInput): Promise<ChatThread> {
   return thread
 }
 
+
+interface SendMessage {
+  shopId: string,
+  text: string,
+  discountLink: string,
+  discountImage: string,
+  type: 'normal' | 'discount',
+  oldPrice?: string,
+  newPrice?: string,
+  product_id?: string
+
+}
 /** Encrypt and send a message in the cached thread for a shop. */
-export async function sendMessage(shopId: string, text: string): Promise<ChatThread> {
+export async function sendMessage({shopId, text, type, discountImage, product_id, discountLink, oldPrice, newPrice}: SendMessage): Promise<ChatThread> {
   const thread = getThread(shopId)
   if (!thread) throw new Error('No conversation to send to')
   const trimmed = text.trim()
@@ -278,12 +314,18 @@ export async function sendMessage(shopId: string, text: string): Promise<ChatThr
     senderName: current?.name || '',
     status: 'sending',
     sentAt: now,
+    discountLink: discountLink ?? "",
+    discountImage: discountImage ?? "",
+    type: type ?? 'normal',
+    oldPrice: oldPrice ?? "",
+    newPrice: newPrice ?? "",
+    
   })
   thread.updatedAt = now
   notifyChatChanged()
   let sent: ChatApiMessage
   try {
-    sent = await apiSendMessage(thread.threadId, trimmed, thread.threadKey)
+    sent = await apiSendMessage(thread.threadId, trimmed, thread.threadKey, type, discountImage ?? "", product_id ?? "", oldPrice ?? "", newPrice ?? "", discountLink ?? "")
     thread.messages = thread.messages.map((m) =>
       m.id === optimisticId
         ? { ...m, id: sent.id, status: 'sent', sentAt: sent.sent_at || now }
