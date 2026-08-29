@@ -176,7 +176,7 @@ export function PurchaseOrders({ state, products, reload, notify }: { state: Org
               </tr>
             ) : (
               state.purchaseOrders.map(po => (
-                <tr key={po.id}>
+                <tr key={po.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '60px' }}>
                   <td style={tdStyle}>
                     <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)' }}>{po.po_number}</p>
                     <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>{po.items.map(i => `${i.product_name} ×${i.qty}`).join(', ')}</p>

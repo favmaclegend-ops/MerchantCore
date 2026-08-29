@@ -141,6 +141,7 @@ export function CustomersPage() {
                     width: '100%', padding: '12px', display: 'flex', alignItems: 'center', gap: '10px',
                     textAlign: 'left', border: 'none', borderBottom: '1px solid var(--bg-secondary)',
                     background: isSelected ? 'var(--bg-secondary)' : 'transparent', cursor: 'pointer',
+                    contentVisibility: 'auto', containIntrinsicSize: '60px',
                   }}>
                     <div style={{ width: '36px', height: '36px', background: 'var(--border-default)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-label)' }}>{customer.name?.substring(0, 2).toUpperCase()}</span>

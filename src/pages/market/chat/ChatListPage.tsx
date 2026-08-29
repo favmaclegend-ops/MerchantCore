@@ -151,6 +151,8 @@ export function ChatListPage() {
                   width: '100%',
                   minWidth: 0,
                   overflow: 'hidden',
+                  contentVisibility: 'auto',
+                  containIntrinsicSize: '76px',
                   borderBottom:
                     i < filtered.length - 1
                       ? '1px solid var(--border-default)'

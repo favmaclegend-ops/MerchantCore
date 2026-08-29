@@ -313,25 +313,28 @@ export function ChatThreadPage() {
             />
           </>
         )}
-        {thread.messages.map((m) =>
-          m.type === "discount" ? (
-            <DiscountMessageBubble
-              key={m.id}
-              message={m}
-              shopId={thread.shopId}
-              shopName={thread.shopName}
-              active={menuTarget?.id === m.id}
-              onOpenMenu={(rect) => openMenu(m.id, rect)}
-            />
-          ) : (
-            <MessageBubble
-              key={m.id}
-              message={m}
-              active={menuTarget?.id === m.id}
-              onOpenMenu={(rect) => openMenu(m.id, rect)}
-            />
-          ),
-        )}
+        {thread.messages.map((m) => (
+          <div
+            key={m.id}
+            style={{ contentVisibility: 'auto', containIntrinsicSize: '120px' }}
+          >
+            {m.type === "discount" ? (
+              <DiscountMessageBubble
+                message={m}
+                shopId={thread.shopId}
+                shopName={thread.shopName}
+                active={menuTarget?.id === m.id}
+                onOpenMenu={(rect) => openMenu(m.id, rect)}
+              />
+            ) : (
+              <MessageBubble
+                message={m}
+                active={menuTarget?.id === m.id}
+                onOpenMenu={(rect) => openMenu(m.id, rect)}
+              />
+            )}
+          </div>
+        ))}
       </div>
 
       {generalStore.getState().isNegotiationPanel && <NegotiationPanel />}

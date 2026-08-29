@@ -173,15 +173,16 @@ export function NotificationsPage() {
         )}
 
         {!loading && filtered.map(n => (
-          <NotificationRow
-            key={n.id}
-            notification={n}
-            read={readStateFor(n)}
-            format={format}
-            canDelete={canDelete}
-            onMarkRead={markAsRead}
-            onDelete={deleteNotification}
-          />
+          <div key={n.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '72px' }}>
+            <NotificationRow
+              notification={n}
+              read={readStateFor(n)}
+              format={format}
+              canDelete={canDelete}
+              onMarkRead={markAsRead}
+              onDelete={deleteNotification}
+            />
+          </div>
         ))}
       </div>
     </div>

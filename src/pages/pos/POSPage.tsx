@@ -442,6 +442,8 @@ export function POSPage() {
                         border: "1px solid var(--border-default)",
                         overflow: "hidden",
                         height: "auto",
+                        contentVisibility: "auto",
+                        containIntrinsicSize: "190px",
                       }}
                     >
                       <div

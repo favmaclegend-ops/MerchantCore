@@ -15,7 +15,7 @@ export default function PublicMarketLayout() {
         width: "100%",
         height: "var(--app-height)",
         overflow: "hidden",
-        background: "var(--bg-page)",
+        background: "var(--bg-surface)",
       }}
     >
       <header
@@ -68,7 +68,7 @@ export default function PublicMarketLayout() {
         </Link>
       </header>
 
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", paddingBottom: "var(--safe-bottom)" }}>
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", background: "var(--bg-page)", paddingBottom: "var(--safe-bottom)" }}>
         <Suspense
           fallback={
             <div

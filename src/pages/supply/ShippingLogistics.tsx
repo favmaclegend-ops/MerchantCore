@@ -123,7 +123,7 @@ export function ShippingLogistics({ state, reload, notify }: { state: OrgSupplyS
               </tr>
             ) : (
               state.shipments.map(s => (
-                <tr key={s.id}>
+                <tr key={s.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '60px' }}>
                   <td style={{ ...tdStyle, fontWeight: 600 }}>{s.tracking_number}</td>
                   <td style={tdStyle}>
                     <p style={{ margin: 0 }}>{s.po_number}</p>

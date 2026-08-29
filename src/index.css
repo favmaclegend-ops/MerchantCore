@@ -149,7 +149,9 @@ body,
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-page);
+  /* Match the header so iOS overscroll/rubber-banding feels native
+     instead of showing a hard content-colored edge. */
+  background-color: var(--bg-header);
   color: var(--text-primary);
   overflow: hidden;
 }

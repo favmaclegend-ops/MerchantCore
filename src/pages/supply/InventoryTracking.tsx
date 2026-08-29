@@ -187,7 +187,7 @@ export function InventoryTracking({ products, reload, notify, orgUser }: { produ
               </tr>
             ) : (
               filtered.map(p => (
-                <tr key={p.id}>
+                <tr key={p.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '72px' }}>
                   <td style={tdStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ width: 30, height: 30, borderRadius: 6, flexShrink: 0, overflow: 'hidden', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

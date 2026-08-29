@@ -734,6 +734,8 @@ export function MarketPage() {
                     borderRadius: "10px",
                     border: "1px solid var(--border-default)",
                     background: "var(--bg-secondary)",
+                    contentVisibility: "auto",
+                    containIntrinsicSize: "110px",
                   }}
                 >
                   <div

@@ -426,16 +426,17 @@ export function InventoryPage() {
             </div>
           )}
           {filtered.map((product: Product) => (
-            <ProductRow
-              key={product.id}
-              product={product}
-              uploaded={uploadedSourceIds.has(product.id)}
-              canEdit={canEdit}
-              format={format}
-              onEdit={openEdit}
-              onDelete={handleDelete}
-              onRemoveFromMarket={handleRemoveFromMarket}
-            />
+            <div key={product.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '76px' }}>
+              <ProductRow
+                product={product}
+                uploaded={uploadedSourceIds.has(product.id)}
+                canEdit={canEdit}
+                format={format}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+                onRemoveFromMarket={handleRemoveFromMarket}
+              />
+            </div>
           ))}
           {filtered.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', padding: '24px' }}>No items found</p>}
         </div>

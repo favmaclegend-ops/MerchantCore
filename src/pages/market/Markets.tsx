@@ -336,7 +336,8 @@ export function Markets() {
                     justifyContent: "space-between",
                     width: "100%",
                     height: "clamp(.5svh, auto)",
-
+                    contentVisibility: "auto",
+                    containIntrinsicSize: "230px",
                     padding: "1rem",
                     background: "var(--bg-nav)",
                     border: "var(--border-default)",

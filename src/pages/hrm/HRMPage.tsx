@@ -576,7 +576,7 @@ export function HRMPage() {
                   </thead>
                   <tbody>
                     {employees.map(employee => (
-                      <tr key={employee.id}>
+                      <tr key={employee.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}>
                         <td style={tdStyle}>
                           <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)' }}>{employee.name}</p>
                           <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>{employee.email}</p>
@@ -634,7 +634,7 @@ export function HRMPage() {
                   </thead>
                   <tbody>
                     {payrollRuns.map(run => (
-                      <tr key={run.id}>
+                      <tr key={run.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '56px' }}>
                         <td style={{ ...tdStyle, fontWeight: 600 }}>{run.period}</td>
                         <td style={tdStyle}>{run.employee_name}</td>
                         <td style={{ ...tdStyle, textAlign: 'right' }}>{format(run.gross)}</td>
@@ -683,7 +683,7 @@ export function HRMPage() {
                       {rosterEmployeesFilter.map(employee => {
                         const record = todayByEmp.get(employee.id)
                         return (
-                          <tr key={employee.id}>
+                          <tr key={employee.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '48px' }}>
                             <td style={{ ...tdStyle, fontWeight: 600 }}>{employee.name}</td>
                             <td style={tdStyle}>
                               {record
@@ -719,7 +719,7 @@ export function HRMPage() {
                     </thead>
                     <tbody>
                       {sumaryEmployees.map(row => (
-                        <tr key={row.employee_id}>
+                        <tr key={row.employee_id} style={{ contentVisibility: 'auto', containIntrinsicSize: '56px' }}>
                           <td style={{ ...tdStyle, fontWeight: 600 }}>{row.employee_name}</td>
                           <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>{row.scheduled_days}</td>
                           <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text-muted)' }}>{row.present_days}</td>
@@ -758,7 +758,7 @@ export function HRMPage() {
                     </thead>
                     <tbody>
                       {timeEntriesFilter.map(entry => (
-                        <tr key={entry.id}>
+                        <tr key={entry.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '44px' }}>
                           <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{formatDate(entry.date)}</td>
                           <td style={{ ...tdStyle, fontWeight: 600 }}>{entry.employee_name}</td>
                           <td style={{ ...tdStyle, textAlign: 'right' }}>{entry.hours}</td>
@@ -792,7 +792,7 @@ export function HRMPage() {
                   </thead>
                   <tbody>
                     {reviews.map(review => (
-                      <tr key={review.id}>
+                      <tr key={review.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '56px' }}>
                         <td style={{ ...tdStyle, fontWeight: 600 }}>{review.employee_name}</td>
                         <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{review.period}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{review.score.toFixed(1)}</td>
@@ -820,7 +820,7 @@ export function HRMPage() {
           {active === 'benefits' && (
             <div style={{ display: 'grid', gridTemplateColumns: bp.md ? 'repeat(2, 1fr)' : '1fr', gap: '12px', width: '100%' }}>
               {benefits.map(benefit => (
-                <div key={benefit.id} style={panelStyle}>
+                <div key={benefit.id} style={{ ...panelStyle, contentVisibility: 'auto', containIntrinsicSize: '150px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(59,130,246,0.15)', color: '#93c5fd', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

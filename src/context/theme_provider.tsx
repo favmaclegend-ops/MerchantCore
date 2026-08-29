@@ -6,26 +6,30 @@ const HEADER_COLORS = {
   dark: '#0f172a',
 } as const
 
+function writeMeta(name: string, content: string) {
+  let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)
+  if (!meta) {
+    meta = document.createElement('meta')
+    meta.name = name
+    document.head.appendChild(meta)
+  }
+  meta.content = content
+}
+
 function applyStatusBar(theme: 'light' | 'dark') {
   const color = HEADER_COLORS[theme]
 
-  let themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-  if (!themeColor) {
-    themeColor = document.createElement('meta')
-    themeColor.name = 'theme-color'
-    document.head.appendChild(themeColor)
-  }
-  themeColor.content = color
+  // `theme-color` drives the live iOS status bar / toolbar area colour
+  // (works dynamically in Safari and standalone to colour the strip).
+  writeMeta('theme-color', color)
 
-  let statusBar = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]')
-  if (!statusBar) {
-    statusBar = document.createElement('meta')
-    statusBar.name = 'apple-mobile-web-app-status-bar-style'
-    document.head.appendChild(statusBar)
-  }
-  // Transparent bar in dark mode (light status-bar text over the dark header),
-  // default opaque bar in light mode so the dark status-bar text stays readable.
-  statusBar.content = theme === 'dark' ? 'black-translucent' : 'default'
+  // `apple-mobile-web-app-status-bar-style` is only read at launch on iOS
+  // standalone, so we keep it consistent here rather than relying on runtime
+  // changes. `theme-color` above is what actually updates dynamically.
+  writeMeta(
+    'apple-mobile-web-app-status-bar-style',
+    theme === 'dark' ? 'black-translucent' : 'black-translucent',
+  )
 }
 
 export default function ThemeProvider({ children }: { children: ReactNode }) {

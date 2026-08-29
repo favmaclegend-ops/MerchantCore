@@ -117,7 +117,7 @@ export function MarketOrders({ notify }: Props) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {orders.map((order) => (
-            <div key={order.id} style={{ border: "1px solid var(--border-default)", borderRadius: "12px", background: "var(--bg-surface)", padding: "14px" }}>
+            <div key={order.id} style={{ border: "1px solid var(--border-default)", borderRadius: "12px", background: "var(--bg-surface)", padding: "14px", contentVisibility: "auto", containIntrinsicSize: "150px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                 <div>
                   <strong style={{ fontSize: "13px", color: "var(--text-primary)", display: "block" }}>

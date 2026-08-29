@@ -67,13 +67,13 @@ export default function Home() {
 
     return (
         <>
-            <div style={{ display: 'flex', width: '100%', height: 'var(--app-height)', overflow: 'hidden', background: 'var(--bg-page)' }}>
+            <div style={{ display: 'flex', width: '100%', height: 'var(--app-height)', overflow: 'hidden', background: 'var(--bg-header)' }}>
                 {!hideFrame && <DesktopSidebar />}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden', width: '100%' }}>
                     {!hideFrame && <DesktopHeader />}
                     {!hideFrame && <MobileHeader />}
 
-                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: (hideFrame || (location.pathname === '/home/pos' && (bp.lg || bp.md))) ? '0' : '5.5rem' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg-page)', paddingBottom: (hideFrame || (location.pathname === '/home/pos' && (bp.lg || bp.md))) ? '0' : '5.5rem' }}>
                         <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>}>
                             <Routes>
                                 <Route path="/dashboard" element={<DashboardPage />} />

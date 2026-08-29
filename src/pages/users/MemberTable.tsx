@@ -64,7 +64,7 @@ function MemberRow({ member, color, compact, open, onToggle, onEdit, onToggleAct
   const nameColor = disabled || inactive ? 'var(--text-placeholder)' : 'var(--text-primary)'
 
   return (
-    <tr style={{ opacity: 1,    }} >
+    <tr style={{ opacity: 1, contentVisibility: 'auto', containIntrinsicSize: '64px' }} >
       <td style={tdStyle}>
         <Avatar member={member} color={color} size={36} />
       </td>

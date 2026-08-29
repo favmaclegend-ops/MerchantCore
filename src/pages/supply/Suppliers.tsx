@@ -155,7 +155,7 @@ export function Suppliers({ state, products, reload, notify }: { state: OrgSuppl
               </tr>
             ) : (
               state.suppliers.map(s => (
-                <tr key={s.id}>
+                <tr key={s.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}>
                   <td style={tdStyle}>
                     <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)' }}>{s.name}</p>
                     <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>{s.id} · {s.address}</p>
