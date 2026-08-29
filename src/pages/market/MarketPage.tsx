@@ -32,6 +32,7 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { MarketOrdersPage } from "./MarketOrdersPage";
 import { MarketScanPage } from "./MarketScanPage";
 import { ChatRoute } from "./chat/ChatRoute";
+import { BottomSheet } from "@/components/BottomSheet";
 
 interface CartPanelProps {
   cart: MarketCartItem[];
@@ -586,32 +587,19 @@ export function MarketPage() {
           )
         )}
 
-        {!isChatRoute && !bp.mlg && isCartOpen && (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 950,
-              background: "rgba(2,6,23,.6)",
-              backdropFilter: "blur(4px)",
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "center",
-              padding: "8px",
-            }}
-            onClick={() => setIsCartOpen(false)}
+        {!isChatRoute && !bp.mlg && (
+          <BottomSheet
+            open={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            zIndex={950}
+            maxHeight="85vh"
+            bottom="calc(16px + var(--safe-bottom))"
           >
             <div
-              onClick={(e) => e.stopPropagation()}
               style={{
-                width: "100%",
-                maxWidth: "520px",
-                maxHeight: "85vh",
+                padding: "6px 8px 8px",
                 overflowX: "hidden",
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                borderRadius: "1rem",
+                width: "100%",
               }}
             >
               <CartPanel
@@ -619,7 +607,7 @@ export function MarketPage() {
                 onClose={() => setIsCartOpen(false)}
               />
             </div>
-          </div>
+          </BottomSheet>
         )}
 
         {successMsg && (

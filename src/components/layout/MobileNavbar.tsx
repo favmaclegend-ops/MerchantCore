@@ -1,4 +1,4 @@
-import { useState, useContext, useRef, useLayoutEffect } from 'react'
+import { useState, useContext, useRef, useLayoutEffect, useEffect } from 'react'
 import type { ElementType } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle } from 'lucide-react'
@@ -62,6 +62,75 @@ export function MobileNavbar() {
   const dragRef = useRef({ dragging: false, lastX: 0 })
   const draggedRef = useRef(false)
   const [pressing, setPressing] = useState(false)
+
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const sheetDragRef = useRef({ dragging: false, startY: 0, dy: 0 })
+  const [closing, setClosing] = useState(false)
+  const SHEET_CLOSE_THRESHOLD = 120
+
+  useEffect(() => {
+    if (open) {
+      const sheet = sheetRef.current
+      if (sheet) {
+        sheet.style.transition = 'none'
+        sheet.style.transform = 'translateY(100%)'
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            sheet.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)'
+            sheet.style.transform = 'translateY(0)'
+          })
+        })
+      }
+    }
+  }, [open])
+
+  const closeSheet = () => {
+    setClosing(true)
+    const sheet = sheetRef.current
+    if (sheet) {
+      sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
+      sheet.style.transform = 'translateY(100%)'
+    }
+    window.setTimeout(() => {
+      setOpen(false)
+      setClosing(false)
+    }, 300)
+  }
+
+  const handleSheetPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    sheetDragRef.current = { dragging: true, startY: e.clientY, dy: 0 }
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      /* ignore capture errors */
+    }
+  }
+
+  const handleSheetPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const s = sheetDragRef.current
+    const sheet = sheetRef.current
+    if (!s.dragging || !sheet) return
+    const dy = e.clientY - s.startY
+    if (dy > 0 && sheet.scrollTop <= 0) {
+      s.dy = dy
+      sheet.style.transition = 'none'
+      sheet.style.transform = `translateY(${dy}px)`
+      e.preventDefault?.()
+    }
+  }
+
+  const handleSheetPointerUp = () => {
+    const s = sheetDragRef.current
+    const sheet = sheetRef.current
+    if (!s.dragging || !sheet) return
+    s.dragging = false
+    if (s.dy >= SHEET_CLOSE_THRESHOLD) {
+      closeSheet()
+    } else {
+      sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
+      sheet.style.transform = 'translateY(0)'
+    }
+  }
 
   const positionIndicator = () => {
     const nav = navRef.current
@@ -171,45 +240,57 @@ export function MobileNavbar() {
   return (
     <>
       {/* Backdrop */}
-      {open && (
-        <>
-          <div
-            onClick={() => setOpen(false)}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(0,0,0,0.35)',
-              backdropFilter: 'blur(4px)',
-              WebkitBackdropFilter: 'blur(4px)',
-              zIndex: 45,
-              transition: 'opacity 0.25s ease',
-            }}
-          />
-          {/* More menu sheet */}
-          <div
-            style={{
-              position: 'fixed',
-              left: '12px',
-              right: '12px',
-              bottom: 'calc(90px + var(--safe-bottom))',
-              background: 'var(--bg-surface)',
-              borderRadius: '20px',
-              boxShadow: '0 16px 48px rgba(0,0,0,0.15), 0 0 0 1px var(--border-default)',
-              zIndex: 50,
-              padding: '6px',
-              maxHeight: '50vh',
-              overflowY: 'auto',
-            }}
-          >
-            <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'var(--border-default)', margin: '8px auto 6px' }} />
-            {visibleMoreItems.map(item => {
+      {(open || closing) && (
+        <div
+          onClick={closeSheet}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 45,
+            opacity: open ? 1 : 0,
+            visibility: open ? 'visible' : 'hidden',
+            transition: 'opacity 0.25s ease, visibility 0.25s ease',
+          }}
+        />
+      )}
+
+      {/* More menu bottom sheet */}
+      {(open || closing) && (
+        <div
+          ref={sheetRef}
+          onPointerDown={handleSheetPointerDown}
+          onPointerMove={handleSheetPointerMove}
+          onPointerUp={handleSheetPointerUp}
+          onPointerCancel={handleSheetPointerUp}
+          style={{
+            position: 'fixed',
+            left: '12px',
+            right: '12px',
+            bottom: 'calc(16px + var(--safe-bottom))',
+            background: 'var(--bg-surface)',
+            borderRadius: '20px',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.15), 0 0 0 1px var(--border-default)',
+            zIndex: 900,
+            padding: '6px',
+            maxHeight: '60vh',
+            overflowY: 'auto',
+            overscrollBehaviorY: 'contain',
+            willChange: 'transform',
+           
+          }}
+        >
+          <div style={{ width: '36px',  height: '4px', borderRadius: '2px', background: 'var(--border-default)', margin: '8px auto 6px', cursor: 'grab' }} />
+          {visibleMoreItems.map(item => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setOpen(false)}
+                  onClick={closeSheet}
                   onTouchStart={() => preloadRoute(item.path)}
                   style={{
                     display: 'flex',
@@ -232,7 +313,6 @@ export function MobileNavbar() {
               )
             })}
           </div>
-        </>
       )}
 
       {/* Floating pill navbar */}
@@ -246,7 +326,7 @@ export function MobileNavbar() {
         className="mobile-navbar"
         style={{
           position: 'fixed',
-          bottom: 'calc(16px + var(--safe-bottom))',
+          bottom: 'calc(6px + var(--safe-bottom))',
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
