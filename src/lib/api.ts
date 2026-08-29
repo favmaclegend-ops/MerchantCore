@@ -1009,6 +1009,8 @@ export const api = {
     },
     getMyOrderQrToken: (orderId: string) =>
       request<{ token: string; order_id: string }>(`/market/orders/${orderId}/qrcode`),
+    deleteMyOrder: (orderId: string) =>
+      request<Record<string, unknown>>(`/market/orders/${orderId}`, { method: 'DELETE' }),
 
     // Org (member JWT) — supply chain orders tab
     getOrgMarketOrders: (status?: string) => {
@@ -1021,5 +1023,7 @@ export const api = {
       orgRequest<Record<string, unknown>>('/market/orders/org/scan', { method: 'POST', body: JSON.stringify({ token }) }),
     cancelMarketOrder: (orderId: string) =>
       orgRequest<Record<string, unknown>>(`/market/orders/org/${orderId}/cancel`, { method: 'POST' }),
+    deleteOrgOrder: (orderId: string) =>
+      orgRequest<Record<string, unknown>>(`/market/orders/org/${orderId}`, { method: 'DELETE' }),
   },
 }

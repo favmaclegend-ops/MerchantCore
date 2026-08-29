@@ -11,6 +11,7 @@ export interface MarketCartItem {
   product_name: string;
   product_price: string;
   quantity: number;
+  source_id?: string;
   variant_id?: string;
   variant?: { size?: string; color?: string; shape?: string };
 }
@@ -82,6 +83,7 @@ export const buildMarketCartItem = (
     product_name: product.product_name,
     product_price: product.product_price,
     quantity: 1,
+    source_id: product.sourceId,
     variant_id: variant
       ? `${product.product_id}::${variantIndex}`
       : undefined,

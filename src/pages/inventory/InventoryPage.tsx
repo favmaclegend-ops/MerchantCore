@@ -18,7 +18,7 @@ import { Link } from 'react-router-dom'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', height: '40px', padding: '0 12px', border: '1px solid var(--border-input)',
-  borderRadius: '8px', fontSize: '13px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box',
+  borderRadius: '8px', fontSize: '16px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box',
 }
 
 const LOW_STOCK_THRESHOLD = 20

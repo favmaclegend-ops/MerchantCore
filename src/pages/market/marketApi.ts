@@ -274,7 +274,7 @@ export const submitMarketOrder = async (
         const src = productById.get(item.product_id);
         return {
           product_id: item.product_id,
-          source_id: src?.sourceId ?? undefined,
+          source_id: item.source_id ?? src?.sourceId ?? undefined,
           name: item.product_name,
           price: parseFloat(item.product_price),
           quantity: item.quantity,
