@@ -13,7 +13,7 @@ export default function App() {
     <Routes>
       <Route path='/' element={<DefaultPage />}/>
       <Route path='/verify-email' element={
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', padding: '24px' }}>
+        <div style={{ minHeight: 'var(--app-min-height)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', padding: '24px' }}>
           <VerifyEmailPage />
         </div>
       }/>

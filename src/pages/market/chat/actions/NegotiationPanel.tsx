@@ -34,6 +34,7 @@ export default function NegotiationPanel() {
             borderRadius: "1rem",
             bottom: !bp.sm ? 100 : 0,
             padding: "1rem",
+            paddingBottom: "calc(1rem + var(--safe-bottom))",
             gap: '1rem',
           }}
         >

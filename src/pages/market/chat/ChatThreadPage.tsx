@@ -123,7 +123,10 @@ export function ChatThreadPage() {
       >
         <div
           style={{
-            padding: "16px 18px",
+            paddingTop: 'calc(16px + var(--safe-top))',
+            paddingBottom: "16px",
+            paddingLeft: 'calc(18px + var(--safe-left))',
+            paddingRight: 'calc(18px + var(--safe-right))',
             borderBottom: "1px solid var(--border-default)",
             background: "var(--bg-surface)",
             display: "flex",
@@ -179,7 +182,10 @@ export function ChatThreadPage() {
       {/* Header */}
       <div
         style={{
-          padding: "12px 16px",
+          paddingTop: 'calc(12px + var(--safe-top))',
+          paddingBottom: '12px',
+          paddingLeft: 'calc(16px + var(--safe-left))',
+          paddingRight: 'calc(16px + var(--safe-right))',
           borderBottom: "1px solid var(--border-default)",
           background: "var(--bg-surface)",
           display: "flex",
@@ -336,13 +342,15 @@ export function ChatThreadPage() {
       <form
         onSubmit={handleSend}
         style={{
-          padding: "10px 14px",
+          paddingTop: "10px",
+          paddingBottom: 'calc(10px + var(--safe-bottom))',
+          paddingLeft: 'calc(14px + var(--safe-left))',
+          paddingRight: 'calc(14px + var(--safe-right))',
           borderTop: "1px solid var(--border-default)",
           background: "var(--bg-surface)",
           display: "flex",
           alignItems: "center",
           gap: 10,
-
         }}
       >
         {

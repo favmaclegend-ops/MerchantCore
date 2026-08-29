@@ -60,7 +60,9 @@ export function ChatListPage() {
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          paddingBlockStart: '2rem'
+          paddingTop: 'calc(var(--safe-top) + 10px)',
+          paddingLeft: 'calc(var(--safe-left) + 12px)',
+          paddingRight: 'calc(var(--safe-right) + 12px)',
         }}
       >
         <a
@@ -116,7 +118,7 @@ export function ChatListPage() {
           minWidth: 0,
           overflowY: 'auto',
           overflowX: 'hidden',
-          padding: '0 0 20px',
+          padding: '0 0 calc(20px + var(--safe-bottom))',
           background: 'var(--bg-surface)',
         }}
       >

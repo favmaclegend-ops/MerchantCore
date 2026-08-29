@@ -35,7 +35,7 @@ export default function Home() {
     const hideFrame = !!isChatThreadPage
 
     if (loading) {
-        return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
+        return <div style={{ height: 'var(--app-height)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
     }
 
     if (!user && !orgUser) {
@@ -44,7 +44,7 @@ export default function Home() {
 
     if (orgUser?.disabled) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', padding: '24px' }}>
+            <div style={{ minHeight: 'var(--app-min-height)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', padding: '24px' }}>
                 <div style={{ maxWidth: 420, width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 32, textAlign: 'center' }}>
                     <div style={{ width: 64, height: 64, margin: '0 auto 20px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Ban size={32} color="var(--danger, #ef4444)" />
@@ -67,7 +67,7 @@ export default function Home() {
 
     return (
         <>
-            <div style={{ display: 'flex', width: '100%', height: '100vh', overflow: 'hidden', background: 'var(--bg-page)' }}>
+            <div style={{ display: 'flex', width: '100%', height: 'var(--app-height)', overflow: 'hidden', background: 'var(--bg-page)' }}>
                 {!hideFrame && <DesktopSidebar />}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden', width: '100%' }}>
                     {!hideFrame && <DesktopHeader />}

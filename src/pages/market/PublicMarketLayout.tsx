@@ -13,7 +13,7 @@ export default function PublicMarketLayout() {
         display: "flex",
         flexDirection: "column",
         width: "100%",
-        height: "100vh",
+        height: "var(--app-height)",
         overflow: "hidden",
         background: "var(--bg-page)",
       }}
@@ -23,8 +23,11 @@ export default function PublicMarketLayout() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 1.25rem",
-          height: "3.5rem",
+          paddingLeft: "calc(1.25rem + var(--safe-left))",
+          paddingRight: "calc(1.25rem + var(--safe-right))",
+          paddingTop: "var(--safe-top)",
+          paddingBottom: 0,
+          height: "calc(3.5rem + var(--safe-top))",
           flexShrink: 0,
           background: "var(--bg-surface)",
           borderBottom: "1px solid var(--border-default)",
@@ -65,7 +68,7 @@ export default function PublicMarketLayout() {
         </Link>
       </header>
 
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", paddingBottom: "var(--safe-bottom)" }}>
         <Suspense
           fallback={
             <div

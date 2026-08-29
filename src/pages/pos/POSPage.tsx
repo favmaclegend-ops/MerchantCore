@@ -1007,8 +1007,8 @@ export function POSPage() {
           onClick={() => setCartView(!isCart)}
           style={{
             position: "fixed",
-            bottom: "5.5rem",
-            right: "1rem",
+            bottom: "calc(5.5rem + var(--safe-bottom))",
+            right: "calc(1rem + var(--safe-right))",
             zIndex: 900,
             width: "56px",
             height: "56px",
