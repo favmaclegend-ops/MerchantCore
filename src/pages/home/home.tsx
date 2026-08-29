@@ -1,11 +1,13 @@
 import { Suspense, useContext, lazy } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Ban, LogOut } from 'lucide-react'
+import { useStore } from 'elk-components'
 import { Authcontext } from '@/context/auth_context'
 import { DesktopSidebar } from '@/components/layout/DesktopSidebar'
 import { DesktopHeader } from '@/components/layout/DesktopHeader'
 import { MobileNavbar } from '@/components/layout/MobileNavbar'
 import { MobileHeader } from '@/components/layout/MobileHeader'
+import { marketUiStore } from '@/pages/market/marketUiStore'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { canManageFinance, canManageHRM, canManageSupply, canManageUsers } from '@/lib/orgAccess'
 
@@ -33,6 +35,8 @@ export default function Home() {
 
     const isChatThreadPage = location.pathname.match(/\/market\/chat(\/|$)/)
     const hideFrame = !!isChatThreadPage
+    const marketNavHidden = useStore(marketUiStore).navHidden
+    const hideNav = hideFrame || marketNavHidden
 
     if (loading) {
         return <div style={{ height: 'var(--app-height)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
@@ -73,7 +77,7 @@ export default function Home() {
                     {!hideFrame && <DesktopHeader />}
                     {!hideFrame && <MobileHeader />}
 
-                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg-page)', paddingBottom: (hideFrame || (location.pathname === '/home/pos' && (bp.lg || bp.md))) ? '0' : '5.5rem' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg-page)', paddingBottom: (hideNav || (location.pathname === '/home/pos' && (bp.lg || bp.md))) ? '0' : '5.5rem' }}>
                         <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>}>
                             <Routes>
                                 <Route path="/dashboard" element={<DashboardPage />} />
@@ -95,7 +99,7 @@ export default function Home() {
                         </Suspense>
                     </div>
 
-                    {!hideFrame && <MobileNavbar />}
+                    {!hideNav && <MobileNavbar />}
                 </div>
             </div>
         </>

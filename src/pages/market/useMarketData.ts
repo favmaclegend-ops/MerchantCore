@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { marketStore } from "./demoMarketStore";
 import { fetchMarketData } from "./marketApi";
 
+// Clear any previously seeded demo data so the market always loads fresh data
+// from the real backend.
+marketStore.setState({ products: [], shops: {}, advert: [], catergories: ["All"], top4tRatingShops: [], fetchError: null });
+
 const FETCH_TIMEOUT_MS = 12_000;
 
 let marketDataPromise: Promise<unknown> | null = null;
