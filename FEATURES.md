@@ -338,6 +338,25 @@ The nav pill is not just a passive indicator — it is **draggable**. Pointer ev
 - `positionIndicator()` is also called on pointer-up (when not navigating) so the pill snaps back
   to the current tab with the same spring after an aborted drag.
 
+### 6b-ii. Reusable draggable bottom-sheet modal
+
+`src/components/BottomSheet.tsx` — a shared, high-z-index bottom-sheet used by the **More** menu,
+the **market cart** and the **mobile POS cart**:
+
+- **Slide-up entrance**: animates `translateY(100%) → 0` on open with a springy
+  `cubic-bezier(0.32, 0.72, 0, 1)`.
+- **Drag down to dismiss**: pointer events on the sheet follow the finger downward
+  (`overscrollBehaviorY: contain`); past a `120px` threshold it slides out and closes, otherwise it
+  snaps back.
+- **Backdrop tap to close**, with a fade + blur.
+- **High z-index** (defaults to `999`, configurable) so it floats above nav bars and FABs.
+- Used by:
+  - **More sheet** — `MobileNavbar.tsx` (was a plain fixed panel; now a draggable sheet).
+  - **Market cart** (`MarketPage.tsx`) — `zIndex: 950`, opened from the floating cart button.
+  - **Mobile POS cart** (`POSPage.tsx`) — on `!bp.xl` the cart panel is extracted into a
+    `cartContent` variable rendered inline on desktop (`bp.xl`) and inside a `BottomSheet`
+    (`zIndex: 999`) on mobile instead of toggling an inline page view.
+
 
 ---
 

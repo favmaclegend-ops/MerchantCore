@@ -20,6 +20,7 @@ import { useDebounceEffect, useInstance, useSetState } from "elk-components";
 import { store } from "@/context/store";
 import { UploadToShopModal } from "@/pages/market/components/UploadToShopModal";
 import { GracefulImage } from "@/components/GracefulImage";
+import { BottomSheet } from "@/components/BottomSheet";
 
 interface CartItem {
   id: string;
@@ -250,6 +251,336 @@ export function POSPage() {
       </div>
     );
 
+  const cartContent = (
+                <div
+                  style={{
+                    background: "var(--bg-surface)",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border-default)",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "12px",
+                      borderBottom: "1px solid var(--bg-tertiary)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      Cart ({cart.length})
+                    </span>
+                    {!bp.xl && (
+                      <button
+                        onClick={() => setCartView(false)}
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 500,
+                          color: "var(--text-secondary)",
+                          background: "var(--bg-secondary)",
+                          border: "1px solid var(--border-default)",
+                          borderRadius: "4px",
+                          padding: "4px 10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Close
+                      </button>
+                    )}
+                  </div>
+    
+                  <div
+                    style={{
+                      flex: 1,
+                      overflowY: "auto",
+                      padding: "12px",
+                      maxHeight: bp.lg ? "240px" : "200px",
+                    }}
+                  >
+                    {cart.length === 0 ? (
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--text-placeholder)",
+                          textAlign: "center",
+                          padding: "24px 0",
+                          margin: 0,
+                        }}
+                      >
+                        Empty
+                      </p>
+                    ) : (
+                      cart.map((item) => (
+                        <div
+                          key={item.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: "28px",
+                              height: "28px",
+                              background: "var(--bg-tertiary)",
+                              borderRadius: "4px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <GracefulImage src={item.image} alt={item.name} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p
+                              style={{
+                                fontSize: "10px",
+                                fontWeight: 500,
+                                color: "var(--text-primary)",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                margin: 0,
+                              }}
+                            >
+                              {item.name}
+                            </p>
+                            <p
+                              style={{
+                                fontSize: "10px",
+                                color: "var(--text-muted)",
+                                margin: 0,
+                              }}
+                            >
+                              {format(item.price)} × {item.quantity}
+                            </p>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "2px",
+                            }}
+                          >
+                            <button
+                              onClick={() => updateQuantity(item.id, -1)}
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderRadius: "4px",
+                                background: "var(--bg-tertiary)",
+                                border: "none",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <Minus style={{ width: "12px", height: "12px" }} />
+                            </button>
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                fontWeight: 600,
+                                width: "16px",
+                                textAlign: "center",
+                              }}
+                            >
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(item.id, 1)}
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderRadius: "4px",
+                                background: "var(--bg-tertiary)",
+                                border: "none",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <Plus style={{ width: "12px", height: "12px" }} />
+                            </button>
+                          </div>
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              color: "var(--text-primary)",
+                              margin: 0,
+                              minWidth: "48px",
+                              textAlign: "right",
+                            }}
+                          >
+                            {format(item.price * item.quantity)}
+                          </p>
+                          <button
+                            style={{
+                              padding: ".4rem",
+                              borderRadius: "1rem",
+                              cursor: "pointer",
+                              border: "none",
+                            }}
+                            onClick={() => removeCartItem(item.id)}
+                          >
+                            <Delete color="red" size={20}/>
+                           
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+    
+                  <div
+                    style={{
+                      padding: "12px",
+                      borderTop: "1px solid var(--bg-tertiary)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "10px",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      <span style={{ color: "var(--text-muted)" }}>Subtotal</span>
+                      <span style={{ color: "var(--text-primary)" }}>
+                        {format(subtotal)}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "10px",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      <span style={{ color: "var(--text-muted)" }}>Tax (5%)</span>
+                      <span style={{ color: "var(--text-primary)" }}>
+                        {format(tax)}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        paddingTop: "6px",
+                        borderTop: "1px solid var(--bg-tertiary)",
+                      }}
+                    >
+                      <span>Total</span>
+                      <span>{format(total)}</span>
+                    </div>
+                  </div>
+    
+                  <div
+                    style={{
+                      padding: "12px",
+                      display: "grid",
+                      gridTemplateColumns: "repeat(4, 1fr)",
+                      gap: "6px",
+                    }}
+                  >
+                    {paymentButtons.map((pb) => {
+                      const Icon = pb.icon;
+                      const isActive = paymentMethod === pb.label;
+                      return (
+                        <button
+                          key={pb.label}
+                          onClick={() => setPaymentMethod(pb.label)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "4px",
+                            padding: "6px 0",
+                            fontSize: "10px",
+                            fontWeight: 500,
+                            background: isActive
+                              ? "var(--bg-nav-active)"
+                              : "var(--bg-secondary)",
+                            color: isActive
+                              ? "var(--text-primary)"
+                              : "var(--text-secondary)",
+                            border: isActive
+                              ? "none"
+                              : "1px solid var(--border-default)",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <Icon style={{ width: "12px", height: "12px" }} />{" "}
+                          {pb.label}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={openLog}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "4px",
+                        padding: "6px 0",
+                        fontSize: "10px",
+                        fontWeight: 500,
+                        background: "var(--bg-secondary)",
+                        border: "1px solid var(--border-default)",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      <History style={{ width: "12px", height: "12px" }} /> Log
+                    </button>
+                  </div>
+    
+                  <div style={{ padding: "0 12px 12px" }}>
+                    <button
+                      onClick={handleCheckout}
+                      disabled={cart.length === 0 || checkingOut}
+                      style={{
+                        width: "100%",
+                        padding: "8px 0",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: "var(--text-secondary)",
+                        background:
+                          cart.length === 0
+                            ? "var(--text-placeholder)"
+                            : "var(--bg-nav-active)",
+                        borderRadius: "4px",
+                        border: "none",
+                        cursor: cart.length === 0 ? "not-allowed" : "pointer",
+                        opacity: checkingOut ? 0.6 : 1,
+                      }}
+                    >
+                      {checkingOut ? "Processing..." : `Checkout ${format(total)}`}
+                    </button>
+                  </div>
+                </div>
+  );
   return (
     <>
       <div
@@ -565,338 +896,8 @@ export function POSPage() {
         )}
 
         {/**CART=========================================================================================== */}
-        {(bp.xl || isCart) && (
-          <>
-            <div
-              style={{
-                background: "var(--bg-surface)",
-                borderRadius: "8px",
-                border: "1px solid var(--border-default)",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <div
-                style={{
-                  padding: "12px",
-                  borderBottom: "1px solid var(--bg-tertiary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  Cart ({cart.length})
-                </span>
-                {!bp.xl && (
-                  <button
-                    onClick={() => setCartView(false)}
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 500,
-                      color: "var(--text-secondary)",
-                      background: "var(--bg-secondary)",
-                      border: "1px solid var(--border-default)",
-                      borderRadius: "4px",
-                      padding: "4px 10px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Close
-                  </button>
-                )}
-              </div>
-
-              <div
-                style={{
-                  flex: 1,
-                  overflowY: "auto",
-                  padding: "12px",
-                  maxHeight: bp.lg ? "240px" : "200px",
-                }}
-              >
-                {cart.length === 0 ? (
-                  <p
-                    style={{
-                      fontSize: "12px",
-                      color: "var(--text-placeholder)",
-                      textAlign: "center",
-                      padding: "24px 0",
-                      margin: 0,
-                    }}
-                  >
-                    Empty
-                  </p>
-                ) : (
-                  cart.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "28px",
-                          height: "28px",
-                          background: "var(--bg-tertiary)",
-                          borderRadius: "4px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                          overflow: "hidden",
-                        }}
-                      >
-                        <GracefulImage src={item.image} alt={item.name} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p
-                          style={{
-                            fontSize: "10px",
-                            fontWeight: 500,
-                            color: "var(--text-primary)",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            margin: 0,
-                          }}
-                        >
-                          {item.name}
-                        </p>
-                        <p
-                          style={{
-                            fontSize: "10px",
-                            color: "var(--text-muted)",
-                            margin: 0,
-                          }}
-                        >
-                          {format(item.price)} × {item.quantity}
-                        </p>
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "2px",
-                        }}
-                      >
-                        <button
-                          onClick={() => updateQuantity(item.id, -1)}
-                          style={{
-                            width: "20px",
-                            height: "20px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: "4px",
-                            background: "var(--bg-tertiary)",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <Minus style={{ width: "12px", height: "12px" }} />
-                        </button>
-                        <span
-                          style={{
-                            fontSize: "10px",
-                            fontWeight: 600,
-                            width: "16px",
-                            textAlign: "center",
-                          }}
-                        >
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(item.id, 1)}
-                          style={{
-                            width: "20px",
-                            height: "20px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: "4px",
-                            background: "var(--bg-tertiary)",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <Plus style={{ width: "12px", height: "12px" }} />
-                        </button>
-                      </div>
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          color: "var(--text-primary)",
-                          margin: 0,
-                          minWidth: "48px",
-                          textAlign: "right",
-                        }}
-                      >
-                        {format(item.price * item.quantity)}
-                      </p>
-                      <button
-                        style={{
-                          padding: ".4rem",
-                          borderRadius: "1rem",
-                          cursor: "pointer",
-                          border: "none",
-                        }}
-                        onClick={() => removeCartItem(item.id)}
-                      >
-                        <Delete color="red" size={20}/>
-                       
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div
-                style={{
-                  padding: "12px",
-                  borderTop: "1px solid var(--bg-tertiary)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "10px",
-                    marginBottom: "4px",
-                  }}
-                >
-                  <span style={{ color: "var(--text-muted)" }}>Subtotal</span>
-                  <span style={{ color: "var(--text-primary)" }}>
-                    {format(subtotal)}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "10px",
-                    marginBottom: "4px",
-                  }}
-                >
-                  <span style={{ color: "var(--text-muted)" }}>Tax (5%)</span>
-                  <span style={{ color: "var(--text-primary)" }}>
-                    {format(tax)}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    paddingTop: "6px",
-                    borderTop: "1px solid var(--bg-tertiary)",
-                  }}
-                >
-                  <span>Total</span>
-                  <span>{format(total)}</span>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: "12px",
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4, 1fr)",
-                  gap: "6px",
-                }}
-              >
-                {paymentButtons.map((pb) => {
-                  const Icon = pb.icon;
-                  const isActive = paymentMethod === pb.label;
-                  return (
-                    <button
-                      key={pb.label}
-                      onClick={() => setPaymentMethod(pb.label)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "4px",
-                        padding: "6px 0",
-                        fontSize: "10px",
-                        fontWeight: 500,
-                        background: isActive
-                          ? "var(--bg-nav-active)"
-                          : "var(--bg-secondary)",
-                        color: isActive
-                          ? "var(--text-primary)"
-                          : "var(--text-secondary)",
-                        border: isActive
-                          ? "none"
-                          : "1px solid var(--border-default)",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Icon style={{ width: "12px", height: "12px" }} />{" "}
-                      {pb.label}
-                    </button>
-                  );
-                })}
-                <button
-                  onClick={openLog}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "4px",
-                    padding: "6px 0",
-                    fontSize: "10px",
-                    fontWeight: 500,
-                    background: "var(--bg-secondary)",
-                    border: "1px solid var(--border-default)",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  <History style={{ width: "12px", height: "12px" }} /> Log
-                </button>
-              </div>
-
-              <div style={{ padding: "0 12px 12px" }}>
-                <button
-                  onClick={handleCheckout}
-                  disabled={cart.length === 0 || checkingOut}
-                  style={{
-                    width: "100%",
-                    padding: "8px 0",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: "var(--text-secondary)",
-                    background:
-                      cart.length === 0
-                        ? "var(--text-placeholder)"
-                        : "var(--bg-nav-active)",
-                    borderRadius: "4px",
-                    border: "none",
-                    cursor: cart.length === 0 ? "not-allowed" : "pointer",
-                    opacity: checkingOut ? 0.6 : 1,
-                  }}
-                >
-                  {checkingOut ? "Processing..." : `Checkout ${format(total)}`}
-                </button>
-              </div>
-            </div>
-          </>
-        )}
+        {/* CART (desktop inline column) */}
+        {bp.xl && <>{cartContent}</>}
         {/**CART ENDING=========================================================================================== */}
 
         {showLog && (
@@ -1003,6 +1004,18 @@ export function POSPage() {
       </div>
 
       {showUpload && <UploadToShopModal onClose={() => setShowUpload(false)} />}
+
+      {!bp.xl && (
+        <BottomSheet
+          open={isCart}
+          onClose={() => setCartView(false)}
+          zIndex={999}
+          maxHeight="85vh"
+          bottom="calc(6px + var(--safe-bottom))"
+        >
+          <div style={{ padding: "4px 12px 12px" }}>{cartContent}</div>
+        </BottomSheet>
+      )}
 
       {!bp.xl && (
         <button

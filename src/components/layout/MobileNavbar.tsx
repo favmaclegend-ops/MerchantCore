@@ -326,7 +326,7 @@ export function MobileNavbar() {
         className="mobile-navbar"
         style={{
           position: 'fixed',
-          bottom: 'calc(6px + var(--safe-bottom))',
+          bottom: 'calc(var(--safe-bottom))',
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
