@@ -290,7 +290,33 @@ never read message contents:
 | Currency formatting | `src/context/currency_context.tsx` |
 | Dark/light theming via CSS variables | `src/context/theme_*` |
 | Responsive layout (desktop sidebar + mobile bottom nav) | `src/components/layout/` |
+| **iOS-style bottom nav indicator** | `src/components/layout/MobileNavbar.tsx` |
 | Breakpoint hooks | `src/hooks/useBreakpoint.ts` |
+
+## 6b. iOS-style gilding bottom nav indicator — `[mobile]`
+
+`src/components/layout/MobileNavbar.tsx` · CSS in `src/index.css` (`.nav-indicator`,
+`.nav-indicator-pop`, `@keyframes nav-pill-pop`)
+
+Replaces the static per-tab background highlight with a **single sliding pill** that glides
+between the active tab, matching iOS's tab-bar feel:
+
+- **Single indicator element**: an absolutely-positioned pill inside the floating nav
+  (`position: relative`). One active highlight slides from tab to tab instead of each tab
+  having its own static background.
+- **Precise math**: a `useLayoutEffect` runs on every route change and measures the active
+  tab's `offsetLeft` + `offsetWidth` (via `data-nav-index` on each tab and the More button),
+  then sets the pill's `width` and `transform: translateX(...)` to land exactly on that tab.
+- **Springy bounce**: the pill transitions with an overshooting spring bezier
+  `cubic-bezier(0.34, 1.56, 0.64, 1)` on both `transform` and `width`, so it overshoots and
+  settles — the iOS-style bouncy motion. A nested inner pill runs `nav-pill-pop`
+  (`scale` up → overshoot → settle) keyed by the route so every navigation gets a subtle pop.
+- **No flash on mount**: the first placement disables the transition (`.no-anim`) so the
+  indicator appears already-positioned instead of animating from tab 0.
+- **More sheet integration**: opening the More sheet (or an active path in the sheet) slides
+  the indicator onto the **More** button; closing it slides it back.
+- Inactive tab icon/label keep a `color` crossfade; only the moving pill carries the
+  `--bg-nav-active` background, so colors stay readable as it glides underneath.
 
 ---
 
