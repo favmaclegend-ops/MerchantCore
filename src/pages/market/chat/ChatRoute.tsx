@@ -7,7 +7,7 @@ import { ChatThreadPage } from './ChatThreadPage'
 const base = () => (window.location.pathname.startsWith('/market') ? '/market' : '/home/market')
 
 /**
- * Chat entry point shared by `/chat` and `/chat/:shopId`.
+ * Chat entry point shared by `/chat` and `/chat/:threadId`.
  *
  * On wide screens it renders a classic two-column layout: the list of stores
  * with open conversations on the left, and the selected conversation panel on
@@ -15,12 +15,12 @@ const base = () => (window.location.pathname.startsWith('/market') ? '/market' :
  * then full-screen thread page once a conversation is opened).
  */
 export function ChatRoute() {
-  const { shopId } = useParams()
+  const { threadId } = useParams()
   const bp = useBreakpoint()
   const navigate = useNavigate()
 
   if (!bp.lg) {
-    return shopId ? <ChatThreadPage /> : <ChatListPage />
+    return threadId ? <ChatThreadPage /> : <ChatListPage />
   }
 
   return (
@@ -37,7 +37,7 @@ export function ChatRoute() {
       <div style={{ minWidth: 0, overflow: 'hidden', borderRight: '1px solid var(--border-default)', background: 'var(--bg-surface)' }}>
         <ChatListPage />
       </div>
-      <div style={{ minWidth: 0, overflow: 'hidden' }}>{shopId ? <ChatThreadPage /> : <EmptyPane />}</div>
+      <div style={{ minWidth: 0, overflow: 'hidden' }}>{threadId ? <ChatThreadPage /> : <EmptyPane />}</div>
     </div>
   )
 

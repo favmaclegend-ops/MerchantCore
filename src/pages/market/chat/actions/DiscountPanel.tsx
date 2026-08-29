@@ -41,7 +41,7 @@ export default function DiscountPanel() {
   const { orgUser } = useContext(Authcontext);
   const [pItems, setItems] = useState<Product[]>([]);
   const [selectedItem, setSelectedItem] = useState<Product | null>(null);
-  const { shopId = "" } = useParams();
+  const { threadId = "" } = useParams();
   const newPrice = useRef<HTMLInputElement>(null);
   const [uploadedSourceIds, setUploadedSourceIds] = useState<Set<string>>(
     new Set(),
@@ -74,7 +74,7 @@ export default function DiscountPanel() {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedItem || !shopId) return;
+    if (!selectedItem || !threadId) return;
     const enteredPrice = newPrice?.current?.value;
     if (!enteredPrice || Number(enteredPrice) <= 0) return;
 
@@ -96,7 +96,7 @@ export default function DiscountPanel() {
     });
 
     void sendMessage({
-      shopId: shopId,
+      threadId: threadId,
       text,
       discountImage,
       discountLink,
