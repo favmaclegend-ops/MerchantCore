@@ -139,6 +139,28 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Re-enable selection where it is genuinely needed — text inputs/textareas
+   and editors must stay selectable for the user to read/amend their content. */
+input,
+textarea,
+select,
+[contenteditable="true"],
+.editable,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="search"],
+input[type="url"] {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
 }
 
 html,
