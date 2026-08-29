@@ -190,7 +190,6 @@ export function DashboardPage() {
 
   useEffect(() => {
     const id = ++fetchId.current
-    if (cacheSnapshot) return
 
     const refresh = isOrg ? refreshOrgDashboardCache() : refreshDashboardCache()
     refresh.then((data) => {
@@ -203,7 +202,27 @@ export function DashboardPage() {
     }).finally(() => {
       if (id === fetchId.current) setLoading(false)
     })
-  }, [cacheSnapshot, isOrg])
+
+    // Realtime: refresh stats in the background so completed orders / sales
+    // appear without a manual refresh (and without waiting out the cache TTL).
+    const poll = window.setInterval(() => {
+      const pid = ++fetchId.current
+      const refreshPoll = isOrg ? refreshOrgDashboardCache() : refreshDashboardCache()
+      refreshPoll.then((data) => {
+        if (pid !== fetchId.current || !data) return
+        setStats(data.stats)
+        setRevenueMonths(data.revenueMonths)
+        setRevenueData(data.revenueData)
+        setTxns(data.txns)
+        setAlertList(data.alertList)
+      }).catch(() => {})
+    }, 15000)
+
+    return () => {
+      fetchId.current += 1
+      window.clearInterval(poll)
+    }
+  }, [isOrg])
 
   const rangeChart = chartRange === '6m' ? { labels: revenueMonths, data: revenueData } : computeRangeChart(txns, chartRange)
 
@@ -316,7 +335,7 @@ export function DashboardPage() {
           <div style={{ width: '100%', padding: mobile ? '12px' : '16px', background: 'var(--bg-surface)', borderRadius: '14px', boxShadow: 'var(--shadow-card)', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
             <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', minWidth: 0 }}>
               <h3 style={{ fontWeight: 700, fontSize: mobile ? '14px' : '16px', margin: 0, flexShrink: 0 }}>Revenue Trend</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '3px', borderRadius: '8px', background: 'var(--bg-tertiary)', overflowX: 'auto', maxWidth: '100%', flex: 1, minWidth: 0, ...hideScrollbar }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginInlineStart: 'auto',  padding: '3px', borderRadius: '8px', background: 'var(--bg-tertiary)', overflowX: 'auto', maxWidth: '100%',  minWidth: 0, ...hideScrollbar }}>
                 {RANGE_OPTIONS.map((r) => (
                   <button
                     key={r.id}

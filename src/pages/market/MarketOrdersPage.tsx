@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { useStore } from "elk-components";
-import { ArrowLeft, CheckCircle2, XCircle, Clock, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Clock, RefreshCw, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { fetchMyOrders, marketOrdersStore, type MarketOrder } from "./marketApi";
 import { valueFormater } from "./market";
@@ -72,10 +72,37 @@ export function MarketOrdersPage() {
       .finally(() => {
         if (mounted) setLoading(false);
       });
+
+    // Realtime orders: poll status changes (completed/cancelled) so the client
+    // sees the org's completion without a manual refresh.
+    const poll = window.setInterval(() => {
+      if (!mounted) return;
+      fetchMyOrders()
+        .then((data) => {
+          if (!mounted) return;
+          setLocalOrders(data);
+          marketOrdersStore.setState({ orders: data });
+        })
+        .catch(() => {});
+    }, 5000);
+
     return () => {
       mounted = false;
+      window.clearInterval(poll);
     };
   }, []);
+
+  const removeOrder = async (orderId: string) => {
+    if (!window.confirm("Delete this order?")) return;
+    try {
+      await api.market.deleteMyOrder(orderId);
+      const next = allOrders.filter((o) => o.id !== orderId);
+      setLocalOrders(next);
+      marketOrdersStore.setState({ orders: next });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not delete order");
+    }
+  };
 
   const revealQr = async (orderId: string) => {
     setExpanded((prev) => (prev === orderId ? null : orderId));
@@ -194,6 +221,14 @@ export function MarketOrdersPage() {
                   <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "11px", fontWeight: 600, color: meta.color, background: meta.bg, padding: "4px 10px", borderRadius: "999px" }}>
                     {meta.icon} {meta.label}
                   </span>
+                  <button
+                    onClick={() => removeOrder(order.id)}
+                    title="Delete order"
+                    aria-label="Delete order"
+                    style={{ padding: "6px", borderRadius: "8px", border: "1px solid var(--border-danger)", background: "var(--bg-danger)", color: "var(--text-danger)", cursor: "pointer", display: "inline-flex" }}
+                  >
+                    <Trash2 style={{ width: 13, height: 13 }} />
+                  </button>
                 </div>
 
                 <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>

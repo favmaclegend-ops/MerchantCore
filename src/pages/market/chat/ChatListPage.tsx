@@ -19,7 +19,7 @@ export function ChatListPage() {
   const { threads, unread } = useChatStore()
   const [query, setQuery] = useState('')
 
-  const activeShopId =
+  const activeThreadId =
     searchParams.get('active') || (() => {
       const m = location.pathname.match(/\/chat\/([^/]+)/)
       return m ? decodeURIComponent(m[1]) : undefined
@@ -31,13 +31,13 @@ export function ChatListPage() {
     return threads.filter((t) => (t.title || t.shopName).toLowerCase().includes(q))
   }, [threads, query])
 
-  const openThread = (shopId: string) => {
-    navigate(`${base()}/chat/${shopId}`)
+  const openThread = (threadId: string) => {
+    navigate(`${base()}/chat/${threadId}`)
   }
 
-  const removeThread = (shopId: string) => {
+  const removeThread = (threadId: string) => {
     if (!window.confirm('Delete this conversation?')) return
-    void deleteThread(shopId)
+    void deleteThread(threadId)
   }
 
   return (
@@ -143,7 +143,7 @@ export function ChatListPage() {
           >
             {filtered.map((thread: ChatThread, i) => (
               <div
-                key={thread.shopId}
+                key={thread.threadId}
                 style={{
                   position: 'relative',
                   width: '100%',
@@ -157,9 +157,9 @@ export function ChatListPage() {
               >
                 <ChatTile
                   thread={thread}
-                  active={thread.shopId === activeShopId}
-                  onOpen={() => openThread(thread.shopId)}
-                  onDelete={() => removeThread(thread.shopId)}
+                  active={thread.threadId === activeThreadId}
+                  onOpen={() => openThread(thread.threadId)}
+                  onDelete={() => removeThread(thread.threadId)}
                 />
               </div>
             ))}

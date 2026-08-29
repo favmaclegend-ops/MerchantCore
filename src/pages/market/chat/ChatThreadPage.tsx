@@ -28,7 +28,7 @@ const base = () =>
   window.location.pathname.startsWith("/market") ? "/market" : "/home/market";
 
 export function ChatThreadPage() {
-  const { shopId = "" } = useParams();
+  const { threadId = "" } = useParams();
   const navigate = useNavigate();
   const {orgUser} = useContext(Authcontext)
   const { unread, loading } = useChatStore();
@@ -38,7 +38,7 @@ export function ChatThreadPage() {
   const [panelRect, setPanelRect] = useState<DOMRect | null>(null);
   useStore(generalStore);
 
-  const thread = getThread(shopId);
+  const thread = getThread(threadId);
 
   const activeMessage = menuTarget
     ? thread?.messages.find((m) => m.id === menuTarget.id) ?? null
@@ -69,11 +69,11 @@ export function ChatThreadPage() {
 
   // Mark read + scroll when opening or when messages change.
   useEffect(() => {
-    if (!shopId) return;
-    if (getThread(shopId) && getThread(shopId)!.unread > 0) {
-      void markThreadRead(shopId);
+    if (!threadId) return;
+    if (getThread(threadId) && getThread(threadId)!.unread > 0) {
+      void markThreadRead(threadId);
     }
-  }, [shopId, unread]);
+  }, [threadId, unread]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -89,10 +89,10 @@ export function ChatThreadPage() {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     const value = text.trim();
-    if (!value || !shopId) return;
+    if (!value || !threadId) return;
     generalStore.setState({ messageType: "normal" });
     void sendMessage({
-      shopId: shopId,
+      threadId: threadId,
       text: value,
       discountImage: "",
       discountLink: "",
@@ -106,11 +106,11 @@ export function ChatThreadPage() {
 
   const handleDelete = () => {
     if (!window.confirm("Delete this conversation?")) return;
-    void deleteThread(shopId);
+    void deleteThread(threadId);
     back();
   };
 
-  if (!thread || !shopId) {
+  if (!thread || !threadId) {
     return (
       <div
         style={{

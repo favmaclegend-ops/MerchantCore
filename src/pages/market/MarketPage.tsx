@@ -549,7 +549,7 @@ export function MarketPage() {
         <Routes>
           <Route path="/" element={<Markets />} />
           <Route path="/chat" element={<ChatRoute />} />
-          <Route path="/chat/:shopId" element={<ChatRoute />} />
+          <Route path="/chat/:threadId" element={<ChatRoute />} />
           <Route path="/orders" element={<MarketOrdersPage />} />
           <Route path="/orders/scan" element={<MarketScanPage />} />
           <Route path="/:id/*" element={<ShopPage />} />

@@ -240,7 +240,7 @@ export function ShopPage () {
                                 setChatError("");
                                 chatLoadingRef.current = true;
                                 try {
-                                    await startThread({
+                                    const thread = await startThread({
                                         shopId: shop.shop_id,
                                         shopName: shop.shop_name || 'Shop',
                                         shopImage: shop.shopProfileImage,
@@ -248,7 +248,7 @@ export function ShopPage () {
                                     });
                                     notifyChatChanged();
                                     const basePath = location.pathname.startsWith('/market') ? '/market' : '/home/market';
-                                    navigate(`${basePath}/chat/${shop.shop_id}`);
+                                    navigate(`${basePath}/chat/${thread.threadId}`);
                                 } catch (e) {
                                     console.error("Failed to start chat:", e);
                                     setChatError(e instanceof Error ? e.message : 'Could not start chat. Please sign in as a customer to message this shop.');

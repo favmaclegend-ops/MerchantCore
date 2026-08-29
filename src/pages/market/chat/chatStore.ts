@@ -9,11 +9,11 @@
  *
  * Reusable methods:
  *   useChatStore()            -> { threads, unread, loading }
- *   startThread(shop)         -> open/create a buyer<->shop thread
- *   sendMessage(shopId, text) -> encrypt + send a message
- *   markThreadRead(shopId)    -> clear unread for a thread
- *   deleteThread(shopId)      -> delete a thread
- *   getThread(shopId)         -> a single thread (from cache)
+ *   startThread(shop)         -> open/create a buyer<->shop thread (returns it)
+ *   sendMessage(threadId, …)  -> encrypt + send a message
+ *   markThreadRead(threadId)  -> clear unread for a thread
+ *   deleteThread(threadId)    -> delete a thread
+ *   getThread(threadId)       -> a single thread (from cache)
  *   getThreads()              -> all threads (newest first)
  *   getUnreadCount()          -> total unread
  *   notifyChatChanged()       -> re-render subscribers (e.g. after a send)
@@ -114,8 +114,8 @@ function getThreads(): ChatThread[] {
   )
 }
 
-export function getThread(shopId: string): ChatThread | null {
-  return cache[shopId] ?? null
+export function getThread(threadId: string): ChatThread | null {
+  return cache[threadId] ?? null
 }
 
 export function getUnreadCount(): number {
@@ -170,7 +170,10 @@ async function storeThread(api: ChatApiThread, privateKeyPem: string): Promise<C
     participantKey: current.key,
     isOwner,
   }
-  cache[thread.shopId] = thread
+  // Conversations are unique per thread (a shop can have many buyers), so the
+  // cache must be keyed by threadId — NOT shopId, which collides when two
+  // different buyers message the same shop.
+  cache[thread.threadId] = thread
   return thread
 }
 
@@ -222,7 +225,7 @@ async function refreshStore(): Promise<void> {
       } catch {
         // messages for this thread unavailable — keep an empty thread
       }
-      next[thread.shopId] = thread
+      next[thread.threadId] = thread
     }
     cache = next
     loaded = true
@@ -351,7 +354,7 @@ export async function startThread(shop: ThreadInput): Promise<ChatThread> {
 
 
 interface SendMessage {
-  shopId: string,
+  threadId: string,
   text: string,
   discountLink: string,
   discountImage: string,
@@ -362,8 +365,8 @@ interface SendMessage {
 
 }
 /** Encrypt and send a message in the cached thread for a shop. */
-export async function sendMessage({shopId, text, type, discountImage, product_id, discountLink, oldPrice, newPrice}: SendMessage): Promise<ChatThread> {
-  const thread = getThread(shopId)
+export async function sendMessage({threadId, text, type, discountImage, product_id, discountLink, oldPrice, newPrice}: SendMessage): Promise<ChatThread> {
+  const thread = getThread(threadId)
   if (!thread) throw new Error('No conversation to send to')
   const trimmed = text.trim()
   const now = new Date().toISOString()
@@ -404,8 +407,8 @@ export async function sendMessage({shopId, text, type, discountImage, product_id
 }
 
 /** Mark a thread read for the current participant. */
-export async function markThreadRead(shopId: string): Promise<void> {
-  const thread = getThread(shopId)
+export async function markThreadRead(threadId: string): Promise<void> {
+  const thread = getThread(threadId)
   if (!thread) return
   try {
     await apiMarkRead(thread.threadId)
@@ -417,8 +420,8 @@ export async function markThreadRead(shopId: string): Promise<void> {
 }
 
 /** Delete a thread (server + local cache). */
-export async function deleteThread(shopId: string): Promise<void> {
-  const thread = getThread(shopId)
+export async function deleteThread(threadId: string): Promise<void> {
+  const thread = getThread(threadId)
   if (thread?.threadId) {
     try {
       await apiDeleteThread(thread.threadId)
@@ -426,7 +429,7 @@ export async function deleteThread(shopId: string): Promise<void> {
       // non-fatal — still remove locally
     }
   }
-  delete cache[shopId]
+  delete cache[threadId]
   notifyChatChanged()
 }
 
