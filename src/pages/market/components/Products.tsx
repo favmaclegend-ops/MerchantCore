@@ -196,6 +196,8 @@ export function Products() {
                 flexDirection: "column",
                 justifyContent: "space-between",
                 width: "100%",
+                contentVisibility: "auto",
+                containIntrinsicSize: "230px",
                 padding: "1rem",
                 background: "var(--bg-surface)",
                 border: "1px solid var(--border-default)",

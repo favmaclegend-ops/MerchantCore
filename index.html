@@ -3,7 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content, maximum-scale=1.0" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="MerchantCore" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon.svg" />
+    <script>
+      // Apply the stored theme before first paint so the iOS status bar /
+      // toolbar area starts with the correct header colour (no stuck flash).
+      (function () {
+        try {
+          var theme = localStorage.getItem('app_theme') === 'dark' ? 'dark' : 'light';
+          var header = theme === 'dark' ? '#0f172a' : '#ffffff';
+          document.documentElement.setAttribute('data-theme', theme);
+          var meta = document.createElement('meta');
+          meta.name = 'theme-color';
+          meta.content = header;
+          document.head.appendChild(meta);
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
     <title>MerchantCore</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

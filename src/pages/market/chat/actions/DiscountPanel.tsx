@@ -137,6 +137,7 @@ export default function DiscountPanel() {
             borderRadius: "1rem",
             position: "absolute",
             padding: "1rem",
+            paddingBottom: "calc(1rem + var(--safe-bottom))",
             width: bp.sm ? "100%" : "90%",
             maxWidth: "400px",
             bottom: bp.sm ? 0 : undefined,

@@ -8,6 +8,9 @@ import NotificationProvider from './context/notification_provider';
 import OrgNotificationProvider from './context/org_notification_provider';
 import CurrencyProvider from './context/currency_provider';
 import ThemeProvider from './context/theme_provider';
+import { registerServiceWorker } from './lib/pwa';
+
+registerServiceWorker();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

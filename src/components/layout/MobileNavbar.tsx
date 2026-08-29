@@ -72,7 +72,7 @@ export function MobileNavbar() {
               position: 'fixed',
               left: '12px',
               right: '12px',
-              bottom: '90px',
+              bottom: 'calc(90px + var(--safe-bottom))',
               background: 'var(--bg-surface)',
               borderRadius: '20px',
               boxShadow: '0 16px 48px rgba(0,0,0,0.15), 0 0 0 1px var(--border-default)',
@@ -120,7 +120,7 @@ export function MobileNavbar() {
       <nav
         style={{
           position: 'fixed',
-          bottom: '16px',
+          bottom: 'calc(16px + var(--safe-bottom))',
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',

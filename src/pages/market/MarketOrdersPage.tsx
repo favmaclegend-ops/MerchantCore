@@ -207,7 +207,7 @@ export function MarketOrdersPage() {
             return (
               <div
                 key={order.id}
-                style={{ border: "1px solid var(--border-default)", borderRadius: "12px", background: "var(--bg-surface)", padding: "14px" }}
+                style={{ border: "1px solid var(--border-default)", borderRadius: "12px", background: "var(--bg-surface)", padding: "14px", contentVisibility: "auto", containIntrinsicSize: "150px" }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                   <div>

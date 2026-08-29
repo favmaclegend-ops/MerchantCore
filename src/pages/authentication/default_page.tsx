@@ -23,7 +23,7 @@ export default function DefaultPage() {
     }
 
     if (loading) {
-        return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
+        return <div style={{ height: 'var(--app-height)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>
     }
 
     if (user || orgUser) {
@@ -31,7 +31,7 @@ export default function DefaultPage() {
     }
 
     return (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto', background: 'var(--bg-tertiary)', padding: '24px' }}>
+        <div style={{ height: 'var(--app-height)', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto', background: 'var(--bg-tertiary)', padding: 'calc(24px + var(--safe-top)) 24px calc(24px + var(--safe-bottom))' }}>
             <div style={{ margin: 'auto 0', width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center',  }}>
                 {isOrg ? (
                     <>

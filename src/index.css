@@ -41,6 +41,15 @@
 }
 
 :root {
+  /* iOS safe-area insets. Outside iOS these resolve to 0 (fallback). */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  /* Dynamic app height: tracks browser toolbars + keyboard on iOS. */
+  --app-height: 100vh;
+  --app-min-height: 100vh;
+
   --bg-page: #f8fafc;
   --bg-surface: #ffffff;
   --bg-surface-hover: #1e293b;
@@ -132,11 +141,29 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-page);
+  /* Match the header so iOS overscroll/rubber-banding feels native
+     instead of showing a hard content-colored edge. */
+  background-color: var(--bg-header);
   color: var(--text-primary);
   overflow: hidden;
+}
+
+/* On browsers that support dynamic viewport units, let the app fill the
+   currently visible viewport instead of the static 100vh. This keeps the
+   bottom bars (nav, chat composer) above the iOS toolbar + keyboard. */
+@supports (height: 100dvh) {
+  :root {
+    --app-height: 100dvh;
+    --app-min-height: 100dvh;
+  }
 }
 
 @keyframes shimmer {

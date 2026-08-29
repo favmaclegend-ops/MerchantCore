@@ -147,7 +147,7 @@ export function CreditLedgerPage() {
             </thead>
             <tbody>
               {filteredEntries.map((entry: any) => (
-                <tr key={entry.id} style={{ borderBottom: '1px solid var(--bg-secondary)' }}>
+                <tr key={entry.id} style={{ borderBottom: '1px solid var(--bg-secondary)', contentVisibility: 'auto', containIntrinsicSize: '64px' }}>
                   <td style={{ padding: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{ width: '28px', height: '28px', background: 'var(--bg-tertiary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

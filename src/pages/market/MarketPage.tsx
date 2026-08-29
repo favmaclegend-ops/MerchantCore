@@ -563,8 +563,8 @@ export function MarketPage() {
             onClick={() => setIsCartOpen(true)}
             style={{
               position: "fixed",
-              bottom: "5.5rem",
-              right: "1rem",
+              bottom: "calc(5.5rem + var(--safe-bottom))",
+              right: "calc(1rem + var(--safe-right))",
               zIndex: 900,
               display: "flex",
               alignItems: "center",
@@ -734,6 +734,8 @@ export function MarketPage() {
                     borderRadius: "10px",
                     border: "1px solid var(--border-default)",
                     background: "var(--bg-secondary)",
+                    contentVisibility: "auto",
+                    containIntrinsicSize: "110px",
                   }}
                 >
                   <div

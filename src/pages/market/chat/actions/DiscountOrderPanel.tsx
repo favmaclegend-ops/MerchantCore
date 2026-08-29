@@ -148,6 +148,7 @@ export default function DiscountOrderPanel() {
           maxWidth: 460,
           maxHeight: "92vh",
           overflowY: "auto",
+          paddingBottom: "var(--safe-bottom)",
           background: "var(--bg-surface)",
           borderRadius: bp.sm ? "18px 18px 0 0" : "18px",
           border: "1px solid var(--border-default)",

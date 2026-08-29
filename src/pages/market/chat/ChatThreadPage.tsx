@@ -123,7 +123,10 @@ export function ChatThreadPage() {
       >
         <div
           style={{
-            padding: "16px 18px",
+            paddingTop: 'calc(16px + var(--safe-top))',
+            paddingBottom: "16px",
+            paddingLeft: 'calc(18px + var(--safe-left))',
+            paddingRight: 'calc(18px + var(--safe-right))',
             borderBottom: "1px solid var(--border-default)",
             background: "var(--bg-surface)",
             display: "flex",
@@ -179,7 +182,10 @@ export function ChatThreadPage() {
       {/* Header */}
       <div
         style={{
-          padding: "12px 16px",
+          paddingTop: 'calc(12px + var(--safe-top))',
+          paddingBottom: '12px',
+          paddingLeft: 'calc(16px + var(--safe-left))',
+          paddingRight: 'calc(16px + var(--safe-right))',
           borderBottom: "1px solid var(--border-default)",
           background: "var(--bg-surface)",
           display: "flex",
@@ -307,25 +313,28 @@ export function ChatThreadPage() {
             />
           </>
         )}
-        {thread.messages.map((m) =>
-          m.type === "discount" ? (
-            <DiscountMessageBubble
-              key={m.id}
-              message={m}
-              shopId={thread.shopId}
-              shopName={thread.shopName}
-              active={menuTarget?.id === m.id}
-              onOpenMenu={(rect) => openMenu(m.id, rect)}
-            />
-          ) : (
-            <MessageBubble
-              key={m.id}
-              message={m}
-              active={menuTarget?.id === m.id}
-              onOpenMenu={(rect) => openMenu(m.id, rect)}
-            />
-          ),
-        )}
+        {thread.messages.map((m) => (
+          <div
+            key={m.id}
+            style={{ contentVisibility: 'auto', containIntrinsicSize: '120px' }}
+          >
+            {m.type === "discount" ? (
+              <DiscountMessageBubble
+                message={m}
+                shopId={thread.shopId}
+                shopName={thread.shopName}
+                active={menuTarget?.id === m.id}
+                onOpenMenu={(rect) => openMenu(m.id, rect)}
+              />
+            ) : (
+              <MessageBubble
+                message={m}
+                active={menuTarget?.id === m.id}
+                onOpenMenu={(rect) => openMenu(m.id, rect)}
+              />
+            )}
+          </div>
+        ))}
       </div>
 
       {generalStore.getState().isNegotiationPanel && <NegotiationPanel />}
@@ -336,13 +345,15 @@ export function ChatThreadPage() {
       <form
         onSubmit={handleSend}
         style={{
-          padding: "10px 14px",
+          paddingTop: "10px",
+          paddingBottom: 'calc(10px + var(--safe-bottom))',
+          paddingLeft: 'calc(14px + var(--safe-left))',
+          paddingRight: 'calc(14px + var(--safe-right))',
           borderTop: "1px solid var(--border-default)",
           background: "var(--bg-surface)",
           display: "flex",
           alignItems: "center",
           gap: 10,
-
         }}
       >
         {

@@ -612,19 +612,21 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
             );
             return (
               <Fragment key={p.id}>
-                <ItemRow
-                  name={p.name}
-                  price={p.price}
-                  inStock={p.stock > 0}
-                  selectable={mode === "selected"}
-                  checked={selected.has(p.id)}
-                  uploaded={false}
-                  image={p.image}
-                  onToggle={() => toggle(p.id)}
-                  compact={bp.sm}
-                  onToggleVariants={() => toggleVariants(p.id)}
-                  variantCount={filledDrafts.length}
-                />
+                <div style={{ contentVisibility: "auto", containIntrinsicSize: "72px" }}>
+                  <ItemRow
+                    name={p.name}
+                    price={p.price}
+                    inStock={p.stock > 0}
+                    selectable={mode === "selected"}
+                    checked={selected.has(p.id)}
+                    uploaded={false}
+                    image={p.image}
+                    onToggle={() => toggle(p.id)}
+                    compact={bp.sm}
+                    onToggleVariants={() => toggleVariants(p.id)}
+                    variantCount={filledDrafts.length}
+                  />
+                </div>
                 {openVariants === p.id && (
                   <VariantEditor
                     drafts={drafts}
@@ -635,19 +637,20 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
             );
           })}
           {alreadyUploaded.map((p) => (
-            <ItemRow
-              key={p.id}
-              name={p.name}
-              price={p.price}
-              inStock={p.stock > 0}
-              selectable={false}
-              checked={false}
-              uploaded
-              image={p.image}
-              onToggle={() => {}}
-              onRemove={() => doRemove(p)}
-              compact={bp.sm}
-            />
+            <div key={p.id} style={{ contentVisibility: "auto", containIntrinsicSize: "72px" }}>
+              <ItemRow
+                name={p.name}
+                price={p.price}
+                inStock={p.stock > 0}
+                selectable={false}
+                checked={false}
+                uploaded
+                image={p.image}
+                onToggle={() => {}}
+                onRemove={() => doRemove(p)}
+                compact={bp.sm}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -1003,6 +1006,8 @@ function VariantEditor({
             border: "1px solid var(--border-default)",
             borderRadius: ".6rem",
             background: "var(--bg-surface)",
+            contentVisibility: "auto",
+            containIntrinsicSize: "120px",
           }}
         >
           <div style={{ display: "flex", gap: ".4rem" }}>
