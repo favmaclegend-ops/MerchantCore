@@ -1,6 +1,6 @@
-import { useState, useContext } from 'react'
+import { useState, useContext, useRef, useLayoutEffect } from 'react'
 import type { ElementType } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
@@ -45,9 +45,128 @@ export function MobileNavbar() {
         : true,
   )
 
-  if (bp.lg) return null
-
   const isMoreActive = open || visibleMoreItems.some(i => location.pathname === i.path)
+
+  const getActiveIndex = () => {
+    const p = primaryItems.findIndex(i => location.pathname === i.path)
+    if (p !== -1) return p
+    if (isMoreActive) return primaryItems.length
+    return -1
+  }
+  const activeIndex = getActiveIndex()
+
+  const navRef = useRef<HTMLElement>(null)
+  const indicatorRef = useRef<HTMLDivElement>(null)
+  const initRef = useRef(false)
+  const navigate = useNavigate()
+  const dragRef = useRef({ dragging: false, lastX: 0 })
+  const draggedRef = useRef(false)
+  const [pressing, setPressing] = useState(false)
+
+  const positionIndicator = () => {
+    const nav = navRef.current
+    const indicator = indicatorRef.current
+    if (!nav || !indicator) return
+    const p = primaryItems.findIndex(i => location.pathname === i.path)
+    const idx = p !== -1 ? p : isMoreActive ? primaryItems.length : -1
+    if (idx < 0) return
+    const nodes = Array.from(nav.querySelectorAll('[data-nav-index]'))
+    const node = nodes[idx] as HTMLElement | undefined
+    if (!node) return
+    indicator.style.width = `${node.offsetWidth}px`
+    indicator.style.height = `${node.offsetHeight}px`
+    indicator.style.top = `${node.offsetTop}px`
+    indicator.style.transform = `translateX(${node.offsetLeft}px)`
+  }
+
+  useLayoutEffect(() => {
+    const nav = navRef.current
+    const indicator = indicatorRef.current
+    if (!nav || !indicator || activeIndex < 0) return
+    positionIndicator()
+    if (!initRef.current) {
+      indicator.classList.add('no-anim')
+      requestAnimationFrame(() => indicator.classList.remove('no-anim'))
+    }
+    initRef.current = true
+  }, [activeIndex, bp.lg])
+
+  const NAV_DRAG_THRESHOLD = 8
+
+  const handleNavPointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    draggedRef.current = false
+    dragRef.current = { dragging: false, lastX: e.clientX }
+    setPressing(true)
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      /* ignore capture errors */
+    }
+  }
+
+  const handleNavPointerMove = (e: React.PointerEvent<HTMLElement>) => {
+    const state = dragRef.current
+    const nav = navRef.current
+    const indicator = indicatorRef.current
+    if (!state || !nav || !indicator) return
+    const dx = Math.abs(e.clientX - state.lastX)
+    if (!state.dragging && dx > NAV_DRAG_THRESHOLD) {
+      state.dragging = true
+      draggedRef.current = true
+      e.preventDefault?.()
+    }
+    if (state.dragging) {
+      const rect = nav.getBoundingClientRect()
+      const w = indicator.offsetWidth
+      let x = e.clientX - rect.left - w / 2
+      x = Math.min(Math.max(x, 0), rect.width - w)
+      indicator.style.transform = `translateX(${x}px)`
+      state.lastX = e.clientX
+    }
+  }
+
+  const handleNavPointerUp = (e: React.PointerEvent<HTMLElement>) => {
+    const state = dragRef.current
+    const nav = navRef.current
+    const indicator = indicatorRef.current
+    setPressing(false)
+
+    if (state && state.dragging && nav && indicator) {
+      const rect = nav.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const nodes = Array.from(nav.querySelectorAll('[data-nav-index]'))
+      let target: HTMLElement | null = null
+      for (const n of nodes as HTMLElement[]) {
+        const r = n.getBoundingClientRect()
+        if (x >= r.left - rect.left && x <= r.right - rect.left) {
+          target = n
+          break
+        }
+      }
+      if (target) {
+        const idx = Number(target.dataset.navIndex)
+        if (idx < primaryItems.length) {
+          draggedRef.current = false
+          navigate(primaryItems[idx].path)
+          setOpen(false)
+          return
+        }
+        setOpen(p => !p)
+      }
+    }
+    positionIndicator()
+  }
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    if (draggedRef.current) {
+      e.preventDefault()
+      draggedRef.current = false
+      return
+    }
+    setOpen(false)
+  }
+
+  if (bp.lg) return null
 
   return (
     <>
@@ -118,6 +237,13 @@ export function MobileNavbar() {
 
       {/* Floating pill navbar */}
       <nav
+        ref={navRef}
+        onPointerDown={handleNavPointerDown}
+        onPointerMove={handleNavPointerMove}
+        onPointerUp={handleNavPointerUp}
+        onPointerCancel={handleNavPointerUp}
+        onContextMenu={e => e.preventDefault()}
+        className="mobile-navbar"
         style={{
           position: 'fixed',
           bottom: 'calc(16px + var(--safe-bottom))',
@@ -125,26 +251,47 @@ export function MobileNavbar() {
           transform: 'translateX(-50%)',
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'center',
           gap: '2px',
-          padding: '6px 8px',
+          width: 'auto',
+          maxWidth: 'calc(100vw - 24px)',
+          padding: '8px 12px',
           background: 'var(--bg-surface)',
-          borderRadius: '28px',
+          borderRadius: '30px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px var(--border-default)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           zIndex: 40,
+          touchAction: 'none',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
         }}
       >
-        {primaryItems.map((item) => {
+        {activeIndex >= 0 && (
+          <div
+            ref={indicatorRef}
+            className="nav-indicator"
+            data-nav-indicator=""
+          >
+            <div
+              key={location.pathname}
+              className={`nav-indicator-pop${pressing ? ' drag-scale' : ''}`}
+            />
+          </div>
+        )}
+        {primaryItems.map((item, i) => {
           const Icon = item.icon
           const isActive = location.pathname === item.path
           return (
             <Link
               key={item.path}
               to={item.path}
-              onClick={() => setOpen(false)}
+              data-nav-index={i}
+              onClick={handleLinkClick}
               onTouchStart={() => preloadRoute(item.path)}
               style={{
+                position: 'relative',
+                zIndex: 1,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -157,8 +304,7 @@ export function MobileNavbar() {
                 textDecoration: 'none',
                 minWidth: '52px',
                 color: isActive ? 'var(--text-on-dark)' : 'var(--text-muted)',
-                background: isActive ? 'var(--bg-nav-active)' : 'transparent',
-                transition: 'all 0.2s ease',
+                transition: 'color 0.25s ease',
               }}
             >
               <Icon style={{ width: '20px', height: '20px' }} />
@@ -169,8 +315,18 @@ export function MobileNavbar() {
 
         {/* More button with active indicator */}
         <button
-          onClick={() => setOpen(p => !p)}
+          onClick={(e) => {
+            if (draggedRef.current) {
+              e.preventDefault()
+              draggedRef.current = false
+              return
+            }
+            setOpen(p => !p)
+          }}
+          data-nav-index={primaryItems.length}
           style={{
+            position: 'relative',
+            zIndex: 1,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -180,12 +336,12 @@ export function MobileNavbar() {
             borderRadius: '20px',
             fontSize: '10px',
             fontWeight: 600,
-            background: isMoreActive ? 'var(--bg-nav-active)' : 'transparent',
+            background: 'transparent',
             border: 'none',
             cursor: 'pointer',
             minWidth: '52px',
             color: isMoreActive ? 'var(--text-on-dark)' : 'var(--text-muted)',
-            transition: 'all 0.2s ease',
+            transition: 'color 0.25s ease',
           }}
         >
           <MoreHorizontal style={{ width: '20px', height: '20px' }} />

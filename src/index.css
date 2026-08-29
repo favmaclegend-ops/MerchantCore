@@ -139,6 +139,28 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Re-enable selection where it is genuinely needed — text inputs/textareas
+   and editors must stay selectable for the user to read/amend their content. */
+input,
+textarea,
+select,
+[contenteditable="true"],
+.editable,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="search"],
+input[type="url"] {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
 }
 
 html,
@@ -272,4 +294,39 @@ body {
   *::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* iOS-style bottom nav gliding indicator */
+.nav-indicator {
+  position: absolute;
+  left: 0;
+  border-radius: 20px;
+  background: var(--bg-nav-active);
+  z-index: 0;
+  pointer-events: none;
+  transition:
+    transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, width;
+}
+.nav-indicator.no-anim {
+  transition: none;
+}
+@keyframes nav-pill-pop {
+  0% { transform: scale(1); }
+  38% { transform: scale(1.08); }
+  62% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+.nav-indicator-pop {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: var(--bg-nav-active);
+  animation: nav-pill-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.nav-indicator-pop.drag-scale {
+  animation: none;
+  transform: scale(1.15);
 }

@@ -5,7 +5,17 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { BILLBOARD_AD_COUNT, useBillboardAds, useBillboardPlayer } from "../billboard";
 import { BillboardVideo } from "./BillboardVideo";
 
-export const Bilboards = ({ hidden }: { hidden?: boolean }) => {
+export const Bilboards = ({
+  hidden,
+  pull = 0,
+  pulling = false,
+}: {
+  hidden?: boolean;
+  /** Live pull distance (px): while hidden, opens the billboard proportionally
+      to track the finger before snapping fully open/closed. */
+  pull?: number;
+  pulling?: boolean;
+}) => {
   const location = useLocation();
   const state = useStore(marketStore);
   const top4RatingShop = state.top4tRatingShops ?? [];
@@ -19,21 +29,29 @@ export const Bilboards = ({ hidden }: { hidden?: boolean }) => {
     <div
       style={{
         display: "flex",
+        flex: "0 0 auto",
+        alignItems: "flex-start",
         padding: hidden ? "0 1rem" : "1rem",
         width: "100%",
+        maxWidth: "100%",
+        minWidth: 0,
+        boxSizing: "border-box",
         gap: "1rem",
-        maxHeight: hidden ? "0" : "24rem",
-        opacity: hidden ? 0 : 1,
+        maxHeight: hidden && pull <= 0 ? "0" : hidden ? `${pull}px` : "24rem",
+        opacity: hidden ? (pull > 0 ? 0.85 : 0) : 1,
         overflow: "hidden",
-        transition: "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.4s ease",
+        transition: pulling ? "none" : "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.4s ease",
       }}
     >
       <div
         style={{
           alignSelf: "center",
           display: "flex",
+          flex: "0 0 auto",
           width: bp.xsm ? "50%" : "100%",
-          height: "20rem",
+          maxWidth: "100%",
+          minWidth: 0,
+          height: bp.xsm ? "20rem" : "12rem",
           borderRadius: "1rem",
           overflow: "hidden",
           position: "relative",
@@ -69,6 +87,8 @@ export const Bilboards = ({ hidden }: { hidden?: boolean }) => {
           style={{
             display: "grid",
             flex: "1",
+            minWidth: 0,
+            maxWidth: "100%",
             borderRadius: "1rem",
             gridTemplateColumns: "1fr 1fr",
             gap: "1rem",
@@ -84,7 +104,7 @@ export const Bilboards = ({ hidden }: { hidden?: boolean }) => {
                   flexDirection: "column",
                   justifyContent: "space-between",
                   width: "100%",
-                  height: "clamp(.5svh, auto)",
+                  height: "auto",
                   padding: "1rem",
                   background: "var(--bg-nav)",
                   border: "var(--border-default)",
@@ -142,7 +162,7 @@ export const Bilboards = ({ hidden }: { hidden?: boolean }) => {
                   alignItems: "center",
                   justifyContent: "center",
                   width: "100%",
-                  height: "clamp(.5svh, auto)",
+                  height: "auto",
                   padding: "1rem",
                   background: "var(--bg-nav)",
                   border: "1px dashed var(--border-input)",
