@@ -1,6 +1,6 @@
 import { useState, useContext, useRef, useLayoutEffect } from 'react'
 import type { ElementType } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
@@ -47,38 +47,124 @@ export function MobileNavbar() {
 
   const isMoreActive = open || visibleMoreItems.some(i => location.pathname === i.path)
 
-  const activeIndex = (() => {
+  const getActiveIndex = () => {
     const p = primaryItems.findIndex(i => location.pathname === i.path)
     if (p !== -1) return p
     if (isMoreActive) return primaryItems.length
     return -1
-  })()
+  }
+  const activeIndex = getActiveIndex()
 
   const navRef = useRef<HTMLElement>(null)
   const indicatorRef = useRef<HTMLDivElement>(null)
   const initRef = useRef(false)
+  const navigate = useNavigate()
+  const dragRef = useRef({ dragging: false, lastX: 0 })
+  const draggedRef = useRef(false)
+  const [pressing, setPressing] = useState(false)
+
+  const positionIndicator = () => {
+    const nav = navRef.current
+    const indicator = indicatorRef.current
+    if (!nav || !indicator) return
+    const p = primaryItems.findIndex(i => location.pathname === i.path)
+    const idx = p !== -1 ? p : isMoreActive ? primaryItems.length : -1
+    if (idx < 0) return
+    const nodes = Array.from(nav.querySelectorAll('[data-nav-index]'))
+    const node = nodes[idx] as HTMLElement | undefined
+    if (!node) return
+    indicator.style.width = `${node.offsetWidth}px`
+    indicator.style.height = `${node.offsetHeight}px`
+    indicator.style.top = `${node.offsetTop}px`
+    indicator.style.transform = `translateX(${node.offsetLeft}px)`
+  }
 
   useLayoutEffect(() => {
     const nav = navRef.current
     const indicator = indicatorRef.current
     if (!nav || !indicator || activeIndex < 0) return
-
-    const nodes = Array.from(nav.querySelectorAll('[data-nav-index]'))
-    const node = nodes[activeIndex] as HTMLElement | undefined
-    if (!node) return
-
-    indicator.style.left = '0'
-    indicator.style.width = `${node.offsetWidth}px`
-    indicator.style.height = `${node.offsetHeight}px`
-    indicator.style.top = `${node.offsetTop}px`
-    indicator.style.transform = `translateX(${node.offsetLeft}px)`
-
+    positionIndicator()
     if (!initRef.current) {
       indicator.classList.add('no-anim')
       requestAnimationFrame(() => indicator.classList.remove('no-anim'))
     }
     initRef.current = true
   }, [activeIndex, bp.lg])
+
+  const NAV_DRAG_THRESHOLD = 8
+
+  const handleNavPointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    draggedRef.current = false
+    dragRef.current = { dragging: false, lastX: e.clientX }
+    setPressing(true)
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      /* ignore capture errors */
+    }
+  }
+
+  const handleNavPointerMove = (e: React.PointerEvent<HTMLElement>) => {
+    const state = dragRef.current
+    const nav = navRef.current
+    const indicator = indicatorRef.current
+    if (!state || !nav || !indicator) return
+    const dx = Math.abs(e.clientX - state.lastX)
+    if (!state.dragging && dx > NAV_DRAG_THRESHOLD) {
+      state.dragging = true
+      draggedRef.current = true
+      e.preventDefault?.()
+    }
+    if (state.dragging) {
+      const rect = nav.getBoundingClientRect()
+      const w = indicator.offsetWidth
+      let x = e.clientX - rect.left - w / 2
+      x = Math.min(Math.max(x, 0), rect.width - w)
+      indicator.style.transform = `translateX(${x}px)`
+      state.lastX = e.clientX
+    }
+  }
+
+  const handleNavPointerUp = (e: React.PointerEvent<HTMLElement>) => {
+    const state = dragRef.current
+    const nav = navRef.current
+    const indicator = indicatorRef.current
+    setPressing(false)
+
+    if (state && state.dragging && nav && indicator) {
+      const rect = nav.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const nodes = Array.from(nav.querySelectorAll('[data-nav-index]'))
+      let target: HTMLElement | null = null
+      for (const n of nodes as HTMLElement[]) {
+        const r = n.getBoundingClientRect()
+        if (x >= r.left - rect.left && x <= r.right - rect.left) {
+          target = n
+          break
+        }
+      }
+      if (target) {
+        const idx = Number(target.dataset.navIndex)
+        if (idx < primaryItems.length) {
+          draggedRef.current = false
+          navigate(primaryItems[idx].path)
+          setOpen(false)
+          return
+        }
+        setOpen(p => !p)
+      }
+    }
+    positionIndicator()
+  }
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    if (draggedRef.current) {
+      e.preventDefault()
+      draggedRef.current = false
+      return
+    }
+    setOpen(false)
+  }
 
   if (bp.lg) return null
 
@@ -152,6 +238,12 @@ export function MobileNavbar() {
       {/* Floating pill navbar */}
       <nav
         ref={navRef}
+        onPointerDown={handleNavPointerDown}
+        onPointerMove={handleNavPointerMove}
+        onPointerUp={handleNavPointerUp}
+        onPointerCancel={handleNavPointerUp}
+        onContextMenu={e => e.preventDefault()}
+        className="mobile-navbar"
         style={{
           position: 'fixed',
           bottom: 'calc(16px + var(--safe-bottom))',
@@ -170,6 +262,9 @@ export function MobileNavbar() {
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           zIndex: 40,
+          touchAction: 'none',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
         }}
       >
         {activeIndex >= 0 && (
@@ -180,7 +275,7 @@ export function MobileNavbar() {
           >
             <div
               key={location.pathname}
-              className="nav-indicator-pop"
+              className={`nav-indicator-pop${pressing ? ' drag-scale' : ''}`}
             />
           </div>
         )}
@@ -192,7 +287,7 @@ export function MobileNavbar() {
               key={item.path}
               to={item.path}
               data-nav-index={i}
-              onClick={() => setOpen(false)}
+              onClick={handleLinkClick}
               onTouchStart={() => preloadRoute(item.path)}
               style={{
                 position: 'relative',
@@ -220,7 +315,14 @@ export function MobileNavbar() {
 
         {/* More button with active indicator */}
         <button
-          onClick={() => setOpen(p => !p)}
+          onClick={(e) => {
+            if (draggedRef.current) {
+              e.preventDefault()
+              draggedRef.current = false
+              return
+            }
+            setOpen(p => !p)
+          }}
           data-nav-index={primaryItems.length}
           style={{
             position: 'relative',

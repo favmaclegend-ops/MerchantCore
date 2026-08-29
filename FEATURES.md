@@ -318,6 +318,27 @@ between the active tab, matching iOS's tab-bar feel:
 - Inactive tab icon/label keep a `color` crossfade; only the moving pill carries the
   `--bg-nav-active` background, so colors stay readable as it glides underneath.
 
+### 6b-i. Drag-to-navigate — `[mobile]`
+
+The nav pill is not just a passive indicator — it is **draggable**. Pointer events on the nav
+(`onPointerDown/Move/Up/Cancel` with `setPointerCapture`) drive a direct-manipulation flow:
+
+- **Press** anywhere on the nav while holding the finger down scales the pill up
+  (`.drag-scale`, `transform: scale(1.15)` via the inner pill, so it doesn't clash with the
+  wrapper's `translateX`).
+- **Drag** horizontally: past an `8px` movement threshold the pill enters drag mode and follows
+  the finger's X position (`e.clientX - nav.left - pillWidth/2`, clamped inside the bar).
+- **Release**: the tab whose rectangle the finger is over becomes active and the app **routes to
+  that page** (`navigate(primaryItems[idx].path)`); dragging onto **More** opens the sheet.
+- A `draggedRef` flag suppresses the native `Link` `onClick` after a real drag, so a drag-release
+  doesn't bounce back to the tab you pressed on; a plain tap (no movement) still uses the native
+  click to route.
+- The nav sets `touchAction: none` + `user-select: none` so the browser doesn't hijack the
+  horizontal drag with scrolling/selection while the finger is gliding.
+- `positionIndicator()` is also called on pointer-up (when not navigating) so the pill snaps back
+  to the current tab with the same spring after an aborted drag.
+
+
 ---
 
 ## Status & Backend Integration

@@ -426,7 +426,7 @@ export function InventoryPage() {
             </div>
           )}
           {filtered.map((product: Product) => (
-            <div key={product.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '76px' }}>
+            <div key={product.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '76px', width: '100%' }}>
               <ProductRow
                 product={product}
                 uploaded={uploadedSourceIds.has(product.id)}
