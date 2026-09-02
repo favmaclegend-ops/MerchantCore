@@ -1,12 +1,12 @@
 import { useContext, useEffect, useState } from 'react'
 import {
-  Plus, Wallet, TrendingUp, TrendingDown, CheckCircle, Ban, Send, X, ReceiptText, FileText,
+  Plus, Wallet, TrendingUp, TrendingDown, CheckCircle, Ban, Send, X, ReceiptText, FileText, Trash2,
 } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context/auth_context'
 import { CurrencyContext } from '@/context/currency_context'
-import { buildBalanceSheet, type FinanceState, type Invoice, type InvoiceStatus } from '@/lib/orgTypes'
+import { buildBalanceSheet, type FinanceState, type Invoice, type InvoiceStatus, type OrgCustomer } from '@/lib/orgTypes'
 
 type TabId = 'overview' | 'ledger' | 'invoices' | 'tax' | 'balance'
 
@@ -86,23 +86,26 @@ export function FinancePage() {
 
   const [ledgerFilter, setLedgerFilter] = useState<'all' | 'income' | 'expense'>('all')
   const [showInvoiceForm, setShowInvoiceForm] = useState(false)
-  const [invoiceForm, setInvoiceForm] = useState<{ customer: string; dueAt: string; items: InvoiceFormItem[] }>({
-    customer: '',
+  const [customers, setCustomers] = useState<OrgCustomer[]>([])
+  const [invoiceForm, setInvoiceForm] = useState<{ customerId: string; dueAt: string; items: InvoiceFormItem[] }>({
+    customerId: '',
     dueAt: '',
     items: [{ description: '', qty: '1', unitPrice: '' }],
   })
+  const [showTaxForm, setShowTaxForm] = useState(false)
+  const [taxForm, setTaxForm] = useState({ name: '', rate: '5', basis: '', period: '', dueAt: '', paid: '0' })
 
-  const loadState = () => {
+  const loadState = (initial = false) => {
     api.org.finance.getState()
       .then(s => setState(s))
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load finance data'))
+      .finally(() => { if (initial) setLoading(false) })
   }
 
   useEffect(() => {
-    api.org.finance.getState()
-      .then(s => setState(s))
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load finance data'))
-      .finally(() => setLoading(false))
+    loadState(true)
+    const id = setInterval(() => loadState(), 30_000)
+    return () => clearInterval(id)
   }, [])
 
   if (!orgUser || orgUser.role === 'staff') {
@@ -116,16 +119,22 @@ export function FinancePage() {
     )
   }
 
-  const income = state ? state.ledger.filter(e => e.category === 'income').reduce((sum, e) => sum + e.amount, 0) : 0
-  const expenses = state ? state.ledger.filter(e => e.category === 'expense').reduce((sum, e) => sum + e.amount, 0) : 0
-  const netCashFlow = income - expenses
-  const balanceSheet = state ? buildBalanceSheet(state) : null
+  // Prefer server-computed aggregates; fall back to local recomputation.
+  const income = state ? (state.income ?? state.ledger.filter(e => e.category === 'income').reduce((sum, e) => sum + e.amount, 0)) : 0
+  const expenses = state ? (state.expenses ?? state.ledger.filter(e => e.category === 'expense').reduce((sum, e) => sum + e.amount, 0)) : 0
+  // Ledger is the single source of truth. Until historical POS entries are in
+  // the ledger (fresh accounts), fall back to POS revenue so the page is not empty.
+  const posRevenue = state?.posRevenue ?? 0
+  const totalRevenue = income !== 0 ? income : posRevenue
+  const balanceSheet = state ? buildBalanceSheet(state, totalRevenue - expenses) : null
   const cashOnHand = balanceSheet ? balanceSheet.assets[0].value : 0
   const outstanding = state
-    ? state.invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((sum, i) => sum + i.amount, 0)
+    ? (state.outstanding ?? state.invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((sum, i) => sum + i.amount, 0))
     : 0
   const overdueCount = state ? state.invoices.filter(i => i.status === 'overdue').length : 0
-  const taxPayable = state ? state.taxes.reduce((sum, t) => sum + Math.round(t.basis * t.rate) / 100 - t.paid, 0) : 0
+  const taxPayable = state
+    ? (state.totalDue ?? state.taxes.reduce((sum, t) => sum + Math.round(t.basis * t.rate) / 100 - t.paid, 0))
+    : 0
   const taxPaid = state ? state.taxes.reduce((sum, t) => sum + t.paid, 0) : 0
   const nextTaxDue = state
     ? state.taxes.filter(t => t.status !== 'paid').sort((a, b) => a.dueAt.localeCompare(b.dueAt))[0]
@@ -136,20 +145,61 @@ export function FinancePage() {
     : []
 
   const changeStatus = (invoice: Invoice, status: InvoiceStatus) => {
-    api.org.finance.setInvoiceStatus(invoice.id, status).then(loadState).catch(() => {})
+    api.org.finance.setInvoiceStatus(invoice.id, status).then(() => loadState()).catch(() => {})
+  }
+
+  const deleteInvoice = (invoiceId: string) => {
+    if (!window.confirm('Delete this invoice permanently?')) return
+    api.org.finance.deleteInvoice(invoiceId).then(() => loadState()).catch(() => {})
   }
 
   const submitInvoice = () => {
     const items = invoiceForm.items
       .filter(item => item.description.trim() && Number(item.qty) > 0 && Number(item.unitPrice) > 0)
       .map(item => ({ description: item.description.trim(), qty: Number(item.qty), unitPrice: Number(item.unitPrice) }))
-    if (!invoiceForm.customer.trim() || items.length === 0) return
-    api.org.finance.createInvoice({ customer: invoiceForm.customer, dueAt: invoiceForm.dueAt, items })
+    const customer = customers.find(c => c.id === invoiceForm.customerId)
+    if (!customer || items.length === 0) return
+    api.org.finance.createInvoice({ customer: customer.name, customerId: customer.id, customerEmail: customer.email, dueAt: invoiceForm.dueAt, items })
       .then(() => {
         setShowInvoiceForm(false)
-        setInvoiceForm({ customer: '', dueAt: '', items: [{ description: '', qty: '1', unitPrice: '' }] })
+        setInvoiceForm({ customerId: '', dueAt: '', items: [{ description: '', qty: '1', unitPrice: '' }] })
         loadState()
       })
+      .catch(() => {})
+  }
+
+  const submitTax = () => {
+    const name = taxForm.name.trim()
+    const rate = Number(taxForm.rate)
+    const basis = Number(taxForm.basis)
+    if (!name || rate <= 0 || basis <= 0) return
+    api.org.finance.createTaxItem({
+      name,
+      rate,
+      basis,
+      period: taxForm.period.trim(),
+      dueAt: taxForm.dueAt,
+      paid: Number(taxForm.paid) || 0,
+    })
+      .then(() => {
+        setShowTaxForm(false)
+        setTaxForm({ name: '', rate: '5', basis: '', period: '', dueAt: '', paid: '0' })
+        loadState()
+      })
+      .catch(() => {})
+  }
+
+  const markTaxPaid = (taxId: string) => {
+    const tax = state?.taxes.find(t => t.id === taxId)
+    const payable = tax ? Math.max(0, Math.round(tax.basis * tax.rate) / 100) : 0
+    api.org.finance.updateTaxItem(taxId, { paid: payable, status: 'paid' })
+      .then(() => loadState())
+      .catch(() => {})
+  }
+
+  const deleteTax = (taxId: string) => {
+    api.org.finance.deleteTaxItem(taxId)
+      .then(() => loadState())
       .catch(() => {})
   }
 
@@ -201,7 +251,7 @@ export function FinancePage() {
           <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Finance &amp; Accounting</h1>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>Cash flow, invoicing, tax compliance &amp; financial health</p>
         </div>
-        <button onClick={() => setShowInvoiceForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+        <button onClick={() => { api.org.getCustomers().then(setCustomers).catch(() => setCustomers([])); setShowInvoiceForm(true) }} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
           <Plus size={16} /> Create invoice
         </button>
       </div>
@@ -217,10 +267,10 @@ export function FinancePage() {
           {active === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                <StatCard label="Total Revenue" value={format(income)} sub="From general ledger (income)" icon={<TrendingUp size={18} />} tone="green" />
-                <StatCard label="Total Expenses" value={format(expenses)} sub="From general ledger (expenses)" icon={<TrendingDown size={18} />} tone="red" />
-                <StatCard label="Net Cash Flow" value={format(netCashFlow)} sub="Revenue minus expenses" icon={<Wallet size={18} />} tone="accent" />
-                <StatCard label="Cash on Hand" value={format(cashOnHand)} sub="Real-time balance sheet snapshot" icon={<ReceiptText size={18} />} tone="neutral" />
+                <StatCard label="Total Revenue" value={format(totalRevenue)} sub={posRevenue ? 'From POS sales' : 'From general ledger'} icon={<TrendingUp size={18} />} tone="green" />
+                <StatCard label="Total Expenses" value={format(expenses)} sub="From general ledger" icon={<TrendingDown size={18} />} tone="red" />
+                <StatCard label="Net Cash Flow" value={format(totalRevenue - expenses)} sub="Revenue minus expenses" icon={<Wallet size={18} />} tone="accent" />
+                <StatCard label="Cash on Hand" value={format(cashOnHand)} sub="Balance sheet snapshot" icon={<ReceiptText size={18} />} tone="neutral" />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? '2fr 1fr' : '1fr', gap: '16px' }}>
@@ -333,7 +383,10 @@ export function FinancePage() {
                     {state.invoices.map(invoice => (
                       <tr key={invoice.id}>
                         <td style={{ ...tdStyle, fontWeight: 600 }}>{invoice.number}</td>
-                        <td style={tdStyle}>{invoice.customer}</td>
+                        <td style={tdStyle}>
+                          <div style={{ fontWeight: 600 }}>{invoice.customer}</div>
+                          {invoice.customerEmail && <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>{invoice.customerEmail}</div>}
+                        </td>
                         <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{formatDate(invoice.issuedAt)}</td>
                         <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{formatDate(invoice.dueAt)}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{format(invoice.amount)}</td>
@@ -355,6 +408,9 @@ export function FinancePage() {
                                 <Ban size={14} />
                               </button>
                             )}
+                            <button onClick={() => deleteInvoice(invoice.id)} title="Delete invoice" style={{ padding: '6px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'rgba(239,68,68,0.15)', color: '#fca5a5', display: 'inline-flex' }}>
+                              <Trash2 size={14} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -377,7 +433,12 @@ export function FinancePage() {
               </div>
 
               <div style={panelStyle}>
-                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 12px 0' }}>Tax obligations</h3>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Tax obligations</h3>
+                  <button onClick={() => setShowTaxForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: '12px', fontWeight: 600, color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                    <Plus size={14} /> Add obligation
+                  </button>
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
                   <div style={{ flex: 1, height: '8px', borderRadius: '999px', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
                     <div style={{ width: `${taxPayable + taxPaid > 0 ? Math.min(100, (taxPaid / (taxPayable + taxPaid)) * 100) : 0}%`, height: '100%', background: 'var(--bg-nav-active)', borderRadius: '999px' }} />
@@ -397,6 +458,7 @@ export function FinancePage() {
                         <th style={{ ...thStyle, textAlign: 'right' }}>Balance</th>
                         <th style={thStyle}>Due</th>
                         <th style={thStyle}>Status</th>
+                        <th style={thStyle}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -414,6 +476,18 @@ export function FinancePage() {
                             <td style={{ ...tdStyle, textAlign: 'right', color: balance > 0 ? '#fca5a5' : '#6ee7b7', fontWeight: 600 }}>{format(balance)}</td>
                             <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{formatDate(tax.dueAt)}</td>
                             <td style={tdStyle}><TaxBadge status={tax.status} /></td>
+                            <td style={{ ...tdStyle, textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                {tax.status !== 'paid' && (
+                                  <button onClick={() => markTaxPaid(tax.id)} title="Mark as paid" style={{ padding: '6px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'rgba(16,185,129,0.18)', color: '#6ee7b7', display: 'inline-flex' }}>
+                                    <CheckCircle size={14} />
+                                  </button>
+                                )}
+                                <button onClick={() => deleteTax(tax.id)} title="Delete obligation" style={{ padding: '6px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'var(--bg-secondary)', color: 'var(--text-danger)', display: 'inline-flex' }}>
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         )
                       })}
@@ -493,7 +567,17 @@ export function FinancePage() {
 
             <div>
               <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Customer</label>
-              <input value={invoiceForm.customer} onChange={e => setInvoiceForm(p => ({ ...p, customer: e.target.value }))} style={inputStyle} placeholder="Customer name" />
+              <select value={invoiceForm.customerId} onChange={e => setInvoiceForm(p => ({ ...p, customerId: e.target.value }))} style={inputStyle}>
+                <option value="">Select a customer…</option>
+                {customers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}{c.company ? ` · ${c.company}` : ''}</option>
+                ))}
+              </select>
+              {customers.length === 0 && (
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                  No customers found yet. Add customers from the Customers page first.
+                </p>
+              )}
             </div>
             <div>
               <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Due date</label>
@@ -524,6 +608,53 @@ export function FinancePage() {
             <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
               <button onClick={() => setShowInvoiceForm(false)} style={{ flex: 1, height: '40px', fontSize: '13px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
               <button onClick={submitInvoice} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Create</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTaxForm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }} onClick={() => setShowTaxForm(false)}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: '12px', padding: '24px', width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Add tax obligation</h3>
+              <button onClick={() => setShowTaxForm(false)} style={{ padding: '6px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', display: 'inline-flex' }}>
+                <X size={14} />
+              </button>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Tax name</label>
+              <input value={taxForm.name} onChange={e => setTaxForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} placeholder="e.g. VAT / Sales tax" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Rate (%)</label>
+                <input value={taxForm.rate} onChange={e => setTaxForm(p => ({ ...p, rate: e.target.value }))} type="number" min="0" step="0.01" style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Taxable basis</label>
+                <input value={taxForm.basis} onChange={e => setTaxForm(p => ({ ...p, basis: e.target.value }))} type="number" min="0" step="0.01" style={inputStyle} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Period</label>
+                <input value={taxForm.period} onChange={e => setTaxForm(p => ({ ...p, period: e.target.value }))} style={inputStyle} placeholder="e.g. 2026-09" />
+              </div>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Due date</label>
+                <input type="date" value={taxForm.dueAt} onChange={e => setTaxForm(p => ({ ...p, dueAt: e.target.value }))} style={inputStyle} />
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Already paid</label>
+              <input value={taxForm.paid} onChange={e => setTaxForm(p => ({ ...p, paid: e.target.value }))} type="number" min="0" step="0.01" style={inputStyle} />
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <button onClick={() => setShowTaxForm(false)} style={{ flex: 1, height: '40px', fontSize: '13px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={submitTax} style={{ flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Add</button>
             </div>
           </div>
         </div>

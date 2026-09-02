@@ -429,6 +429,8 @@ export interface Invoice {
   id: string
   number: string
   customer: string
+  customerId?: string
+  customerEmail?: string
   issuedAt: string
   dueAt: string
   amount: number
@@ -451,6 +453,15 @@ export interface FinanceState {
   ledger: LedgerEntry[]
   invoices: Invoice[]
   taxes: TaxItem[]
+  // Server-computed aggregates (preferred over local recomputation).
+  income?: number
+  expenses?: number
+  net?: number
+  paid?: number
+  outstanding?: number
+  totalDue?: number
+  // Actual POS transaction revenue (from completed sales).
+  posRevenue?: number
 }
 
 export interface BalanceSheetLine {
@@ -467,6 +478,8 @@ export interface BalanceSheet {
 
 export interface InvoiceInput {
   customer: string
+  customerId?: string
+  customerEmail?: string
   dueAt: string
   items: InvoiceLineItem[]
 }
@@ -489,23 +502,25 @@ function unpaidTaxAmount(taxes: TaxItem[]): number {
   return taxes.reduce((sum, tax) => sum + Math.max(0, Math.round(tax.basis * tax.rate) / 100 - tax.paid), 0)
 }
 
-export function buildBalanceSheet(state: FinanceState): BalanceSheet {
+export function buildBalanceSheet(state: FinanceState, netCashFlow?: number): BalanceSheet {
+  // Cash & Bank is derived from the net cash flow (income - expenses) when
+  // provided; otherwise fall back to the local computation.
+  const cashBank = netCashFlow ?? (
+    state.ledger.filter(e => e.category === 'income').reduce((s, e) => s + e.amount, 0)
+    - state.ledger.filter(e => e.category === 'expense').reduce((s, e) => s + e.amount, 0)
+  )
   const assets = [
-    { label: 'Cash & Bank', value: 148500 },
+    { label: 'Cash & Bank', value: Math.round(cashBank * 100) / 100 },
     { label: 'Accounts Receivable', value: Math.round(unpaidInvoiceAmount(state.invoices) * 100) / 100 },
-    { label: 'Inventory', value: 58200 },
-    { label: 'Equipment', value: 45000 },
   ]
   const liabilities = [
-    { label: 'Accounts Payable', value: 21800 },
+    { label: 'Accounts Payable', value: 0 },
     { label: 'Tax Payable', value: Math.round(unpaidTaxAmount(state.taxes) * 100) / 100 },
-    { label: 'Bank Loan', value: 40000 },
   ]
   const totalAssets = assets.reduce((sum, line) => sum + line.value, 0)
   const totalLiabilities = liabilities.reduce((sum, line) => sum + line.value, 0)
-  const retainedEarnings = Math.round((totalAssets - totalLiabilities - 120000) * 100) / 100
+  const retainedEarnings = Math.round((totalAssets - totalLiabilities) * 100) / 100
   const equity = [
-    { label: 'Owner\u2019s Capital', value: 120000 },
     { label: 'Retained Earnings', value: retainedEarnings },
   ]
   return {

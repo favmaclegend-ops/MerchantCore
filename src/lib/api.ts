@@ -137,11 +137,26 @@ function invoiceFromApi(inv: Record<string, unknown>): Invoice {
     id: String(inv.id ?? ''),
     number: String(inv.number ?? ''),
     customer: String(inv.customer ?? ''),
+    customerId: inv.customerId ? String(inv.customerId) : undefined,
+    customerEmail: inv.customerEmail ? String(inv.customerEmail) : undefined,
     issuedAt: String(inv.issuedAt ?? ''),
     dueAt: String(inv.dueAt ?? ''),
     amount: Number(inv.amount ?? 0),
     status: (inv.status as Invoice['status']) ?? 'draft',
     items: Array.isArray(inv.items) ? (inv.items as Invoice['items']) : [],
+  }
+}
+
+function taxFromApi(t: Record<string, unknown>): TaxItem {
+  return {
+    id: String(t.id ?? ''),
+    name: String(t.name ?? ''),
+    rate: Number(t.rate ?? 0),
+    basis: Number(t.basis ?? 0),
+    period: String(t.period ?? ''),
+    dueAt: String(t.dueAt ?? ''),
+    paid: Number(t.paid ?? 0),
+    status: (t.status as TaxItem['status']) ?? 'upcoming',
   }
 }
 
@@ -504,22 +519,38 @@ export const api = {
     finance: {
       getState: async () => {
         const base = `/organisations/${orgId()}`
-        const [ledger, invoices, taxes] = await Promise.all([
-          orgRequest<{ entries: LedgerEntry[] }>(`${base}/ledger`),
-          orgRequest<{ invoices: Array<Record<string, unknown>> }>(`${base}/invoices`),
-          orgRequest<{ items: TaxItem[] }>(`${base}/tax`),
+        const [ledger, invoices, taxes, dashboard] = await Promise.all([
+          orgRequest<{ entries: LedgerEntry[]; income?: number; expenses?: number; net?: number }>(`${base}/ledger`),
+          orgRequest<{ invoices: Array<Record<string, unknown>>; paid?: number; outstanding?: number }>(`${base}/invoices`),
+          orgRequest<{ items: TaxItem[]; totalDue?: number }>(`${base}/tax`),
+          orgRequest<{ stats: { totalRevenue?: number } }>(`${base}/dashboard`),
         ])
         return {
           ledger: ledger.entries,
           invoices: invoices.invoices.map(invoiceFromApi),
           taxes: taxes.items,
+          income: ledger.income,
+          expenses: ledger.expenses,
+          net: ledger.net,
+          paid: invoices.paid,
+          outstanding: invoices.outstanding,
+          totalDue: taxes.totalDue,
+          posRevenue: dashboard.stats.totalRevenue ?? 0,
         } as FinanceState
       },
       createInvoice: async (input: InvoiceInput) => {
         const amount = input.items.reduce((sum, item) => sum + item.qty * item.unitPrice, 0)
         const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/invoices`, {
           method: 'POST',
-          body: JSON.stringify({ customer: input.customer, dueAt: input.dueAt, amount, status: 'draft', items: input.items }),
+          body: JSON.stringify({
+            customer: input.customer,
+            customerId: input.customerId,
+            customerEmail: input.customerEmail,
+            dueAt: input.dueAt,
+            amount,
+            status: 'draft',
+            items: input.items,
+          }),
         })
         return invoiceFromApi(res)
       },
@@ -529,6 +560,40 @@ export const api = {
           body: JSON.stringify({ status }),
         })
         return invoiceFromApi(res)
+      },
+      deleteInvoice: async (invoiceId: string) => {
+        const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/invoices/${invoiceId}`, {
+          method: 'DELETE',
+        })
+        return res
+      },
+      createTaxItem: async (input: { name: string; rate: number; basis: number; period?: string; dueAt?: string; paid?: number; status?: TaxItem['status'] }) => {
+        const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/tax`, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: input.name,
+            rate: input.rate,
+            basis: input.basis,
+            period: input.period ?? '',
+            dueAt: input.dueAt ?? '',
+            paid: input.paid ?? 0,
+            status: input.status ?? 'upcoming',
+          }),
+        })
+        return taxFromApi(res)
+      },
+      updateTaxItem: async (taxId: string, patch: Partial<{ name: string; rate: number; basis: number; period: string; dueAt: string; paid: number; status: string }>) => {
+        const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/tax/${taxId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(patch),
+        })
+        return taxFromApi(res)
+      },
+      deleteTaxItem: async (taxId: string) => {
+        const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/tax/${taxId}`, {
+          method: 'DELETE',
+        })
+        return res
       },
     },
 
