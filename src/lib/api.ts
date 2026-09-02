@@ -39,6 +39,7 @@ import type {
   OrgTimeEntry,
   OrgTimeInput,
   LedgerEntry,
+  QrScanRequest,
   TaxItem,
 } from '@/lib/orgTypes'
 
@@ -126,6 +127,7 @@ function memberFromApi(m: Record<string, unknown>): OrgMember {
     phone: String(m.phone ?? ''),
     role: (m.role as OrgMember['role']) ?? 'staff',
     jobTitle: String(m.jobTitle ?? ''),
+    userId: m.userId ? String(m.userId) : undefined,
     isActive: m.isActive !== false,
     dataBlocked: m.dataBlocked === true,
     disabled: m.disabled === true,
@@ -244,6 +246,9 @@ function attendanceFromApi(a: Record<string, unknown>): OrgAttendanceRecord {
     employee_name: String(a.employeeName ?? ''),
     date: String(a.date ?? ''),
     check_in: String(a.checkIn ?? ''),
+    check_out: String(a.checkOut ?? ''),
+    check_in_method: (a.checkInMethod as OrgAttendanceRecord['check_in_method']) ?? 'manual',
+    check_out_method: (a.checkOutMethod as OrgAttendanceRecord['check_out_method']) ?? 'manual',
     status: (a.status as OrgAttendanceRecord['status']) ?? 'absent',
   }
 }
@@ -465,10 +470,20 @@ export const api = {
       const res = await orgRequest<{ members: Array<Record<string, unknown>> }>(`/organisations/${orgId()}/members`)
       return res.members.map(memberFromApi)
     },
+    getAvailableUsers: async (search?: string) => {
+      const q = search ? `?search=${encodeURIComponent(search)}` : ''
+      const res = await orgRequest<{ users: Array<Record<string, unknown>> }>(`/organisations/${orgId()}/users/available${q}`)
+      return res.users.map((u) => ({
+        id: u.id as string,
+        name: (u.name ?? u.username ?? '') as string,
+        email: u.email as string,
+        username: u.username as string,
+      }))
+    },
     addUser: async (member: Omit<OrgMember, 'id'>) => {
       const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/members`, {
         method: 'POST',
-        body: JSON.stringify({ email: member.email, role: member.role, jobTitle: member.jobTitle, password: member.password || undefined }),
+        body: JSON.stringify({ email: member.email, role: member.role, jobTitle: member.jobTitle, password: member.password || undefined, userId: member.userId || undefined }),
       })
       return memberFromApi(res)
     },
@@ -851,9 +866,30 @@ export const api = {
         }
         const record = await orgRequest<Record<string, unknown>>(`/organisations/${session.orgId}/attendance/check-in`, {
           method: 'POST',
-          body: JSON.stringify({ employeeId: match.id }),
+          body: JSON.stringify({ employeeId: match.id, method: 'qr' }),
         })
         return attendanceFromApi(record)
+      },
+      requestQr: async (employeeId: string, action: 'in' | 'out') => {
+        const res = await orgRequest<QrScanRequest>(`/organisations/${orgId()}/attendance/terminal/qr`, {
+          method: 'POST',
+          body: JSON.stringify({ employeeId, action }),
+        })
+        return res
+      },
+      scan: async (token: string, action: 'in' | 'out') => {
+        const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/attendance/scan`, {
+          method: 'POST',
+          body: JSON.stringify({ token, action }),
+        })
+        return attendanceFromApi(res)
+      },
+      markManual: async (employeeId: string, action: 'check_in' | 'check_out' | 'absent') => {
+        const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/attendance/${employeeId}/mark`, {
+          method: 'POST',
+          body: JSON.stringify({ action }),
+        })
+        return attendanceFromApi(res)
       },
     },
 

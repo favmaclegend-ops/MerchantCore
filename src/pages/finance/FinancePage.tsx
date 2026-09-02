@@ -122,10 +122,28 @@ export function FinancePage() {
   // Prefer server-computed aggregates; fall back to local recomputation.
   const income = state ? (state.income ?? state.ledger.filter(e => e.category === 'income').reduce((sum, e) => sum + e.amount, 0)) : 0
   const expenses = state ? (state.expenses ?? state.ledger.filter(e => e.category === 'expense').reduce((sum, e) => sum + e.amount, 0)) : 0
-  // Ledger is the single source of truth. Until historical POS entries are in
-  // the ledger (fresh accounts), fall back to POS revenue so the page is not empty.
-  const posRevenue = state?.posRevenue ?? 0
-  const totalRevenue = income !== 0 ? income : posRevenue
+  // Ledger is the single, consistent source of truth for the P&L: every
+  // completed POS sale posts an income line, refunds post an expense, and
+  // payroll posts an expense when marked paid. No POS fallback.
+  const totalRevenue = income
+  // P&L expenses grouped by account (payroll appears here once a run is paid).
+  const expenseByAccount = state
+    ? state.ledger
+        .filter(e => e.category === 'expense')
+        .reduce<{ account: string; amount: number }[]>((acc, e) => {
+          const existing = acc.find(x => x.account === e.account)
+          if (existing) existing.amount += e.amount
+          else acc.push({ account: e.account, amount: e.amount })
+          return acc
+        }, [])
+        .sort((a, b) => b.amount - a.amount)
+    : []
+  const netProfit = totalRevenue - expenses
+  // Current month (this period) figures for a roll-up P&L.
+  const thisMonth = new Date().toISOString().slice(0, 7)
+  const thisMonthIncome = state ? state.ledger.filter(e => e.category === 'income' && e.date && e.date.startsWith(thisMonth)).reduce((s, e) => s + e.amount, 0) : 0
+  const thisMonthExpenses = state ? state.ledger.filter(e => e.category === 'expense' && e.date && e.date.startsWith(thisMonth)).reduce((s, e) => s + e.amount, 0) : 0
+  const thisMonthNet = thisMonthIncome - thisMonthExpenses
   const balanceSheet = state ? buildBalanceSheet(state, totalRevenue - expenses) : null
   const cashOnHand = balanceSheet ? balanceSheet.assets[0].value : 0
   const outstanding = state
@@ -267,10 +285,49 @@ export function FinancePage() {
           {active === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                <StatCard label="Total Revenue" value={format(totalRevenue)} sub={posRevenue ? 'From POS sales' : 'From general ledger'} icon={<TrendingUp size={18} />} tone="green" />
+                <StatCard label="Total Revenue" value={format(totalRevenue)} sub="From general ledger" icon={<TrendingUp size={18} />} tone="green" />
                 <StatCard label="Total Expenses" value={format(expenses)} sub="From general ledger" icon={<TrendingDown size={18} />} tone="red" />
-                <StatCard label="Net Cash Flow" value={format(totalRevenue - expenses)} sub="Revenue minus expenses" icon={<Wallet size={18} />} tone="accent" />
+                <StatCard label="Net Profit" value={format(netProfit)} sub="Revenue minus all expenses" icon={<Wallet size={18} />} tone={netProfit >= 0 ? 'green' : 'red'} />
                 <StatCard label="Cash on Hand" value={format(cashOnHand)} sub="Balance sheet snapshot" icon={<ReceiptText size={18} />} tone="neutral" />
+              </div>
+
+              <div style={panelStyle}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px 0' }}>Profit &amp; Loss</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 14px 0' }}>
+                  Revenue minus every expense (including payroll once runs are marked paid) = net profit.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>Revenue (income)</span>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#6ee7b7' }}>{format(totalRevenue)}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>Total expenses</span>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#fca5a5' }}>-{format(expenses)}</span>
+                  </div>
+                  {expenseByAccount.map(e => (
+                    <div key={e.account} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', paddingLeft: '14px' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{e.account}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>-{format(e.amount)}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderTop: '1px solid var(--bg-secondary)', paddingTop: '10px', marginTop: '4px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Net profit</span>
+                    <span style={{ fontSize: '15px', fontWeight: 700, color: netProfit >= 0 ? '#6ee7b7' : '#fca5a5' }}>{netProfit < 0 ? '-' : ''}{format(Math.abs(netProfit))}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderTop: '1px solid var(--bg-secondary)', paddingTop: '10px', marginTop: '14px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>This month (net)</span>
+                    <span style={{ fontSize: '15px', fontWeight: 700, color: thisMonthNet >= 0 ? '#6ee7b7' : '#fca5a5' }}>{thisMonthNet < 0 ? '-' : ''}{format(Math.abs(thisMonthNet))}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', paddingLeft: '14px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Income this month</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{format(thisMonthIncome)}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', paddingLeft: '14px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Expenses this month</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>-{format(thisMonthExpenses)}</span>
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: bp.xl ? '2fr 1fr' : '1fr', gap: '16px' }}>

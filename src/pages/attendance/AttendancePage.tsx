@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from 'react'
-import { Clock, CalendarCheck2, CheckCircle2, Star, User, Briefcase } from 'lucide-react'
+import { Clock, CalendarCheck2, CheckCircle2, Star, User, Briefcase, ScanLine } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context/auth_context'
 import { CurrencyContext } from '@/context/currency_context'
+import { QrScannerModal } from '@/components/attendance/QrScannerModal'
 import type { OrgAttendanceRecord, OrgAttendanceSummary, OrgEmployee } from '@/lib/orgTypes'
 
 const formatDate = (iso: string) => {
@@ -38,7 +39,8 @@ export function AttendancePage() {
   const [records, setRecords] = useState<OrgAttendanceRecord[]>([])
   const [summary, setSummary] = useState<OrgAttendanceSummary[]>([])
   const [loading, setLoading] = useState(true)
-  const [checkingIn, setCheckingIn] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [scanOpen, setScanOpen] = useState<'in' | 'out' | null>(null)
   const [notice, setNotice] = useState('')
 
   const reload = () => {
@@ -63,16 +65,19 @@ export function AttendancePage() {
   const todayRecord = employee ? records.find(r => r.employee_id === employee.id && r.date === today) ?? null : null
   const ownRecords = employee ? records.filter(r => r.employee_id === employee.id).slice(0, 10) : []
 
-  const handleCheckIn = () => {
-    setCheckingIn(true)
-    api.org.attendance.checkIn()
+  const handleScan = (data: string) => {
+    if (!scanOpen || busy) return
+    const action = scanOpen
+    setBusy(true)
+    setScanOpen(null)
+    api.org.attendance.scan(data, action)
       .then(() => {
-        setNotice('Checked in successfully. Have a great shift!')
+        setNotice(action === 'in' ? 'Checked in successfully. Have a great shift!' : 'Checked out successfully. See you tomorrow!')
         reload()
-        setTimeout(() => setNotice(''), 4000)
+        setTimeout(() => setNotice(''), 5000)
       })
-      .catch(() => setNotice('Check-in failed. Please try again.'))
-      .finally(() => setCheckingIn(false))
+      .catch(() => setNotice('That QR code is invalid or already used. Please try again.'))
+      .finally(() => setBusy(false))
   }
 
   if (!orgUser) {
@@ -92,26 +97,46 @@ export function AttendancePage() {
         <div>
           
         </div>
-        <button
-          onClick={handleCheckIn}
-          disabled={checkingIn || !!todayRecord}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', fontSize: '13px', fontWeight: 600,
-            color: todayRecord ? 'var(--text-secondary)' : 'var(--text-on-dark)',
-            background: todayRecord ? 'var(--bg-secondary)' : 'var(--bg-nav-active)',
-            border: 'none', borderRadius: '10px', cursor: todayRecord ? 'default' : 'pointer',
-          }}
-        >
-          {todayRecord ? <CheckCircle2 size={16} /> : <CalendarCheck2 size={16} />}
-          {todayRecord ? `Checked in · ${todayRecord.check_in}` : checkingIn ? 'Checking in…' : 'Present'}
-        </button>
+        {!todayRecord ? (
+          <button
+            onClick={() => setScanOpen('in')}
+            disabled={busy}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', fontSize: '13px', fontWeight: 600,
+              color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '10px', cursor: 'pointer',
+            }}
+          >
+            <ScanLine size={16} />
+            {busy ? 'Processing…' : 'Scan to clock in'}
+          </button>
+        ) : (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', background: 'var(--bg-secondary)', padding: '8px 14px', borderRadius: '10px' }}>
+              <CheckCircle2 size={16} color="#6ee7b7" />
+              In {todayRecord.check_in}{todayRecord.check_out ? ` · Out ${todayRecord.check_out}` : ''}
+            </span>
+            {!todayRecord.check_out && (
+              <button
+                onClick={() => setScanOpen('out')}
+                disabled={busy}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', fontSize: '13px', fontWeight: 600,
+                  color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '10px', cursor: 'pointer',
+                }}
+              >
+                <CalendarCheck2 size={16} />
+                {busy ? 'Processing…' : 'Scan to clock out'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
-
       {notice && (
         <div style={{ width: '100%', padding: '10px 14px', background: 'rgba(16,185,129,0.12)', border: '1px solid var(--border-success)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-success)', fontWeight: 500 }}>
           {notice}
         </div>
       )}
+      {scanOpen && <QrScannerModal onScan={handleScan} onClose={() => setScanOpen(null)} title={scanOpen === 'in' ? 'Scan terminal QR to clock in' : 'Scan terminal QR to clock out'} />}
 
       {loading ? (
         <p style={{ fontSize: '12px', color: 'var(--text-placeholder)', padding: '24px' }}>Loading your attendance…</p>
@@ -133,6 +158,7 @@ export function AttendancePage() {
                     <tr>
                       <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--bg-tertiary)', textAlign: 'left' }}>Date</th>
                       <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--bg-tertiary)', textAlign: 'left' }}>Check-in</th>
+                      <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--bg-tertiary)', textAlign: 'left' }}>Check-out</th>
                       <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--bg-tertiary)', textAlign: 'left' }}>Status</th>
                     </tr>
                   </thead>
@@ -141,6 +167,7 @@ export function AttendancePage() {
                       <tr key={r.id}>
                         <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-primary)', borderBottom: '1px solid var(--bg-secondary)' }}>{formatDate(r.date)}</td>
                         <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-muted)', borderBottom: '1px solid var(--bg-secondary)' }}>{r.check_in}</td>
+                        <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-muted)', borderBottom: '1px solid var(--bg-secondary)' }}>{r.check_out || '—'}</td>
                         <td style={{ padding: '12px 14px', fontSize: '13px', borderBottom: '1px solid var(--bg-secondary)' }}>
                           {r.status === 'present' ? (
                             <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: 'rgba(16,185,129,0.18)', color: '#6ee7b7', whiteSpace: 'nowrap' }}>Present</span>
@@ -156,7 +183,7 @@ export function AttendancePage() {
             ) : (
               <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-placeholder)', fontSize: '12px' }}>
                 <User size={20} style={{ margin: '0 auto 8px', opacity: 0.6 }} />
-                No attendance records yet. Press <strong>Present</strong> to check in for today.
+                No attendance records yet. Search for your name on the HRM terminal and scan the QR to check in.
               </div>
             )}
           </div>

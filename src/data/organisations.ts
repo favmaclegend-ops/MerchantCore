@@ -19,6 +19,7 @@ export interface OrgMember {
   email: string
   username: string
   password: string
+  userId?: string
   phone: string
   role: OrgRole
   jobTitle: string

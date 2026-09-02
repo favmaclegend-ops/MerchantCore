@@ -20,6 +20,7 @@ export interface OrgMember {
   email: string
   username: string
   password: string
+  userId?: string
   phone: string
   role: OrgRole
   jobTitle: string
@@ -157,6 +158,7 @@ export interface OrgEmployee {
   name: string
   email: string
   phone: string
+  userId?: string
   department: string
   jobTitle: string
   employmentType: OrgEmploymentType
@@ -170,6 +172,7 @@ export interface OrgEmployeeInput {
   name: string
   email: string
   phone?: string
+  userId?: string
   department: string
   jobTitle: string
   employmentType: OrgEmploymentType
@@ -257,7 +260,18 @@ export interface OrgAttendanceRecord {
   employee_name: string
   date: string
   check_in: string
+  check_out: string
+  check_in_method: 'qr' | 'manual'
+  check_out_method: 'qr' | 'manual'
   status: 'present' | 'absent'
+}
+
+export interface QrScanRequest {
+  token: string
+  action: 'in' | 'out'
+  employeeId: string
+  employeeName: string
+  expiresAt: string
 }
 
 export interface OrgAttendanceSummary {

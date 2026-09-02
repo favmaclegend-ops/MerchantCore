@@ -1,7 +1,8 @@
 import { useContext,  useState, type ChangeEvent, } from 'react'
 import {
-  Plus, X, Contact, Wallet, ShieldCheck, Clock, Star, DollarSign, CheckCircle2,
+  Plus, X, Contact, Wallet, ShieldCheck, Clock, Star, DollarSign, CheckCircle2, QrCode, ScanLine, MoreVertical, Copy, CalendarCheck2,
 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { api } from '@/lib/api'
 import { Authcontext } from '@/context/auth_context'
@@ -109,6 +110,7 @@ type EmployeeForm = {
   name: string
   email: string
   phone: string
+  userId?: string
   department: string
   jobTitle: string
   employmentType: OrgEmploymentType
@@ -119,7 +121,7 @@ type EmployeeForm = {
 }
 
 const emptyEmployeeForm: EmployeeForm = {
-  name: '', email: '', phone: '', department: '', jobTitle: '',
+  name: '', email: '', phone: '', userId: undefined, department: '', jobTitle: '',
   employmentType: 'full-time', hireDate: new Date().toISOString().slice(0, 10),
   salary: '', status: 'probation', benefits: [],
 }
@@ -191,6 +193,19 @@ export function HRMPage() {
   const [sumaryEmployees, setSummaryEmployees] = useState(summary)
   const [timeEntriesFilter, setTimeEntriesFilter] = useState(timeEntries)
 
+  // Attendance terminal (QR confirmation).
+  const [terminalEmployeeId, setTerminalEmployeeId] = useState('')
+  const [terminalAction, setTerminalAction] = useState<'in' | 'out'>('in')
+  const [qrData, setQrData] = useState('')
+  const [copied, setCopied] = useState(false)
+  const [terminalBusy, setTerminalBusy] = useState(false)
+  const [terminalError, setTerminalError] = useState('')
+  const [terminalDone, setTerminalDone] = useState('')
+  const [bypassOpen, setBypassOpen] = useState(false)
+  const selectedToday = terminalEmployeeId ? todayByEmp.get(terminalEmployeeId) : undefined
+  const selectedHasCheckedIn = !!selectedToday?.check_in
+  const selectedHasCheckedOut = !!selectedToday?.check_out
+
   const handleAttendanceFilter = (e: ChangeEvent) => {
     const target = e.currentTarget as HTMLInputElement
     console.log(target)
@@ -201,8 +216,64 @@ export function HRMPage() {
       return;
     }
     setRosterEmployeeFilter(rosterEmployees.filter(x => x.name?.toLowerCase()?.includes(target?.value?.toLowerCase())  ))
-    setSummaryEmployees(summary.filter(x => x.employee_name?.toLowerCase()?.includes(target?.value.toLowerCase())))
+    setSummaryEmployees(summary.filter(x => x.employee_name?.toLowerCase()?.includes(target.value.toLowerCase())))
     setTimeEntriesFilter(timeEntries.filter(t => t.employee_name?.toLowerCase()?.includes(target?.value?.toLowerCase())))
+  }
+
+  const requestTerminalQr = (action: 'in' | 'out') => {
+    if (!terminalEmployeeId) return
+    setTerminalBusy(true)
+    setTerminalError('')
+    setTerminalDone('')
+    api.org.attendance.requestQr(terminalEmployeeId, action)
+      .then(res => {
+        setTerminalAction(action)
+        setQrData(res.token)
+        pollTerminalStatus()
+      })
+      .catch((err: unknown) => {
+        setQrData('')
+        setTerminalError(err instanceof Error ? err.message : 'Could not generate QR code')
+      })
+      .finally(() => setTerminalBusy(false))
+  }
+
+  const markTerminalManual = (action: 'check_in' | 'check_out' | 'absent') => {
+    if (!terminalEmployeeId) return
+    setTerminalBusy(true)
+    setTerminalError('')
+    api.org.attendance.markManual(terminalEmployeeId, action)
+      .then(() => {
+        setTerminalDone(action === 'absent' ? 'Marked absent.' : action === 'check_in' ? 'Marked present (manual).' : 'Checked out (manual).')
+        setQrData('')
+        reload()
+        setTimeout(() => setTerminalDone(''), 4000)
+      })
+      .catch((err: unknown) => setTerminalError(err instanceof Error ? err.message : 'Could not mark attendance'))
+      .finally(() => setTerminalBusy(false))
+  }
+
+  const pollTerminalStatus = () => {
+    // Poll the attendance list; once the selected employee has a record for today
+    // written by the scanned QR, clear the QR and show confirmation.
+    const id = window.setInterval(() => {
+      api.org.attendance.getRecords()
+        .then(records => {
+          const rec = records.find(r => r.employee_id === terminalEmployeeId && r.date === today)
+          if (terminalAction === 'in' && rec && rec.check_in) {
+            window.clearInterval(id)
+            setTerminalDone(`✅ ${rec.employee_name} confirmed present at ${rec.check_in}`)
+            setQrData('')
+            reload()
+          } else if (terminalAction === 'out' && rec && rec.check_out) {
+            window.clearInterval(id)
+            setTerminalDone(`✅ ${rec.employee_name} checked out at ${rec.check_out}`)
+            setQrData('')
+            reload()
+          }
+        })
+        .catch(() => {})
+    }, 4000)
   }
 
   const reload = () => {
@@ -262,7 +333,8 @@ export function HRMPage() {
     setEditingEmployee(employee ?? null)
     if (employee) {
       setEmployeeForm({
-        name: employee.name, email: employee.email, phone: employee.phone, department: employee.department,
+        name: employee.name, email: employee.email, phone: employee.phone, userId: employee.userId || undefined,
+        department: employee.department,
         jobTitle: employee.jobTitle, employmentType: employee.employmentType, hireDate: employee.hireDate,
         salary: String(employee.salary), status: employee.status === 'active' || employee.status === 'probation' || employee.status === 'on-leave' ? employee.status : 'active',
         benefits: [...employee.benefits],
@@ -284,6 +356,7 @@ export function HRMPage() {
     if (!employeeForm.name.trim() || !employeeForm.email.trim() || !employeeForm.department.trim() || !employeeForm.jobTitle.trim()) return
     const input: OrgEmployeeInput = {
       name: employeeForm.name, email: employeeForm.email, phone: employeeForm.phone,
+      userId: employeeForm.userId,
       department: employeeForm.department, jobTitle: employeeForm.jobTitle,
       employmentType: employeeForm.employmentType, hireDate: employeeForm.hireDate,
       salary: Number(employeeForm.salary) || 0, status: employeeForm.status, benefits: employeeForm.benefits,
@@ -387,7 +460,7 @@ export function HRMPage() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%', height: '38px', padding: '0 12px', border: '1px solid var(--border-input)',
-    borderRadius: '8px', fontSize: '13px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box',
+    borderRadius: '8px', fontSize: '16px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box',
   }
   const selectStyle: React.CSSProperties = { ...inputStyle, padding: '0 8px' }
   const thStyle: React.CSSProperties = {
@@ -412,11 +485,12 @@ export function HRMPage() {
 
   const overlay = {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 9999, padding: '16px',
+    zIndex: 9999, padding: '16px', boxSizing: 'border-box', overflowX: 'hidden',
   } as React.CSSProperties
   const modalCard = {
     background: 'var(--bg-surface)', borderRadius: '12px', padding: '24px', width: '100%', maxWidth: '560px',
     maxHeight: '88vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px',
+    boxSizing: 'border-box', minWidth: 0, overflowX: 'hidden',
   } as React.CSSProperties
   const modalHeader = {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -425,8 +499,8 @@ export function HRMPage() {
     padding: '6px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', display: 'inline-flex',
   } as React.CSSProperties
   const labelStyle: React.CSSProperties = { fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }
-  const fieldRow = { display: 'flex', gap: '8px' } as React.CSSProperties
-  const field = { flex: 1, minWidth: 0 } as React.CSSProperties
+  const fieldRow = { display: 'grid', gridTemplateColumns: bp.md ? 'repeat(2, 1fr)' : '1fr', gap: '12px 8px' } as React.CSSProperties
+  const field = { minWidth: 0, width: '100%' } as React.CSSProperties
   const footer = { display: 'flex', gap: '8px', marginTop: '4px' } as React.CSSProperties
   const cancelBtn = { flex: 1, height: '40px', fontSize: '13px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: '8px', cursor: 'pointer' } as React.CSSProperties
   const submitBtn = { flex: 1, height: '40px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' } as React.CSSProperties
@@ -665,6 +739,108 @@ export function HRMPage() {
               <div style={{display: 'flex', flexDirection: 'column',   marginInlineStart: 'auto', width: '100%' }}> 
                   <input onChange={handleAttendanceFilter} placeholder='Search Attendence...' style={{width: '100%', borderRadius: '.3rem', padding: '.5rem .5rem', height: '100%', border: '1px solid var(--border-default)', outline: 'none', background: 'var(--bg-surface)', }}/>
                 </div>
+
+              <div style={{ ...panelStyle, background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(2,6,23,0.2))' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                  <QrCode size={18} style={{ color: 'var(--text-primary)' }} />
+                  <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Attendance terminal</h3>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: bp.md ? '1.4fr 1fr' : '1fr', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-label)', marginBottom: '4px', display: 'block' }}>Search employee</label>
+                      <input
+                        list="terminal-employees"
+                        placeholder="Type employee name…"
+                        value={employees.find(e => e.id === terminalEmployeeId)?.name ?? ''}
+                        onChange={e => {
+                          const name = e.target.value
+                          const match = rosterEmployees.find(x => x.name?.toLowerCase() === name.toLowerCase())
+                          setTerminalEmployeeId(match ? match.id : '')
+                          setQrData('')
+                        }}
+                        style={inputStyle}
+                      />
+                      <datalist id="terminal-employees">
+                        {rosterEmployees.map(e => <option key={e.id} value={e.name} />)}
+                      </datalist>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      {terminalEmployeeId && !selectedHasCheckedIn && (
+                        <button onClick={() => requestTerminalQr('in')} disabled={terminalBusy} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '8px', cursor: terminalBusy ? 'not-allowed' : 'pointer' }}>
+                          <ScanLine size={14} /> Show check-in QR
+                        </button>
+                      )}
+                      {terminalEmployeeId && selectedHasCheckedIn && !selectedHasCheckedOut && (
+                        <button onClick={() => requestTerminalQr('out')} disabled={terminalBusy} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, color: 'var(--text-on-dark)', background: 'var(--bg-nav-active)', border: 'none', borderRadius: '8px', cursor: terminalBusy ? 'not-allowed' : 'pointer' }}>
+                          <CalendarCheck2 size={14} /> Show check-out QR
+                        </button>
+                      )}
+                      {terminalEmployeeId && selectedHasCheckedOut && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: '#6ee7b7', padding: '8px 12px', borderRadius: '8px', background: 'rgba(16,185,129,0.15)' }}>
+                          <CheckCircle2 size={14} /> Checked in & out today
+                        </span>
+                      )}
+                      <div style={{ position: 'relative', marginLeft: 'auto' }}>
+                        <button
+                          onClick={() => setBypassOpen(o => !o)}
+                          disabled={!terminalEmployeeId}
+                          title="Admin options"
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: '8px', border: 'none', cursor: terminalEmployeeId ? 'pointer' : 'not-allowed', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', opacity: terminalEmployeeId ? 1 : 0.5 }}
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+                        {bypassOpen && (
+                          <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: '10px', padding: '6px', boxShadow: '0 10px 30px rgba(0,0,0,0.35)', minWidth: '170px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em', padding: '4px 8px' }}>Admin bypass</span>
+                            <button onClick={() => { markTerminalManual('check_in'); setBypassOpen(false) }} disabled={terminalBusy} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, padding: '8px', color: 'var(--text-primary)', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', textAlign: 'left' }}>
+                              <CheckCircle2 size={14} color="#6ee7b7" /> Mark present
+                            </button>
+                            <button onClick={() => { markTerminalManual('check_out'); setBypassOpen(false) }} disabled={terminalBusy} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, padding: '8px', color: 'var(--text-primary)', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', textAlign: 'left' }}>
+                              <Clock size={14} color="#93c5fd" /> Mark checked out
+                            </button>
+                            <button onClick={() => { markTerminalManual('absent'); setBypassOpen(false) }} disabled={terminalBusy} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, padding: '8px', color: 'var(--text-danger)', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', textAlign: 'left' }}>
+                              <X size={14} /> Mark absent
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {terminalError && <p style={{ fontSize: '12px', color: 'var(--text-danger)', margin: 0 }}>{terminalError}</p>}
+                    {terminalDone && <p style={{ fontSize: '12px', color: 'var(--text-success)', margin: 0, fontWeight: 500 }}>{terminalDone}</p>}
+                    {qrData && !terminalDone && (
+                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
+                        Waiting for {employees.find(e => e.id === terminalEmployeeId)?.name} to scan… (expires in ~2 min)
+                      </p>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#ffffff', borderRadius: '12px', padding: '16px' }}>
+                    {qrData ? (
+                      <>
+                        <QRCodeSVG value={qrData} size={180} />
+                        <span style={{ fontSize: '11px', color: '#334155', fontWeight: 500 }}>{'Check-' + (terminalAction === 'in' ? 'in' : 'out')} QR · show to employee</span>
+                        <button
+                          onClick={() => { navigator.clipboard?.writeText(qrData); setCopied(true); setTimeout(() => setCopied(false), 2500) }}
+                          title="Copy code for manual entry"
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, padding: '8px 12px', color: '#0f172a', background: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                        >
+                          <Copy size={14} /> {copied ? 'Copied!' : 'Copy code'}
+                        </button>
+                        <code style={{ fontSize: '10px', color: '#64748b', maxWidth: '100%', overflowWrap: 'anywhere', textAlign: 'center', userSelect: 'all' }}>{qrData}</code>
+                      </>
+                    ) : (
+                      <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', padding: '24px' }}>
+                        <QrCode size={40} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
+                        Select an employee and press a QR button to begin.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               <div style={panelStyle}>
                 <div style={{display: 'flex', alignItems: 'center', width: '100%',}}>
