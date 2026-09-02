@@ -142,6 +142,7 @@
   -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
+  
 }
 
 /* Re-enable selection where it is genuinely needed — text inputs/textareas
@@ -166,8 +167,13 @@ input[type="url"] {
 html,
 body,
 #root {
-  height: 100%;
+  height: 100vh;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  
+  
 }
+
 
 body {
   font-family: var(--font-sans);
@@ -176,7 +182,13 @@ body {
   background-color: var(--bg-header);
   color: var(--text-primary);
   overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  width: 100%;
+  inset: 0;
+  height: 100vh;
 }
+
 
 /* On browsers that support dynamic viewport units, let the app fill the
    currently visible viewport instead of the static 100vh. This keeps the

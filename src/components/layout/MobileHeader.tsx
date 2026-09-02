@@ -64,6 +64,10 @@ export function MobileHeader() {
 
   if (bp.lg) return null
 
+  // Hide the app header on a shop/store page — the shop renders its own
+  // immersive header/back button over the cover image.
+  if (isShopPage) return null
+
   return (
     <header
       style={{

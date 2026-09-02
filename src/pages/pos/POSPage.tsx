@@ -11,6 +11,7 @@ import {
   Delete,
 } from "lucide-react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { api } from "@/lib/api";
 import { refreshDashboardCache, refreshOrgDashboardCache } from "@/lib/dashboardCache";
 import { Authcontext } from "@/context";
@@ -64,6 +65,7 @@ function normalizeProducts(products: Product[]): Product[] {
 
 export function POSPage() {
   const bp = useBreakpoint();
+  const keyboardOpen = useKeyboardOpen();
 
   const { format } = useContext(CurrencyContext);
   const { orgUser } = useContext(Authcontext);
@@ -1017,7 +1019,7 @@ export function POSPage() {
         </BottomSheet>
       )}
 
-      {!bp.xl && (
+      {!bp.xl && !keyboardOpen && (
         <button
           onClick={() => setCartView(!isCart)}
           style={{

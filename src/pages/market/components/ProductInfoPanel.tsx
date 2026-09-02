@@ -28,6 +28,7 @@ import { addToMarketCart } from "../cart";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { GracefulImage } from "@/components/GracefulImage";
+import { Gap } from "elk-components";
 
 export function ProductInfoPanel({
   product,
@@ -98,7 +99,9 @@ export function ProductInfoPanel({
   const handleShopClick = () => {
     if (!shop) return;
     onClose();
-    const base = window.location.pathname.startsWith('/market') ? '/market' : '/home/market';
+    const base = window.location.pathname.startsWith("/market")
+      ? "/market"
+      : "/home/market";
     navigate(`${base}/${shop.shop_id}`);
   };
 
@@ -118,9 +121,9 @@ export function ProductInfoPanel({
         background: "rgba(2,6,23,.6)",
         backdropFilter: "blur(4px)",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: bp.sm ? ".5rem" : "1.5rem",
+        alignItems: bp.sm ? "stretch" : "center",
+        justifyContent: bp.sm ? "unset" : "center",
+        padding: bp.sm ? 0 : "1.5rem",
       }}
       onClick={onClose}
     >
@@ -131,10 +134,13 @@ export function ProductInfoPanel({
           flexDirection: "column",
           width: "100%",
           maxWidth: "520px",
-          maxHeight: "90vh",
+          height: bp.sm ? "100%" : "auto",
+          maxHeight: bp.sm ? "100%" : "90vh",
+          paddingTop: bp.sm ? "var(--safe-top)" : 0,
+          boxSizing: "border-box",
           background: "var(--bg-surface)",
           border: "1px solid var(--border-default)",
-          borderRadius: "1.25rem",
+          borderRadius: bp.sm ? "0" : "1.25rem",
           overflow: "hidden",
           boxShadow: "var(--shadow-menu)",
           position: "relative",
@@ -158,6 +164,7 @@ export function ProductInfoPanel({
             background: "rgba(2,6,23,.5)",
             border: "none",
             backdropFilter: "blur(4px)",
+            marginTop: "calc(env(safe-area-inset-top) + 16px)",
           }}
         >
           <X size={18} color="var(--bg-surface)" />
@@ -307,10 +314,13 @@ export function ProductInfoPanel({
             overflowY: "auto",
             flex: 1,
             minHeight: 0,
+            position: "relative",
           }}
         >
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: ".5rem" }}
+            >
               <span
                 style={{
                   fontSize: ".7rem",
@@ -356,8 +366,17 @@ export function ProductInfoPanel({
             >
               {product.product_name}
             </h2>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "1rem", marginTop: ".25rem" }}>
-              <strong style={{ fontSize: "1.4rem", color: "var(--text-primary)" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: "1rem",
+                marginTop: ".25rem",
+              }}
+            >
+              <strong
+                style={{ fontSize: "1.4rem", color: "var(--text-primary)" }}
+              >
                 NLE{valueFormater(product.product_price)}
               </strong>
               <span
@@ -458,9 +477,7 @@ export function ProductInfoPanel({
                         </span>
                       )}
                       {label}
-                      {active && (
-                        <Check size={14} color="var(--text-info)" />
-                      )}
+                      {active && <Check size={14} color="var(--text-info)" />}
                     </button>
                   );
                 })}
@@ -540,7 +557,9 @@ export function ProductInfoPanel({
                   );
                 })}
               </div>
-              <strong style={{ fontSize: ".95rem", color: "var(--text-primary)" }}>
+              <strong
+                style={{ fontSize: ".95rem", color: "var(--text-primary)" }}
+              >
                 {ratings.count > 0
                   ? `${ratings.average.toFixed(1)} / 5`
                   : "No ratings yet"}
@@ -558,7 +577,13 @@ export function ProductInfoPanel({
                 : "Tap a star to rate this product"}
             </span>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: ".35rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: ".35rem",
+              }}
+            >
               {ratings.levels.map((level) => (
                 <div
                   key={level.star}
@@ -605,58 +630,75 @@ export function ProductInfoPanel({
               ))}
             </div>
           </div>
+          <Gap height="5rem" />
 
-          <button
-            className="click"
-            onClick={handleAddToCart}
-            disabled={!product.inStock}
+          <div
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              gap: ".5rem",
+              justifyContent: "space-between",
+              position: "absolute",
+              bottom: 10,
+              left: 0,
               width: "100%",
-              padding: ".85rem",
-              borderRadius: "1rem",
-              cursor: product.inStock ? "pointer" : "not-allowed",
-              background: product.inStock
-                ? "var(--bg-nav-active)"
-                : "var(--text-placeholder)",
-              border: "none",
-              opacity: product.inStock ? 1 : 0.5,
+              gap: "1rem",
+              padding: "1rem",
             }}
           >
-            <ShoppingCart size={18} color="var(--bg-surface)" />
-            <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
-              {added
-                ? "Added to Cart"
-                : product.inStock
-                  ? "Add to Cart"
-                  : "Sold out"}
-            </span>
-          </button>
+            <button
+              className="click"
+              onClick={handleAddToCart}
+              disabled={!product.inStock}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: ".5rem",
+                width: "100%",
+                padding: ".85rem",
 
-          <button
-            className="click"
-            onClick={handleShopClick}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: ".5rem",
-              width: "100%",
-              padding: ".85rem",
-              borderRadius: "1rem",
-              cursor: "pointer",
-              background: "var(--bg-nav-active)",
-              border: "none",
-            }}
-          >
-            <Store size={18} color="var(--bg-surface)" />
-            <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
-              Visit {shop ? shop.shop_name : product.shop_name}
-            </span>
-          </button>
+                borderRadius: "1rem",
+                cursor: product.inStock ? "pointer" : "not-allowed",
+                background: product.inStock
+                  ? "var(--bg-nav-active)"
+                  : "var(--text-placeholder)",
+                border: "none",
+                opacity: product.inStock ? 1 : 0.5,
+              }}
+            >
+              <ShoppingCart size={18} color="var(--bg-surface)" />
+              <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
+                {added
+                  ? "Added to Cart"
+                  : product.inStock
+                    ? "Add to Cart"
+                    : "Sold out"}
+              </span>
+            </button>
+
+            <button
+              className="click"
+              onClick={handleShopClick}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+
+                gap: ".5rem",
+                width: "100%",
+                padding: ".85rem",
+                borderRadius: "1rem",
+                cursor: "pointer",
+                background: "var(--bg-nav-active)",
+                border: "none",
+              }}
+            >
+              <Store size={18} color="var(--bg-surface)" />
+              <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
+                Visit {shop ? shop.shop_name : product.shop_name}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

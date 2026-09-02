@@ -9,6 +9,7 @@ import { MobileNavbar } from '@/components/layout/MobileNavbar'
 import { MobileHeader } from '@/components/layout/MobileHeader'
 import { marketUiStore } from '@/pages/market/marketUiStore'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useKeyboardOpen } from '@/hooks/useKeyboardOpen'
 import { canManageFinance, canManageHRM, canManageSupply, canManageUsers } from '@/lib/orgAccess'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
@@ -32,6 +33,7 @@ export default function Home() {
     const location = useLocation();
     const { user, orgUser, loading, logout } = useContext(Authcontext)
     const bp = useBreakpoint()
+    const keyboardOpen = useKeyboardOpen()
 
     const isChatThreadPage = location.pathname.match(/\/market\/chat(\/|$)/)
     const hideFrame = !!isChatThreadPage
@@ -48,7 +50,7 @@ export default function Home() {
 
     if (orgUser?.disabled) {
         return (
-            <div style={{ minHeight: 'var(--app-min-height)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', padding: '24px' }}>
+            <div style={{ minHeight: 'var(--app-min-height)',  display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', padding: '24px' }}>
                 <div style={{ maxWidth: 420, width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 16, padding: 32, textAlign: 'center' }}>
                     <div style={{ width: 64, height: 64, margin: '0 auto 20px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Ban size={32} color="var(--danger, #ef4444)" />
@@ -71,7 +73,7 @@ export default function Home() {
 
     return (
         <>
-            <div style={{ display: 'flex', width: '100%', height: 'var(--app-height)', overflow: 'hidden', background: 'var(--bg-header)' }}>
+            <div style={{ display: 'flex', width: '100%',  height: '100dvh', overflow: 'hidden', background: 'var(--bg-header)' }}>
                 {!hideFrame && <DesktopSidebar />}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden', width: '100%' }}>
                     {!hideFrame && <DesktopHeader />}
@@ -99,7 +101,7 @@ export default function Home() {
                         </Suspense>
                     </div>
 
-                    {!hideNav && <MobileNavbar />}
+                    {!hideNav && !keyboardOpen && <MobileNavbar />}
                 </div>
             </div>
         </>

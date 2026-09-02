@@ -1,4 +1,5 @@
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { Markets } from "./Markets";
 import { valueFormater } from "./market";
 import {
@@ -479,6 +480,7 @@ function CartPanel({
 
 export function MarketPage() {
   const bp = useBreakpoint();
+  const keyboardOpen = useKeyboardOpen();
   const location = useLocation();
   const isChatRoute = /\/market\/chat(\/|$)/.test(location.pathname);
   const { items: cart } = useStore(marketCartStore);
@@ -559,7 +561,7 @@ export function MarketPage() {
         {!isChatRoute && bp.mlg ? (
           <CartPanel {...cartPanelProps} />
         ) : (
-          !isChatRoute && (
+          !isChatRoute && !keyboardOpen && (
           <button
             onClick={() => setIsCartOpen(true)}
             style={{
