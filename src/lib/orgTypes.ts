@@ -349,6 +349,8 @@ export interface OrgShipment {
   po_id: string
   po_number: string
   supplier_name: string
+  market_order_id: string
+  customer_name: string
   carrier: string
   status: OrgShipmentStatus
   eta: string
@@ -357,7 +359,8 @@ export interface OrgShipment {
 }
 
 export interface OrgShipmentInput {
-  po_id: string
+  po_id?: string
+  market_order_id?: string
   carrier: string
   eta: string
 }

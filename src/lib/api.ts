@@ -323,6 +323,8 @@ function shipmentFromApi(s: Record<string, unknown>): OrgShipment {
     po_id: String(s.poId ?? ''),
     po_number: String(s.poNumber ?? ''),
     supplier_name: String(s.supplierName ?? ''),
+    market_order_id: String(s.marketOrderId ?? ''),
+    customer_name: String(s.customerName ?? ''),
     carrier: String(s.carrier ?? ''),
     status: (s.status as OrgShipmentStatus) ?? 'in-transit',
     eta: String(s.eta ?? ''),
@@ -791,11 +793,11 @@ export const api = {
         return res.runs.map(payrollFromApi)
       },
       runPayroll: async (period: string) => {
-        const res = await orgRequest<{ runs: Array<Record<string, unknown>> }>(`/organisations/${orgId()}/payroll/generate`, {
+        const res = await orgRequest<{ runs: Array<Record<string, unknown>>; skipped?: string[] }>(`/organisations/${orgId()}/payroll/generate`, {
           method: 'POST',
           body: JSON.stringify({ period }),
         })
-        return res.runs.map(payrollFromApi)
+        return { runs: res.runs.map(payrollFromApi), skipped: res.skipped ?? [] }
       },
       setPayrollStatus: async (id: string, status: OrgPayrollStatus) => {
         if (status === 'paid') {
@@ -1013,7 +1015,12 @@ export const api = {
       createShipment: async (data: OrgShipmentInput) => {
         const res = await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/shipments`, {
           method: 'POST',
-          body: JSON.stringify({ poId: data.po_id, carrier: data.carrier, eta: data.eta }),
+          body: JSON.stringify({
+            source: 'market',
+            marketOrderId: data.market_order_id,
+            carrier: data.carrier,
+            eta: data.eta,
+          }),
         })
         return shipmentFromApi(res)
       },
@@ -1023,6 +1030,11 @@ export const api = {
           body: JSON.stringify({ status }),
         })
         return shipmentFromApi(res)
+      },
+      deleteShipment: async (id: string) => {
+        await orgRequest<Record<string, unknown>>(`/organisations/${orgId()}/shipments/${id}`, {
+          method: 'DELETE',
+        })
       },
     },
 

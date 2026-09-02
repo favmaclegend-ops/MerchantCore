@@ -448,10 +448,15 @@ export function HRMPage() {
   const runPayroll = () => {
     const period = currentPeriod()
     api.org.hrm.runPayroll(period)
-      .then(runs => {
-        setNotice(runs.length
+      .then(({ runs, skipped }) => {
+        let msg = runs.length
           ? `Payroll run created for ${period} (${runs.length} run${runs.length === 1 ? '' : 's'})`
-          : `Payroll already processed for ${period}`)
+          : `All employees already processed for ${period}`
+        if (skipped.length) {
+          msg += runs.length ? '. ' : ' ('
+          msg += `${skipped.length} already paid for this month skipped${runs.length ? '' : ')'}`
+        }
+        setNotice(msg)
         reload()
         setTimeout(() => setNotice(''), 4000)
       })
