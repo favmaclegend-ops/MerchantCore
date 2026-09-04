@@ -16,6 +16,7 @@ import {
   Pin,
   PinOff,
   ArrowRight,
+  Upload,
 } from "lucide-react";
 import {
   extractFirstLetter,
@@ -47,6 +48,7 @@ import { api } from "@/lib/api";
 import { valueFormater } from "../market/market";
 import OrgServiceDisplayModal from "./orgServiceDisplayModal";
 import OrgServiceForm from "./orgServiceForm";
+import { UploadServiceToMarketModal } from "./UploadServiceToMarketModal";
 import DLineChart from "@/components/layout/chart";
 
 type TabId = "overview" | "all" | "active" | "inactive" | "completed";
@@ -87,6 +89,9 @@ export function OrgServices() {
 
   const [renderModal, setRenderModal] = useState(false);
   const [renderService, setRenderService] = useState<
+    (typeof services)[0] | null
+  >(null);
+  const [uploadService, setUploadService] = useState<
     (typeof services)[0] | null
   >(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -614,6 +619,29 @@ export function OrgServices() {
             >
               {service.is_pinned ? <PinOff size={14} /> : <Pin size={14} />}
             </button>
+            {isAdmin && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUploadService(service);
+                }}
+                className="click"
+                title="Upload to market"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(34, 197, 94, 0.12)",
+                  color: "#22c55e",
+                  borderRadius: "2rem",
+                  padding: "0.4rem",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <Upload size={14} />
+              </button>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -1789,6 +1817,13 @@ export function OrgServices() {
 
         {isServiceForm && (
           <OrgServiceForm onClose={() => setServiceForm(false)} />
+        )}
+
+        {uploadService && (
+          <UploadServiceToMarketModal
+            service={uploadService}
+            onClose={() => setUploadService(null)}
+          />
         )}
       </div>
     </>

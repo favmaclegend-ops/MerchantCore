@@ -124,6 +124,7 @@ export function ProductInfoPanel({
         alignItems: bp.sm ? "stretch" : "center",
         justifyContent: bp.sm ? "unset" : "center",
         padding: bp.sm ? 0 : "1.5rem",
+      
       }}
       onClick={onClose}
     >
@@ -278,6 +279,7 @@ export function ProductInfoPanel({
                   display: "flex",
                   alignItems: "center",
                   gap: ".35rem",
+                  
                 }}
               >
                 {images.map((_, i) => (
@@ -315,11 +317,13 @@ export function ProductInfoPanel({
             flex: 1,
             minHeight: 0,
             position: "relative",
+            paddingBottom: '20%'
+             
           }}
         >
           <div>
             <div
-              style={{ display: "flex", alignItems: "center", gap: ".5rem" }}
+              style={{ display: "flex", alignItems: "center", gap: ".5rem",  }}
             >
               <span
                 style={{
@@ -637,7 +641,7 @@ export function ProductInfoPanel({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              position: "absolute",
+              position: bp.sm ? "fixed" : "absolute",
               bottom: 10,
               left: 0,
               width: "100%",

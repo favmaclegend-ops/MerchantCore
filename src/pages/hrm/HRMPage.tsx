@@ -529,7 +529,7 @@ export function HRMPage() {
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%', padding: '0 8px' }}>
+    <div style={{ display: 'flex',  height: '100%', overflowY: 'auto', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%', padding: '0 8px', paddingBottom: '50%' }}>
       <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',  }}>
         {tabBar}
         

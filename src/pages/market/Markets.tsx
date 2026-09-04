@@ -3,6 +3,8 @@ import { marketStore } from "./demoMarketStore";
 import type { MarketStoreProduct } from "./demoMarketStore";
 import { addToMarketCart } from "./cart";
 import { Bilboards } from "./components/Bilboards";
+import { ServicesSection } from "./components/ServicesSection";
+import { ServerSearchResults } from "./components/ServerSearchResults";
 import { MarketLoading } from "./components/MarketLoading";
 import { ProductInfoPanel } from "./components/ProductInfoPanel";
 import { useMarketData } from "./useMarketData";
@@ -662,7 +664,12 @@ export function Markets() {
 
         {bp.lg && <Bilboards hidden={false} />}
 
-        {loading ? (
+        {!query.trim() && <ServicesSection />}
+
+        {query.trim() !== "" ? (
+          <ServerSearchResults query={query} />
+        ) : (
+        loading ? (
           <MarketLoading info="Loading market data..." />
         ) : noResultsAtAll ? (
           <div
@@ -874,7 +881,7 @@ export function Markets() {
               );
             })}
           </div>
-        )}
+        ))}
 
         {!isSearch &&
           chunckStore.getState().start > 0 &&

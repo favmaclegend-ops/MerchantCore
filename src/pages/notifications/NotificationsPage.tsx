@@ -73,7 +73,7 @@ export function NotificationsPage() {
   const readStateFor = (n: OrgNotification) => !!orgUser && n.read_by.includes(orgUser.id)
 
   return (
-    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '1500px', marginInline: 'auto' }}>
+    <div style={{ padding: '12px', display: 'flex',  flexDirection: 'column', gap: '12px', maxWidth: '1500px', marginInline: 'auto', paddingBottom: '30%', }}>
       <div>
         <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Notifications & Alerts</h2>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>

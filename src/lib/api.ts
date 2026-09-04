@@ -1513,6 +1513,27 @@ export const api = {
     },
     getProduct: (productId: string) =>
       anonRequest<Record<string, unknown>>(`/market/products/${productId}`),
+    getServices: (search?: string, page = 1, limit = 60) => {
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (search) params.set("search", search);
+      return anonRequest<{
+        services: Array<Record<string, unknown>>;
+        total: number;
+        page: number;
+        limit: number;
+      }>(`/market/services?${params}`);
+    },
+    getService: (serviceId: string) =>
+      anonRequest<Record<string, unknown>>(`/market/services/${serviceId}`),
+    rateService: (
+      serviceId: string,
+      stars: number,
+      rater: string,
+    ) =>
+      anonRequest<Record<string, unknown>>(`/market/services/${serviceId}/rate`, {
+        method: "PUT",
+        body: JSON.stringify({ stars, rater }),
+      }),
     getAdverts: () =>
       anonRequest<Array<Record<string, unknown>>>("/market/advert"),
     getCategories: () =>
@@ -1545,6 +1566,13 @@ export const api = {
       }),
     deleteProduct: (productId: string) =>
       orgRequest<void>(`/market/products/${productId}`, { method: "DELETE" }),
+    createService: (shopId: string, data: Record<string, unknown>) =>
+      orgRequest<Record<string, unknown>>(`/market/shops/${shopId}/services`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    deleteService: (serviceId: string) =>
+      orgRequest<void>(`/market/services/${serviceId}`, { method: "DELETE" }),
 
     // Buyer (personal user JWT) — place & list own orders
     placeOrders: (groups: Array<Record<string, unknown>>) =>

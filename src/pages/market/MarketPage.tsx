@@ -32,6 +32,8 @@ import type { MarketCheckoutResult, MarketOrderAlert } from "./marketApi";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { MarketOrdersPage } from "./MarketOrdersPage";
 import { MarketScanPage } from "./MarketScanPage";
+import { ServicesPage } from "./ServicesPage";
+import { ServiceDetailPage } from "./ServiceDetailPage";
 import { ChatRoute } from "./chat/ChatRoute";
 import { BottomSheet } from "@/components/BottomSheet";
 import { safeBottomInset } from "@/lib/browser";
@@ -556,6 +558,8 @@ export function MarketPage() {
           <Route path="/chat/:threadId" element={<ChatRoute />} />
           <Route path="/orders" element={<MarketOrdersPage />} />
           <Route path="/orders/scan" element={<MarketScanPage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/services/:id" element={<ServiceDetailPage />} />
           <Route path="/:id/*" element={<ShopPage />} />
         </Routes>
 
