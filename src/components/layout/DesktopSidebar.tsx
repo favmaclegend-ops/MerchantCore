@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus, Wallet, Contact, Clock, Bell, Truck, FileSpreadsheet, UserPlusIcon, ReceiptText, MessageCircle, Building } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus, Wallet, Contact, Clock, Bell, Truck, FileSpreadsheet, UserPlusIcon, ReceiptText, MessageCircle, Building, ClipboardList } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useContext } from 'react'
 import type { ElementType } from 'react'
@@ -20,6 +20,7 @@ const navItems: NavItem[] = [
   { path: '/home/inventory', label: 'Inventory', icon: Package },
   { path: '/home/pos', label: 'POS', icon: ShoppingCart },
   { path: '/home/services', label: 'Services', icon: Building },
+  { path: '/home/service-requests', label: 'Service Requests', icon: ClipboardList },
   { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
   { path: '/home/hrm', label: 'HRM', icon: Contact, permission: 'hrm' },
   { path: '/home/supply', label: 'Supply Chain', icon: Truck, permission: 'supply' },

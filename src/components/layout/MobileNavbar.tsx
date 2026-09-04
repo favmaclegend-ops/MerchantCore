@@ -1,7 +1,7 @@
 import { useState, useContext, useRef, useLayoutEffect, useEffect } from 'react'
 import type { ElementType } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle, Building } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle, Building, ClipboardList } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
@@ -31,6 +31,7 @@ const moreItems: MoreItem[] = [
   { path: '/home/credit', label: 'Credit', icon: Wallet },
   { path: '/home/market/orders', label: 'Orders', icon: ReceiptText },
   { path: '/home/market/chat', label: 'Chat', icon: MessageCircle },
+  { path: '/home/service-requests', label: 'Svc Requests', icon: ClipboardList },
   { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
   { path: '/home/hrm', label: 'HRM', icon: Contact, permission: 'hrm' },
   { path: '/home/supply', label: 'Supply Chain', icon: Truck, permission: 'supply' },

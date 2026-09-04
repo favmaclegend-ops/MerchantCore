@@ -24,7 +24,8 @@ const pageConfig: Record<string, { title: string; subtitle?: string }> = {
   '/home/hrm': { title: 'HRM' },
   '/home/finance': { title: 'Finance' },
   '/home/market': { title: 'Market' },
-  '/home/services': {title: 'Services'}
+  '/home/services': {title: 'Services'},
+  '/home/service-requests': {title: 'Service Requests'}
 }
 
 export function MobileHeader() {

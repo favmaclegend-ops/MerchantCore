@@ -333,7 +333,7 @@ export function UploadServiceToMarketModal({
               </div>
 
               <label style={labelStyle}>
-                Image (URL) *
+                Image (URL){!image && " *"}
                 <input
                   placeholder="https://..."
                   value={image}

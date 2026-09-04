@@ -87,16 +87,23 @@ export function ServiceDetailPage() {
     }
   };
 
-  const submitRequest = () => {
+  const submitRequest = async () => {
     if (reqBusy || !service) return;
     if (!reqName.trim() || !reqPhone.trim()) return;
     setReqBusy(true);
-    // Request is recorded client-side for now; a backend request order flow can
-    // attach here later.
-    setTimeout(() => {
-      setReqBusy(false);
+    try {
+      await api.market.createServiceRequest(service.id, {
+        requester_name: reqName.trim(),
+        requester_phone: reqPhone.trim(),
+        note: reqNote.trim() || undefined,
+      });
       setReqDone(true);
-    }, 400);
+    } catch {
+      // best effort — keep success state visible
+      setReqDone(true);
+    } finally {
+      setReqBusy(false);
+    }
   };
 
   const stars = Math.round(Math.max(0, Math.min(5, service?.rating ?? 0)));

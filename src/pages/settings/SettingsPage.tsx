@@ -14,7 +14,7 @@ export function SettingsPage() {
   const [showUpload, setShowUpload] = useState(false)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', padding: '0 8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', padding: '0 8px', paddingBottom: '30%' }}>
       
 
       <div style={{ width: '100%', marginBlockStart: '12px', maxWidth: '600px', background: 'var(--bg-surface)', borderRadius: '16px', border: '1px solid var(--border-default)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>

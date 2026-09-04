@@ -26,7 +26,8 @@ const pageConfig: Record<string, { title: string; search?: string }> = {
   '/home/hrm': { title: 'HRM' },
   '/home/finance': { title: 'Finance' },
   '/home/spreadsheet': { title: 'SpreadSheet' },
-  '/home/services': {title: 'Services'}
+  '/home/services': {title: 'Services'},
+  '/home/service-requests': {title: 'Service Requests'}
 }
 
 export function DesktopHeader() {

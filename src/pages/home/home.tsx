@@ -29,6 +29,7 @@ const NotificationsPage = lazy(() => import('@/pages/notifications/Notifications
 const ExternalSheet = lazy(() => import('@/pages/spreadsheet/external/ExternalSheet').then(m => ({default: m.ExternalSheet})))
 const MarketPage = lazy(() => import('@/pages/market/MarketPage').then(m => ({default: m.MarketPage})))
 const ServicePage = lazy(() => import("@/pages/org_services/OrgServicePage").then(m => ({default: m.OrgServices})))
+const ServiceRequestsPage = lazy(() => import("@/pages/service_requests/ServiceRequestsPage").then(m => ({default: m.ServiceRequestsPage})))
 
 export default function Home() {
     const location = useLocation();
@@ -99,6 +100,7 @@ export default function Home() {
                                 <Route path="/users" element={canManageUsers(orgUser) ? <Users /> : <Navigate to="/dashboard" replace />} />
                                 <Route path='/market/*' element={<MarketPage />}/>
                                 <Route path='/services' element={orgUser ? <ServicePage /> : <Navigate  to={"/dashboard"} replace/>} />
+                                <Route path='/service-requests' element={orgUser ? <ServiceRequestsPage /> : <Navigate to="/dashboard" replace />} />
                             </Routes>
                         </Suspense>
                     </div>

@@ -17,6 +17,8 @@ import {
   PinOff,
   ArrowRight,
   Upload,
+  Store,
+  Loader2,
 } from "lucide-react";
 import {
   extractFirstLetter,
@@ -46,6 +48,7 @@ import { isOrgAdmin } from "@/lib/orgAccess";
 import { api } from "@/lib/api";
 
 import { valueFormater } from "../market/market";
+import { marketServicesStore, fetchMarketServices } from "../market/servicesStore";
 import OrgServiceDisplayModal from "./orgServiceDisplayModal";
 import OrgServiceForm from "./orgServiceForm";
 import { UploadServiceToMarketModal } from "./UploadServiceToMarketModal";
@@ -94,6 +97,7 @@ export function OrgServices() {
   const [uploadService, setUploadService] = useState<
     (typeof services)[0] | null
   >(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [customBuyer, setCustomBuyer] = useState("");
@@ -106,6 +110,7 @@ export function OrgServices() {
   useEffect(() => {
     fetchOrgServices();
     fetchServiceOrders();
+    fetchMarketServices();
   }, []);
 
   useEffect(() => {
@@ -236,6 +241,30 @@ export function OrgServices() {
   const handleDeleteOrder = useCallback(async (id: string) => {
     await deleteServiceOrder(id);
   }, []);
+
+  const marketItems = useStore(marketServicesStore).items;
+
+  const getMarketListing = useCallback(
+    (serviceId: string) =>
+      marketItems.find((ms) => ms.source_id === serviceId) || null,
+    [marketItems],
+  );
+
+  const handleRemoveFromMarket = useCallback(
+    async (e: React.MouseEvent, marketServiceId: string) => {
+      e.stopPropagation();
+      setRemovingId(marketServiceId);
+      try {
+        await api.market.deleteService(marketServiceId);
+        await fetchMarketServices();
+      } catch {
+        // best effort
+      } finally {
+        setRemovingId(null);
+      }
+    },
+    [],
+  );
 
   // Swipe-to-reveal: opening one row closes the others.
   const onSwipeStart = useCallback(
@@ -458,6 +487,32 @@ export function OrgServices() {
           </span>
         )}
 
+        {getMarketListing(service.service_id) && (
+          <span
+            style={{
+              position: "absolute",
+              top: "0.55rem",
+              left: service.is_pinned ? "4.4rem" : "0.55rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.25rem",
+              padding: "0.2rem 0.5rem",
+              borderRadius: "2rem",
+              fontSize: "clamp(0.5rem, 1.1vw, 0.6rem)",
+              fontWeight: 700,
+              letterSpacing: "0.03em",
+              textTransform: "uppercase",
+              background: "rgba(59, 130, 246, 0.2)",
+              color: "#60a5fa",
+              border: "1px solid rgba(59, 130, 246, 0.35)",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <Store size={8} />
+            On Market
+          </span>
+        )}
+
         <span
           style={{
             position: "absolute",
@@ -619,29 +674,62 @@ export function OrgServices() {
             >
               {service.is_pinned ? <PinOff size={14} /> : <Pin size={14} />}
             </button>
-            {isAdmin && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setUploadService(service);
-                }}
-                className="click"
-                title="Upload to market"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(34, 197, 94, 0.12)",
-                  color: "#22c55e",
-                  borderRadius: "2rem",
-                  padding: "0.4rem",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                <Upload size={14} />
-              </button>
-            )}
+            {isAdmin &&
+              (() => {
+                const listing = getMarketListing(service.service_id);
+                if (listing) {
+                  return (
+                    <button
+                      onClick={(e) =>
+                        handleRemoveFromMarket(e, listing.id)
+                      }
+                      className="click"
+                      title="Remove from market"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(59, 130, 246, 0.12)",
+                        color: "#60a5fa",
+                        borderRadius: "2rem",
+                        padding: "0.4rem",
+                        border: "none",
+                        cursor: "pointer",
+                        opacity: removingId === listing.id ? 0.5 : 1,
+                      }}
+                    >
+                      {removingId === listing.id ? (
+                        <Loader2 size={14} className="spin" />
+                      ) : (
+                        <Store size={14} />
+                      )}
+                    </button>
+                  );
+                }
+                return (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setUploadService(service);
+                    }}
+                    className="click"
+                    title="Upload to market"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(34, 197, 94, 0.12)",
+                      color: "#22c55e",
+                      borderRadius: "2rem",
+                      padding: "0.4rem",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Upload size={14} />
+                  </button>
+                );
+              })()}
             <button
               onClick={(e) => {
                 e.stopPropagation();

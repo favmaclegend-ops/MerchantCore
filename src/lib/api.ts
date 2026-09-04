@@ -1624,6 +1624,37 @@ export const api = {
       orgRequest<Record<string, unknown>>(`/market/orders/org/${orderId}`, {
         method: "DELETE",
       }),
+
+    // Service requests
+    createServiceRequest: (
+      serviceId: string,
+      data: { requester_name: string; requester_phone: string; note?: string },
+    ) =>
+      request<Record<string, unknown>>(
+        `/market/services/${serviceId}/requests`,
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+        },
+      ),
+    getOrgServiceRequests: (status?: string) => {
+      const q = status ? `?status=${encodeURIComponent(status)}` : "";
+      return orgRequest<{
+        requests: Array<Record<string, unknown>>;
+        total: number;
+      }>(`/market/services/requests/org${q}`);
+    },
+    respondToServiceRequest: (
+      requestId: string,
+      data: { response: string; status?: string },
+    ) =>
+      orgRequest<Record<string, unknown>>(
+        `/market/services/requests/${requestId}/respond`,
+        {
+          method: "PUT",
+          body: JSON.stringify(data),
+        },
+      ),
   },
 
   service: {
