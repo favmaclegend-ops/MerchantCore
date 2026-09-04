@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { safeBottomInset } from "@/lib/browser";
 
 const CLOSE_THRESHOLD = 120;
 
@@ -24,7 +25,7 @@ export function BottomSheet({
   children,
   zIndex = 999,
   maxHeight = "85vh",
-  bottom = "0px",
+  bottom = safeBottomInset(0),
 }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ dragging: false, startY: 0, dy: 0 });

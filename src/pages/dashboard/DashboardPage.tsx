@@ -239,7 +239,7 @@ export function DashboardPage() {
   const ellipsis: React.CSSProperties = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, minWidth: 0 }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: sectionGap, width: '100%', padding: '0 8px', paddingBlockEnd: '2rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%',  overflowY: 'auto', alignItems: 'center', gap: sectionGap, width: '100%', padding: '0 8px',  paddingBottom: '50%', }}>
 
       {/* Welcome banner */}
       <div style={{ width: '100%', padding: mobile ? '12px' : '16px', borderRadius: '14px', background: '#0f172a' }}>

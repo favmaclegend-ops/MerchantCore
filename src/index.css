@@ -65,6 +65,7 @@
   --bg-info: #f8fafc;
   --bg-highlighted: #b6e2ffc2;
   --bg-scroll-thumb: #01070a3a;
+  --focus-elv-cl: #ece9e9;
   
   --text-primary: #0f172a;
   --text-secondary: #475569;
@@ -110,7 +111,7 @@
   --bg-highlighted: #40444749;
   --bg-scroll-thumb: #00a2ff2f;
   --text-message: white;
-
+  --focus-elv-cl: #0d0e0e;
   --text-primary: #f5f7fb;
   --text-secondary: #e7eef8;
   --text-muted: #a7b5ca;
@@ -172,6 +173,20 @@ body,
   overscroll-behavior: none;
   
   
+}
+
+.ellipsis_text {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.5;
+  font-size: .9rem;
+
+}
+
+.active-border-animation {
+  border: 1px solid var(--border-input);
 }
 
 
@@ -280,7 +295,15 @@ body {
   border-color: var(--border-default) !important;
 }
 
+.focus_elevation {
+  box-shadow: 0px 0px 0px var(--focus-elv-cl);
+  transition: box-shadow .4s ease;
+}
 
+.focus_elevation:focus {
+  box-shadow: 0px 12px 4px var(--focus-elv-cl);
+
+}
 
 .fortune-col-header * {
   color: white !important;

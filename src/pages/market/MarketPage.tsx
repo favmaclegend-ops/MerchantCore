@@ -34,6 +34,7 @@ import { MarketOrdersPage } from "./MarketOrdersPage";
 import { MarketScanPage } from "./MarketScanPage";
 import { ChatRoute } from "./chat/ChatRoute";
 import { BottomSheet } from "@/components/BottomSheet";
+import { safeBottomInset } from "@/lib/browser";
 
 interface CartPanelProps {
   cart: MarketCartItem[];
@@ -595,7 +596,7 @@ export function MarketPage() {
             onClose={() => setIsCartOpen(false)}
             zIndex={950}
             maxHeight="85vh"
-            bottom="calc(16px + var(--safe-bottom))"
+            bottom={safeBottomInset(16)}
           >
             <div
               style={{

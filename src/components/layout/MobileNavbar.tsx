@@ -1,24 +1,34 @@
 import { useState, useContext, useRef, useLayoutEffect, useEffect } from 'react'
 import type { ElementType } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle, Building } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
 import { preloadRoute } from '@/lib/routePreload'
+import { safeBottomInset } from '@/lib/browser'
+
+// Extra raise above the safe-area inset for the floating bottom nav on browsers
+// that are NOT iOS Safari. iOS Safari reports the real safe-area inset, while
+// other browsers typically resolve it to 0 — so we lift the nav by a fixed
+// amount so the home-indicator / system UI never overlaps it. See `lib/browser`.
+const SAFE_BOTTOM_EXTRA = 16
+const NAV_SAFE_BOTTOM = safeBottomInset(SAFE_BOTTOM_EXTRA)
 
 const primaryItems = [
   { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
   { path: '/home/market', label: 'Market', icon: ShoppingCart },
   { path: '/home/inventory', label: 'Stock', icon: Package },
   { path: '/home/pos', label: 'POS', icon: CreditCard },
-  { path: '/home/credit', label: 'Credit', icon: Wallet },
+  { path: '/home/services', label: 'Services', icon: Building },
+
 ]
 
 type MoreItem = { path: string; label: string; icon: ElementType; permission?: OrgPermissions; orgMemberOnly?: boolean }
 
 const moreItems: MoreItem[] = [
   { path: '/home/customers', label: 'Customers', icon: Users },
+  { path: '/home/credit', label: 'Credit', icon: Wallet },
   { path: '/home/market/orders', label: 'Orders', icon: ReceiptText },
   { path: '/home/market/chat', label: 'Chat', icon: MessageCircle },
   { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
@@ -269,7 +279,7 @@ export function MobileNavbar() {
             position: 'fixed',
             left: '12px',
             right: '12px',
-            bottom: 'calc(var(--safe-bottom))',
+            bottom: NAV_SAFE_BOTTOM,
             background: 'var(--bg-surface)',
             borderRadius: '20px',
             boxShadow: '0 16px 48px rgba(0,0,0,0.15), 0 0 0 1px var(--border-default)',
@@ -326,7 +336,7 @@ export function MobileNavbar() {
         className="mobile-navbar"
         style={{
           position: 'fixed',
-          bottom: 'var(--safe-bottom)',
+          bottom: NAV_SAFE_BOTTOM,
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',

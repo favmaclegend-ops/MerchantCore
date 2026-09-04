@@ -25,9 +25,10 @@ const SupplyChainPage = lazy(() => import('@/pages/supply/SupplyChainPage').then
 const Users = lazy(() => import('@/pages/users/UsersPage').then(m => ({ default: m.Users })))
 const AttendancePage = lazy(() => import('@/pages/attendance/AttendancePage').then(m => ({ default: m.AttendancePage })))
 const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })))
-//LAGACY: const SpreadSheet = lazy(() => import('@/pages/spreadsheet/SpreadSheetPage').then(m => ({default: m.SpreadSheetPage})))
+// LEGACY: const SpreadSheet = lazy(() => import('@/pages/spreadsheet/SpreadSheetPage').then(m => ({default: m.SpreadSheetPage})))
 const ExternalSheet = lazy(() => import('@/pages/spreadsheet/external/ExternalSheet').then(m => ({default: m.ExternalSheet})))
 const MarketPage = lazy(() => import('@/pages/market/MarketPage').then(m => ({default: m.MarketPage})))
+const ServicePage = lazy(() => import("@/pages/org_services/OrgServicePage").then(m => ({default: m.OrgServices})))
 
 export default function Home() {
     const location = useLocation();
@@ -79,7 +80,7 @@ export default function Home() {
                     {!hideFrame && <DesktopHeader />}
                     {!hideFrame && <MobileHeader />}
 
-                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg-page)', paddingBottom: (hideNav || (location.pathname === '/home/pos' && (bp.lg || bp.md))) ? '0' : '5.5rem' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg-page)', paddingBottom: (hideNav || (location.pathname === '/home/pos' && (bp.lg || bp.md))) ? '0' : '0' }}>
                         <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-placeholder)', fontSize: '14px' }}>Loading...</div>}>
                             <Routes>
                                 <Route path="/dashboard" element={<DashboardPage />} />
@@ -97,6 +98,7 @@ export default function Home() {
                                 <Route path="/spreadsheet" element={<ExternalSheet />} />
                                 <Route path="/users" element={canManageUsers(orgUser) ? <Users /> : <Navigate to="/dashboard" replace />} />
                                 <Route path='/market/*' element={<MarketPage />}/>
+                                <Route path='/services' element={orgUser ? <ServicePage /> : <Navigate  to={"/dashboard"} replace/>} />
                             </Routes>
                         </Suspense>
                     </div>

@@ -14,6 +14,7 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { api } from "@/lib/api";
 import { refreshDashboardCache, refreshOrgDashboardCache } from "@/lib/dashboardCache";
+import { safeBottomInset } from "@/lib/browser";
 import { Authcontext } from "@/context";
 import Alert from "@/components/alert/alert";
 import { CurrencyContext } from "@/context/currency_context";
@@ -1013,7 +1014,7 @@ export function POSPage() {
           onClose={() => setCartView(false)}
           zIndex={999}
           maxHeight="85vh"
-          bottom="calc(6px + var(--safe-bottom))"
+          bottom={safeBottomInset(6)}
         >
           <div style={{ padding: "4px 12px 12px" }}>{cartContent}</div>
         </BottomSheet>
