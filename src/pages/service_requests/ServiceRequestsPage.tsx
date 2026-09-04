@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Phone, MessageSquare, CheckCircle, XCircle, Send } from "lucide-react";
+import { Phone, MessageSquare, CheckCircle, XCircle, Send, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface ServiceRequest {
@@ -11,6 +11,8 @@ interface ServiceRequest {
   shop_name: string | null;
   requester_name: string;
   requester_phone: string;
+  requester_email: string | null;
+  requester_address: string | null;
   note: string | null;
   status: string;
   response: string | null;
@@ -100,6 +102,20 @@ export function ServiceRequestsPage() {
         response: "Request cancelled",
         status: "cancelled",
       });
+      refresh();
+    } catch {
+      // keep state
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deleteRequest = async (requestId: string) => {
+    if (busy) return;
+    if (!window.confirm("Delete this completed service request?")) return;
+    setBusy(true);
+    try {
+      await api.market.deleteServiceRequest(requestId);
       refresh();
     } catch {
       // keep state
@@ -231,6 +247,12 @@ export function ServiceRequestsPage() {
                       {req.requester_phone}
                     </a>
                   </div>
+                  {(req.requester_email || req.requester_address) && (
+                    <div style={{ fontSize: ".8rem", color: "var(--text-secondary)", display: "flex", flexDirection: "column", gap: ".15rem" }}>
+                      {req.requester_email && <span>Email: {req.requester_email}</span>}
+                      {req.requester_address && <span>Address: {req.requester_address}</span>}
+                    </div>
+                  )}
                   {req.note && (
                     <p style={{ margin: 0, fontSize: ".82rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
                       {req.note}
@@ -397,6 +419,41 @@ export function ServiceRequestsPage() {
                         </button>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Completed requests: delete */}
+                {req.status === "completed" && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      gap: ".5rem",
+                      padding: ".6rem 1rem",
+                      borderTop: "1px solid var(--border-default)",
+                    }}
+                  >
+                    <button
+                      onClick={() => deleteRequest(req.id)}
+                      disabled={busy}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: ".3rem",
+                        padding: ".35rem .75rem",
+                        borderRadius: ".5rem",
+                        border: "1px solid var(--border-default)",
+                        background: "var(--bg-surface)",
+                        fontSize: ".78rem",
+                        fontWeight: 600,
+                        cursor: busy ? "not-allowed" : "pointer",
+                        opacity: busy ? 0.5 : 1,
+                        color: "var(--text-danger, #dc2626)",
+                      }}
+                    >
+                      <Trash2 size={13} />
+                      Delete
+                    </button>
                   </div>
                 )}
               </div>

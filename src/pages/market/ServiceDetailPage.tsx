@@ -5,8 +5,10 @@ import { api } from "@/lib/api";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { Authcontext } from "@/context";
 import { getOrgSession } from "@/data/organisations";
-import { valueFormater } from "./market";
+import { valueFormater, marketBasePath } from "./market";
 import { useShopOwner } from "./useShopOwner";
+import { getOrCreateKeypair } from "./chat/chatCrypto";
+import { registerChatKey } from "./chat/chatApi";
 import {
   getServiceUserRating,
   setServiceUserRating,
@@ -27,6 +29,8 @@ export function ServiceDetailPage() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [reqName, setReqName] = useState("");
   const [reqPhone, setReqPhone] = useState("");
+  const [reqEmail, setReqEmail] = useState("");
+  const [reqAddress, setReqAddress] = useState("");
   const [reqNote, setReqNote] = useState("");
   const [reqBusy, setReqBusy] = useState(false);
   const [reqDone, setReqDone] = useState(false);
@@ -92,11 +96,30 @@ export function ServiceDetailPage() {
     if (!reqName.trim() || !reqPhone.trim()) return;
     setReqBusy(true);
     try {
-      await api.market.createServiceRequest(service.id, {
+      const payload: {
+        requester_name: string;
+        requester_phone: string;
+        requester_email?: string;
+        requester_address?: string;
+        user_id?: string;
+        note?: string;
+      } = {
         requester_name: reqName.trim(),
         requester_phone: reqPhone.trim(),
         note: reqNote.trim() || undefined,
-      });
+      };
+      if (reqEmail.trim()) payload.requester_email = reqEmail.trim();
+      if (reqAddress.trim()) payload.requester_address = reqAddress.trim();
+      if (user?.id) {
+        payload.user_id = user.id;
+        try {
+          const { publicKeyPem } = await getOrCreateKeypair();
+          await registerChatKey(publicKeyPem);
+        } catch {
+          // registration is best-effort — the request still goes through
+        }
+      }
+      await api.market.createServiceRequest(service.id, payload);
       setReqDone(true);
     } catch {
       // best effort — keep success state visible
@@ -109,15 +132,15 @@ export function ServiceDetailPage() {
   const stars = Math.round(Math.max(0, Math.min(5, service?.rating ?? 0)));
 
   return (
-    <div
-      style={{
-        width: "100%",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--bg-primary)",
-      }}
-    >
+      <div
+        style={{
+          width: "100%",
+          minHeight: "100dvh",
+          display: "flex",
+          flexDirection: "column",
+          background: "var(--bg-primary)",
+        }}
+      >
       <div
         style={{
           position: "sticky",
@@ -298,7 +321,7 @@ export function ServiceDetailPage() {
 
               {service.shop_name && (
                 <Link
-                  to={`/market/${service.shop_id}`}
+                  to={`${marketBasePath()}/${service.shop_id}`}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -479,6 +502,25 @@ export function ServiceDetailPage() {
                             value={reqPhone}
                             onChange={(e) => setReqPhone(e.target.value)}
                             placeholder="Contact number"
+                            style={f}
+                          />
+                        </label>
+                        <label style={labelStyle}>
+                          Email
+                          <input
+                            type="email"
+                            value={reqEmail}
+                            onChange={(e) => setReqEmail(e.target.value)}
+                            placeholder="you@example.com (optional)"
+                            style={f}
+                          />
+                        </label>
+                        <label style={labelStyle}>
+                          Address
+                          <input
+                            value={reqAddress}
+                            onChange={(e) => setReqAddress(e.target.value)}
+                            placeholder="Delivery/service address (optional)"
                             style={f}
                           />
                         </label>

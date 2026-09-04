@@ -1625,10 +1625,17 @@ export const api = {
         method: "DELETE",
       }),
 
-    // Service requests
+        // Service requests
     createServiceRequest: (
       serviceId: string,
-      data: { requester_name: string; requester_phone: string; note?: string },
+      data: {
+        requester_name: string;
+        requester_phone: string;
+        requester_email?: string;
+        requester_address?: string;
+        user_id?: string;
+        note?: string;
+      },
     ) =>
       request<Record<string, unknown>>(
         `/market/services/${serviceId}/requests`,
@@ -1640,6 +1647,8 @@ export const api = {
     getOrgServiceRequests: (status?: string) => {
       const q = status ? `?status=${encodeURIComponent(status)}` : "";
       return orgRequest<{
+
+
         requests: Array<Record<string, unknown>>;
         total: number;
       }>(`/market/services/requests/org${q}`);
@@ -1655,6 +1664,29 @@ export const api = {
           body: JSON.stringify(data),
         },
       ),
+    deleteServiceRequest: (requestId: string) =>
+      orgRequest<Record<string, unknown>>(
+        `/market/services/requests/${requestId}`,
+        { method: "DELETE" },
+      ),
+
+    // Customer inbox (personal user JWT)
+    getInbox: () =>
+      request<{ messages: Array<Record<string, unknown>> }>("/market/inbox"),
+    getInboxUnread: () =>
+      request<{ unread: number }>("/market/inbox/unread"),
+    markInboxRead: (messageId: string) =>
+      request<Record<string, unknown>>(`/market/inbox/${messageId}/read`, {
+        method: "PUT",
+      }),
+    deleteInboxMessage: (messageId: string) =>
+      request<Record<string, unknown>>(`/market/inbox/${messageId}`, {
+        method: "DELETE",
+      }),
+    clearInbox: () =>
+      request<{ deleted: boolean; count: number }>("/market/inbox", {
+        method: "DELETE",
+      }),
   },
 
   service: {

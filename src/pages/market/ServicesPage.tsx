@@ -5,6 +5,7 @@ import { ArrowLeft, Sparkles, Ban } from "lucide-react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { MarketServiceCard } from "./components/MarketServiceCard";
 import { fetchMarketServices, marketServicesStore } from "./servicesStore";
+import { marketBasePath } from "./market";
 
 export function ServicesPage() {
   const bp = useBreakpoint();
@@ -16,15 +17,15 @@ export function ServicesPage() {
   }, []);
 
   return (
-    <div
-      style={{
-        width: "100%",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--bg-primary)",
-      }}
-    >
+      <div
+        style={{
+          width: "100%",
+          minHeight: "100dvh",
+          display: "flex",
+          flexDirection: "column",
+          background: "var(--bg-primary)",
+        }}
+      >
       <div
         style={{
           position: "sticky",
@@ -126,7 +127,7 @@ export function ServicesPage() {
               <div key={service.id} style={{ justifyContent: "center", display: "flex" }}>
                 <MarketServiceCard
                   service={service}
-                  onClick={() => navigate(`/market/services/${service.id}`)}
+                  onClick={() => navigate(`${marketBasePath()}/services/${service.id}`)}
                 />
               </div>
             ))}

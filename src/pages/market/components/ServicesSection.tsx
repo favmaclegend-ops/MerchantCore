@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Sparkles, ChevronRight } from "lucide-react";
 import { MarketServiceCard } from "./MarketServiceCard";
 import { fetchMarketServices, marketServicesStore } from "../servicesStore";
+import { marketBasePath } from "../market";
 
 export const SERVICES_PANEL_MAX = 6;
 
@@ -56,7 +57,7 @@ export function ServicesSection() {
         {total > SERVICES_PANEL_MAX && (
           <button
             className="click"
-            onClick={() => navigate("/market/services")}
+            onClick={() => navigate(`${marketBasePath()}/services`)}
             style={{
               display: "flex",
               alignItems: "center",
@@ -99,14 +100,14 @@ export function ServicesSection() {
           >
             <MarketServiceCard
               service={service}
-              onClick={() => navigate(`/market/services/${service.id}`)}
+              onClick={() => navigate(`${marketBasePath()}/services/${service.id}`)}
             />
           </div>
         ))}
         {total > SERVICES_PANEL_MAX && (
           <button
             className="click"
-            onClick={() => navigate("/market/services")}
+            onClick={() => navigate(`${marketBasePath()}/services`)}
             style={{
               display: "flex",
               flexDirection: "column",

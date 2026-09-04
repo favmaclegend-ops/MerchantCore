@@ -1,5 +1,5 @@
 import { Suspense, lazy, useContext } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { LogIn, LogOut, ShoppingCart } from "lucide-react";
 import { Authcontext } from "@/context";
 
@@ -9,15 +9,13 @@ const MarketPage = lazy(() =>
 
 export default function PublicMarketLayout() {
   const { user, orgUser, orgName, logout } = useContext(Authcontext);
-  const { pathname } = useLocation();
   const authenticated = Boolean(user || orgUser);
   const displayName =
     orgUser?.name || user?.full_name || user?.username || "Account";
-  // Service detail/section pages are full-screen views with their own back
-  // header — keep them clean. The market header (with login) only shows for
-  // guests there so they can still sign in while browsing.
-  const isServiceRoute = /\/market\/services(\/|$)/.test(pathname);
-  const showHeader = authenticated ? !isServiceRoute : true;
+  // The market header (brand + login/logout) is intended for guest browsing
+  // only — it only shows when the user is NOT logged in, so signed-in users get
+  // the clean full-screen market without the login bar.
+  const showHeader = !authenticated;
 
   return (
     <div

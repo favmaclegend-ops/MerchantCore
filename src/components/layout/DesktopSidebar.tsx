@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus, Wallet, Contact, Clock, Bell, Truck, FileSpreadsheet, UserPlusIcon, ReceiptText, MessageCircle, Building, ClipboardList } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Users, Calculator, Settings, HelpCircle, Plus, Wallet, Contact, Clock, Bell, Truck, FileSpreadsheet, UserPlusIcon, ReceiptText, MessageCircle, Building, ClipboardList, Inbox } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useContext } from 'react'
 import type { ElementType } from 'react'
@@ -13,14 +13,15 @@ type NavItem = {
   icon: ElementType
   permission?: OrgPermissions
   orgMemberOnly?: boolean
+  personalOnly?: boolean
 }
 
 const navItems: NavItem[] = [
   { path: '/home/dashboard', label: 'Dashboard', icon: LayoutGrid },
   { path: '/home/inventory', label: 'Inventory', icon: Package },
   { path: '/home/pos', label: 'POS', icon: ShoppingCart },
-  { path: '/home/services', label: 'Services', icon: Building },
-  { path: '/home/service-requests', label: 'Service Requests', icon: ClipboardList },
+  { path: '/home/services', label: 'Services', icon: Building, orgMemberOnly: true },
+  { path: '/home/service-requests', label: 'Service Requests', icon: ClipboardList, orgMemberOnly: true },
   { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
   { path: '/home/hrm', label: 'HRM', icon: Contact, permission: 'hrm' },
   { path: '/home/supply', label: 'Supply Chain', icon: Truck, permission: 'supply' },
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
   { path: '/home/notifications', label: 'Notifications', icon: Bell, orgMemberOnly: true },
   { path: '/home/customers', label: 'Customers', icon: Users },
   { path: '/home/credit', label: 'Credit Ledger', icon: CreditCard },
+  { path: '/home/inbox', label: 'Inbox', icon: Inbox, personalOnly: true },
   { path: '/home/calculator', label: 'Calculator', icon: Calculator },
 ]
 
@@ -40,14 +42,16 @@ export function DesktopSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const bp = useBreakpoint()
-  const { orgUser } = useContext(Authcontext)
+  const { user, orgUser } = useContext(Authcontext)
 
   const visibleItems = navItems.filter(item =>
     item.permission
       ? canAccess(orgUser, item.permission)
       : item.orgMemberOnly
         ? !!orgUser
-        : true,
+        : item.personalOnly
+          ? !!user
+          : true,
   )
 
   if (!bp.lg) return null

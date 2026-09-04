@@ -8,6 +8,7 @@ import { adaptProduct } from "../marketApi";
 import type { MarketStoreProduct } from "../demoMarketStore";
 import type { MarketService } from "../servicesStore";
 import { MarketServiceCard } from "./MarketServiceCard";
+import { marketBasePath } from "../market";
 
 interface SearchState {
   products: MarketStoreProduct[];
@@ -162,7 +163,7 @@ export function ServerSearchResults({ query }: { query: string }) {
                   >
                     <MarketServiceCard
                       service={s}
-                      onClick={() => navigate(`/market/services/${s.id}`)}
+                      onClick={() => navigate(`${marketBasePath()}/services/${s.id}`)}
                     />
                   </div>
                 ))}

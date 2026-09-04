@@ -1,7 +1,7 @@
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { Markets } from "./Markets";
-import { valueFormater } from "./market";
+import { valueFormater, marketBasePath } from "./market";
 import {
   CheckCircle,
   CreditCard,
@@ -916,10 +916,6 @@ function ShopAlert({ alert }: { alert: MarketOrderAlert }) {
       </span>
     </div>
   );
-}
-
-function marketBasePath(): string {
-  return window.location.pathname.startsWith("/market") ? "/market" : "/home/market";
 }
 
 function OrdersLink() {
