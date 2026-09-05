@@ -490,6 +490,9 @@ export const api = {
     request<any>(`/notifications/${id}/read`, { method: "PATCH" }),
   markAllNotificationsRead: () =>
     request<any>("/notifications/read-all", { method: "PATCH" }),
+  deleteNotification: (id: string) =>
+    request<any>(`/notifications/${id}`, { method: "DELETE" }),
+  clearTransactions: () => request<any>("/transactions", { method: "DELETE" }),
 
   // Organisation (business workspace) — backed by the real org API. Every call
   // authenticates with the member JWT stored in the org session and is scoped to

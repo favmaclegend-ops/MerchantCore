@@ -84,7 +84,7 @@
   --border-success: #bbf7d0;
   --border-warning: #fde68a;
   --border-danger: #fecaca;
-
+  --hover-bx-sh: #d4e2e7;
   --shadow-card: 1px 6px 3px rgba(128,128,128,0.287);
   --shadow-menu: 0 10px 25px rgba(0,0,0,0.1);
   --default-spreadsheet-bg: white;
@@ -122,7 +122,7 @@
   --text-warning: #fbbf24;
   --text-danger: #fca5a5;
   --text-info: #60a5fa;
-
+  --hover-bx-sh: #0f0f0f;
   --border-default: #3d4e6b;
   --border-input: #4b5c77;
   --border-success: #065f46;

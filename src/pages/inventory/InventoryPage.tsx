@@ -15,6 +15,7 @@ import {
 } from '@/pages/market/marketUpload'
 import { syncUserMarketData } from '@/pages/market/marketApi'
 import { Link } from 'react-router-dom'
+import { useConfirm } from '@/components/confirm/confirm'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', height: '40px', padding: '0 12px', border: '1px solid var(--border-input)',
@@ -229,6 +230,7 @@ export function InventoryPage() {
   const bp = useBreakpoint()
   const { format, currency } = useContext(CurrencyContext)
   const { orgUser } = useContext(Authcontext)
+  const { confirm } = useConfirm()
   const productsApi = orgUser ? api.org : api
   // Only the head of the Supply Chain department and the Super Admin may add/edit/delete
   // products in an organisation workspace. Normal (personal) logins keep full control.
@@ -325,7 +327,7 @@ export function InventoryPage() {
   }
 
   const handleRemoveFromMarket = async (product: Product) => {
-    if (!window.confirm(`Remove "${product.name}" from the market? It stays in your inventory.`)) return
+    if (!await confirm({ title: `Remove "${product.name}" from the market? It stays in your inventory.` })) return
     if (await removeProductFromMarket(ownerKey, product.id)) {
       syncUserMarketData()
       await refreshUploaded()
@@ -335,7 +337,7 @@ export function InventoryPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this product?')) return
+    if (!await confirm({ title: 'Delete this product?' })) return
     await productsApi.deleteProduct(id)
     loadItems()
   }

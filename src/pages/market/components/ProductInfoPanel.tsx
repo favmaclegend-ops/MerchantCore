@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -28,7 +29,7 @@ import { addToMarketCart } from "../cart";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { GracefulImage } from "@/components/GracefulImage";
-import { Gap } from "elk-components";
+import { marketUiStore } from "../marketUiStore";
 
 export function ProductInfoPanel({
   product,
@@ -96,6 +97,14 @@ export function ProductInfoPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // Hide the app's floating bottom navigation and the market page header while
+  // the panel is open so the product takes a clean full screen. Restore on
+  // unmount.
+  useEffect(() => {
+    marketUiStore.setState({ navHidden: true, headerHidden: true });
+    return () => marketUiStore.setState({ navHidden: false, headerHidden: false });
+  }, []);
+
   const handleShopClick = () => {
     if (!shop) return;
     onClose();
@@ -112,19 +121,18 @@ export function ProductInfoPanel({
     setTimeout(() => setAdded(false), 2000);
   };
 
-  return (
+  return createPortal(
     <div
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        background: "rgba(2,6,23,.6)",
-        backdropFilter: "blur(4px)",
+        background: bp.sm ? "var(--bg-surface)" : "rgba(2,6,23,.6)",
+        backdropFilter: bp.sm ? "none" : "blur(4px)",
         display: "flex",
-        alignItems: bp.sm ? "stretch" : "center",
+        alignItems: bp.sm ? "flex-start" : "center",
         justifyContent: bp.sm ? "unset" : "center",
         padding: bp.sm ? 0 : "1.5rem",
-      
       }}
       onClick={onClose}
     >
@@ -135,16 +143,17 @@ export function ProductInfoPanel({
           flexDirection: "column",
           width: "100%",
           maxWidth: "520px",
-          height: bp.sm ? "100%" : "auto",
-          maxHeight: bp.sm ? "100%" : "90vh",
-          paddingTop: bp.sm ? "var(--safe-top)" : 0,
+          height: bp.sm ? "100dvh" : "auto",
+          maxHeight: bp.sm ? "100dvh" : "90vh",
           boxSizing: "border-box",
           background: "var(--bg-surface)",
-          border: "1px solid var(--border-default)",
+          border: bp.sm ? "none" : "1px solid var(--border-default)",
           borderRadius: bp.sm ? "0" : "1.25rem",
           overflow: "hidden",
           boxShadow: "var(--shadow-menu)",
           position: "relative",
+          paddingTop: bp.sm ? "var(--safe-top)" : 0,
+          paddingBottom: bp.sm ? "var(--safe-bottom)" : 0,
         }}
       >
         <button
@@ -153,29 +162,29 @@ export function ProductInfoPanel({
           aria-label="Close"
           style={{
             position: "absolute",
-            top: ".75rem",
+            top: "calc(var(--safe-top) + .6rem)",
             right: ".75rem",
-            zIndex: 10,
+            zIndex: 30,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: ".4rem",
+            padding: ".5rem",
             borderRadius: "50%",
             cursor: "pointer",
-            background: "rgba(2,6,23,.5)",
-            border: "none",
-            backdropFilter: "blur(4px)",
-            marginTop: "calc(env(safe-area-inset-top) + 16px)",
+            background: "rgba(15,23,42,.85)",
+            border: "1px solid rgba(255,255,255,.3)",
+            boxShadow: "0 2px 10px rgba(2,6,23,.35)",
           }}
         >
-          <X size={18} color="var(--bg-surface)" />
+          <X size={20} color="#fff" />
         </button>
 
         <div
           style={{
             position: "relative",
             width: "100%",
-            height: bp.sm ? "14rem" : "18rem",
+            height: bp.sm ? "34dvh" : "15rem",
+            minHeight: bp.sm ? "11rem" : "15rem",
             background: "var(--bg-tertiary)",
             overflow: "hidden",
             touchAction: "pan-y",
@@ -313,12 +322,10 @@ export function ProductInfoPanel({
             flexDirection: "column",
             gap: "1rem",
             padding: "1.25rem",
+            paddingBottom: "calc(var(--safe-bottom) + 5.75rem)",
             overflowY: "auto",
             flex: 1,
             minHeight: 0,
-            position: "relative",
-            paddingBottom: '20%'
-             
           }}
         >
           <div>
@@ -634,19 +641,22 @@ export function ProductInfoPanel({
               ))}
             </div>
           </div>
-          <Gap height="5rem" />
-
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              position: bp.sm ? "fixed" : "absolute",
-              bottom: 10,
+              position: "absolute",
+              bottom: 0,
               left: 0,
+              right: 0,
               width: "100%",
               gap: "1rem",
-              padding: "1rem",
+              padding: ".75rem 1rem calc(var(--safe-bottom) + .75rem)",
+              boxSizing: "border-box",
+              background: "var(--bg-surface)",
+              borderTop: "1px solid var(--border-default)",
+              boxShadow: "0 -6px 16px rgba(2,6,23,.06)",
             }}
           >
             <button
@@ -705,6 +715,7 @@ export function ProductInfoPanel({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

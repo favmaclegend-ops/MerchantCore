@@ -34,6 +34,7 @@ import { MarketOrdersPage } from "./MarketOrdersPage";
 import { MarketScanPage } from "./MarketScanPage";
 import { ServicesPage } from "./ServicesPage";
 import { ServiceDetailPage } from "./ServiceDetailPage";
+import { ProductsPage } from "./ProductsPage";
 import { ChatRoute } from "./chat/ChatRoute";
 import { BottomSheet } from "@/components/BottomSheet";
 import { safeBottomInset } from "@/lib/browser";
@@ -560,6 +561,7 @@ export function MarketPage() {
           <Route path="/orders/scan" element={<MarketScanPage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/services/:id" element={<ServiceDetailPage />} />
+          <Route path="/products" element={<ProductsPage />} />
           <Route path="/:id/*" element={<ShopPage />} />
         </Routes>
 

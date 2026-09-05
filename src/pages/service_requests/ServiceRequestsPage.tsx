@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Phone, MessageSquare, CheckCircle, XCircle, Send, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
+import { useConfirm } from "@/components/confirm/confirm";
 
 interface ServiceRequest {
   id: string;
@@ -36,6 +37,7 @@ const statusColors: Record<string, { bg: string; fg: string }> = {
 };
 
 export function ServiceRequestsPage() {
+  const { confirm } = useConfirm();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("");
@@ -112,7 +114,8 @@ export function ServiceRequestsPage() {
 
   const deleteRequest = async (requestId: string) => {
     if (busy) return;
-    if (!window.confirm("Delete this completed service request?")) return;
+    const ok = await confirm({ title: "Delete this completed service request?" });
+    if (!ok) return;
     setBusy(true);
     try {
       await api.market.deleteServiceRequest(requestId);

@@ -6,6 +6,7 @@ import { MarketServiceCard } from "./MarketServiceCard";
 import { fetchMarketServices, marketServicesStore } from "../servicesStore";
 import { marketBasePath } from "../market";
 
+
 export const SERVICES_PANEL_MAX = 6;
 
 export function ServicesSection() {
@@ -83,9 +84,11 @@ export function ServicesSection() {
           display: "flex",
           gap: ".85rem",
           overflowX: "auto",
-          scrollSnapType: "x mandatory",
+          scrollSnapType: "x proximity",
           padding: "0 1rem .5rem",
+          scrollPaddingLeft: "1rem",
           WebkitOverflowScrolling: "touch",
+       
         }}
       >
         {visible.map((service) => (
@@ -95,7 +98,11 @@ export function ServicesSection() {
               scrollSnapAlign: "start",
               flexShrink: 0,
               contentVisibility: "auto",
-              containIntrinsicSize: "290px",
+              containIntrinsicSize: "270px",
+              boxShadow: '0 5px 5px var(--hover-bx-sh)',
+              borderRadius: '1rem'
+              
+              
             }}
           >
             <MarketServiceCard

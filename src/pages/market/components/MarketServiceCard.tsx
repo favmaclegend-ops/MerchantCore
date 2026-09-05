@@ -20,21 +20,22 @@ export function MarketServiceCard({
       style={{
         display: "flex",
         flexDirection: "column",
-        width: bp.lg ? "270px" : "230px",
-        minWidth: bp.lg ? "270px" : "230px",
+        width: bp.lg ? "240px" : "205px",
+        minWidth: bp.lg ? "240px" : "205px",
         borderRadius: "1rem",
         overflow: "hidden",
         cursor: onClick ? "pointer" : "default",
         background: "var(--bg-surface)",
         border: "1px solid var(--border-default)",
         boxShadow: "var(--shadow-sm)",
+        height: '100%'
       }}
     >
       <div
         style={{
           position: "relative",
           width: "100%",
-          height: "9.5rem",
+          height: "8.25rem",
           overflow: "hidden",
           background: "var(--bg-tertiary)",
         }}
@@ -102,7 +103,7 @@ export function MarketServiceCard({
           display: "flex",
           flexDirection: "column",
           gap: ".35rem",
-          padding: ".85rem",
+          padding: ".7rem",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: ".3rem" }}>
@@ -122,7 +123,7 @@ export function MarketServiceCard({
         <h3
           style={{
             margin: 0,
-            fontSize: ".95rem",
+            fontSize: ".9rem",
             fontWeight: 700,
             color: "var(--text-primary)",
             overflow: "hidden",
@@ -153,7 +154,7 @@ export function MarketServiceCard({
 
         <span
           style={{
-            fontSize: ".95rem",
+            fontSize: ".9rem",
             fontWeight: 800,
             color: "var(--text-primary)",
             marginTop: ".15rem",

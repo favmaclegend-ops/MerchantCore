@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import { Authcontext } from '@/context/auth_context'
 import { CurrencyContext } from '@/context/currency_context'
 import { buildBalanceSheet, type FinanceState, type Invoice, type InvoiceStatus, type OrgCustomer } from '@/lib/orgTypes'
+import { useConfirm } from '@/components/confirm/confirm'
 
 type TabId = 'overview' | 'ledger' | 'invoices' | 'tax' | 'balance'
 
@@ -78,6 +79,7 @@ export function FinancePage() {
   const bp = useBreakpoint()
   const { format } = useContext(CurrencyContext)
   const { orgUser } = useContext(Authcontext)
+  const { confirm } = useConfirm()
 
   const [active, setActive] = useState<TabId>('overview')
   const [state, setState] = useState<FinanceState | null>(null)
@@ -166,8 +168,8 @@ export function FinancePage() {
     api.org.finance.setInvoiceStatus(invoice.id, status).then(() => loadState()).catch(() => {})
   }
 
-  const deleteInvoice = (invoiceId: string) => {
-    if (!window.confirm('Delete this invoice permanently?')) return
+  const deleteInvoice = async (invoiceId: string) => {
+    if (!await confirm({ title: 'Delete this invoice permanently?' })) return
     api.org.finance.deleteInvoice(invoiceId).then(() => loadState()).catch(() => {})
   }
 

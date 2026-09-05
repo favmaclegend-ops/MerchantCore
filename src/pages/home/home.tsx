@@ -39,8 +39,9 @@ export default function Home() {
     const keyboardOpen = useKeyboardOpen()
 
     const isChatThreadPage = location.pathname.match(/\/market\/chat(\/|$)/)
-    const hideFrame = !!isChatThreadPage
     const marketNavHidden = useStore(marketUiStore).navHidden
+    const marketHeaderHidden = useStore(marketUiStore).headerHidden
+    const hideFrame = !!isChatThreadPage || marketHeaderHidden
     const hideNav = hideFrame || marketNavHidden
 
     if (loading) {

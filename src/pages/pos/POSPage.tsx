@@ -932,16 +932,47 @@ export function POSPage() {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3
+              <div
                 style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  color: "var(--text-primary)",
-                  margin: 0,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                Recent Transactions
-              </h3>
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    color: "var(--text-primary)",
+                    margin: 0,
+                  }}
+                >
+                  Recent Transactions
+                </h3>
+                {!orgUser && transactions.length > 0 && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.clearTransactions();
+                        setTransactions([]);
+                      } catch (e) {
+                        console.error("Failed to clear transactions", e);
+                      }
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "var(--danger, #e5484d)",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      padding: "4px",
+                    }}
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
               {transactions.length === 0 && (
                 <p
                   style={{
