@@ -65,6 +65,7 @@
   --bg-info: #f8fafc;
   --bg-highlighted: #b6e2ffc2;
   --bg-scroll-thumb: #01070a3a;
+  --focus-elv-cl: #ece9e9;
   
   --text-primary: #0f172a;
   --text-secondary: #475569;
@@ -83,7 +84,7 @@
   --border-success: #bbf7d0;
   --border-warning: #fde68a;
   --border-danger: #fecaca;
-
+  --hover-bx-sh: #d4e2e7;
   --shadow-card: 1px 6px 3px rgba(128,128,128,0.287);
   --shadow-menu: 0 10px 25px rgba(0,0,0,0.1);
   --default-spreadsheet-bg: white;
@@ -110,7 +111,7 @@
   --bg-highlighted: #40444749;
   --bg-scroll-thumb: #00a2ff2f;
   --text-message: white;
-
+  --focus-elv-cl: #0d0e0e;
   --text-primary: #f5f7fb;
   --text-secondary: #e7eef8;
   --text-muted: #a7b5ca;
@@ -121,7 +122,7 @@
   --text-warning: #fbbf24;
   --text-danger: #fca5a5;
   --text-info: #60a5fa;
-
+  --hover-bx-sh: #0f0f0f;
   --border-default: #3d4e6b;
   --border-input: #4b5c77;
   --border-success: #065f46;
@@ -142,6 +143,7 @@
   -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
+  
 }
 
 /* Re-enable selection where it is genuinely needed — text inputs/textareas
@@ -166,8 +168,27 @@ input[type="url"] {
 html,
 body,
 #root {
-  height: 100%;
+  height: 100vh;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  
+  
 }
+
+.ellipsis_text {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.5;
+  font-size: .9rem;
+
+}
+
+.active-border-animation {
+  border: 1px solid var(--border-input);
+}
+
 
 body {
   font-family: var(--font-sans);
@@ -176,7 +197,13 @@ body {
   background-color: var(--bg-header);
   color: var(--text-primary);
   overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  width: 100%;
+  inset: 0;
+  height: 100vh;
 }
+
 
 /* On browsers that support dynamic viewport units, let the app fill the
    currently visible viewport instead of the static 100vh. This keeps the
@@ -199,6 +226,16 @@ body {
 
 .spin {
   animation: spin 0.9s linear infinite;
+}
+
+.spinner {
+  display: inline-block;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 *::-webkit-scrollbar {
@@ -258,7 +295,15 @@ body {
   border-color: var(--border-default) !important;
 }
 
+.focus_elevation {
+  box-shadow: 0px 0px 0px var(--focus-elv-cl);
+  transition: box-shadow .4s ease;
+}
 
+.focus_elevation:focus {
+  box-shadow: 0px 12px 4px var(--focus-elv-cl);
+
+}
 
 .fortune-col-header * {
   color: white !important;

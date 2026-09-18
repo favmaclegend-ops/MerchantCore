@@ -86,7 +86,7 @@ export function OverView() {
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", width: "100%", padding: bp.sm ? "0 .5rem 1rem" : "0 0 1rem" }}>
       <div
         style={{
           display: "grid",
@@ -174,7 +174,7 @@ export function OverView() {
             minWidth: "0",
           }}
         >
-          <section
+          {!bp.sm && <section
             style={{
               background: "var(--bg-surface)",
               border: "1px solid var(--border-default)",
@@ -365,7 +365,7 @@ export function OverView() {
                 </div>
               </div>
             </div>
-          </section>
+          </section>}
         </div>
 
         <section

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { Package, Plus, Search, ShoppingCart, Star } from "lucide-react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Package, Plus, Search, ShoppingCart, Star } from "lucide-react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useStore } from "elk-components";
 import { marketStore } from "../demoMarketStore";
@@ -17,6 +17,8 @@ import { GracefulImage } from "@/components/GracefulImage";
 
 export function Products() {
   const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const bp = useBreakpoint();
   const { shops, products } = useStore(marketStore);
   const shop = shops[params.id ?? ""];
@@ -50,16 +52,132 @@ export function Products() {
             p.product_name.toLowerCase().includes(query.toLowerCase()) ||
             p.category.toLowerCase().includes(query.toLowerCase()),
         );
-        console.log(filtered)
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "1rem",
+        gap: bp.sm ? ".75rem" : "1rem",
         width: "100%",
+        padding: bp.sm ? "0" : undefined,
       }}
     >
+      {bp.sm ? (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: ".6rem",
+            width: "100%",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: ".5rem",
+            }}
+          >
+            <button
+              className="click"
+              onClick={() => navigate(location.pathname)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: ".4rem",
+                borderRadius: "50%",
+                cursor: "pointer",
+                background: "var(--bg-secondary)",
+                border: "1px solid var(--border-default)",
+                flexShrink: 0,
+              }}
+            >
+              <ArrowLeft size={16} color="var(--text-primary)" />
+            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
+              <Package size={18} color="var(--text-info)" />
+              <h2
+                style={{
+                  fontSize: "1.1rem",
+                  fontWeight: "bolder",
+                  color: "var(--text-primary)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Products
+              </h2>
+              <span
+                style={{
+                  fontSize: ".75rem",
+                  fontWeight: 600,
+                  padding: ".15rem .5rem",
+                  borderRadius: "3rem",
+                  background: "var(--bg-secondary)",
+                  border: "1px solid var(--border-default)",
+                  color: "var(--text-muted)",
+                }}
+              >
+                {shopProducts.length}
+              </span>
+            </div>
+
+            {isOwner(shop) && (
+              <button
+                className="click"
+                onClick={() => setShowUpload(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: ".3rem",
+                  padding: ".4rem .7rem",
+                  borderRadius: "3rem",
+                  cursor: "pointer",
+                  background: "var(--bg-nav-active)",
+                  border: "none",
+                  color: "var(--bg-surface)",
+                  fontSize: ".75rem",
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  marginInlineStart: "auto",
+                }}
+              >
+                <Plus size={14} color="var(--bg-surface)" />
+                Add
+              </button>
+            )}
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: ".5rem",
+              width: "100%",
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border-default)",
+              borderRadius: ".75rem",
+              padding: ".55rem .75rem",
+            }}
+          >
+            <Search size={16} color="var(--text-muted)" />
+            <input
+              placeholder="Search products..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              style={{
+                width: "100%",
+                border: "none",
+                outline: "none",
+                background: "transparent",
+                color: "var(--text-primary)",
+                fontSize: ".85rem",
+              }}
+            />
+          </div>
+        </div>
+      ) : (
       <div
         style={{
           display: "flex",
@@ -150,6 +268,7 @@ export function Products() {
           />
         </div>
       </div>
+      )}
 
       {filtered.length === 0 ? (
         <div
@@ -183,7 +302,8 @@ export function Products() {
                 ? "1fr 1fr"
                 : "repeat(auto-fill, minmax(190px, 1fr))",
             width: "100%",
-            gap: "1rem",
+            gap: bp.sm ? ".6rem" : "1rem",
+            padding: bp.sm ? "0 .25rem" : undefined,
           }}
         >
           {filtered.map((product) => (

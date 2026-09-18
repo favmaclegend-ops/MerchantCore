@@ -54,8 +54,13 @@ export default function NotificationProvider({ children }: { children: ReactNode
     setUnreadCount(0);
   }, []);
 
+  const deleteNotification = useCallback(async (id: string) => {
+    await api.deleteNotification(id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, loading, fetchNotifications, markAsRead, markAllAsRead }}>
+    <NotificationContext.Provider value={{ notifications, unreadCount, loading, fetchNotifications, markAsRead, markAllAsRead, deleteNotification }}>
       {children}
     </NotificationContext.Provider>
   );

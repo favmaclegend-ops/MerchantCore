@@ -11,8 +11,10 @@ import {
   Delete,
 } from "lucide-react";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { api } from "@/lib/api";
 import { refreshDashboardCache, refreshOrgDashboardCache } from "@/lib/dashboardCache";
+import { safeBottomInset } from "@/lib/browser";
 import { Authcontext } from "@/context";
 import Alert from "@/components/alert/alert";
 import { CurrencyContext } from "@/context/currency_context";
@@ -64,6 +66,7 @@ function normalizeProducts(products: Product[]): Product[] {
 
 export function POSPage() {
   const bp = useBreakpoint();
+  const keyboardOpen = useKeyboardOpen();
 
   const { format } = useContext(CurrencyContext);
   const { orgUser } = useContext(Authcontext);
@@ -929,16 +932,47 @@ export function POSPage() {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3
+              <div
                 style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  color: "var(--text-primary)",
-                  margin: 0,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                Recent Transactions
-              </h3>
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    color: "var(--text-primary)",
+                    margin: 0,
+                  }}
+                >
+                  Recent Transactions
+                </h3>
+                {!orgUser && transactions.length > 0 && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.clearTransactions();
+                        setTransactions([]);
+                      } catch (e) {
+                        console.error("Failed to clear transactions", e);
+                      }
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "var(--danger, #e5484d)",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      padding: "4px",
+                    }}
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
               {transactions.length === 0 && (
                 <p
                   style={{
@@ -1011,13 +1045,13 @@ export function POSPage() {
           onClose={() => setCartView(false)}
           zIndex={999}
           maxHeight="85vh"
-          bottom="calc(6px + var(--safe-bottom))"
+          bottom={safeBottomInset(6)}
         >
           <div style={{ padding: "4px 12px 12px" }}>{cartContent}</div>
         </BottomSheet>
       )}
 
-      {!bp.xl && (
+      {!bp.xl && !keyboardOpen && (
         <button
           onClick={() => setCartView(!isCart)}
           style={{

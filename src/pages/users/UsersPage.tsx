@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react'
 import { Button, Icon, Icons } from 'elk-components'
 import { MemberTable } from './MemberTable'
-import { MemberForm } from './MemberForm'
+import { MemberForm, type AvailableUser } from './MemberForm'
 import { Authcontext } from '@/context/auth_context'
 import { api } from '@/lib/api'
 import { canManageUsers } from '@/lib/orgAccess'
@@ -21,6 +21,9 @@ export function Users() {
   const [form, setForm] = useState<FormState>({ open: false, editing: null })
   const [search, setSearch] = useState('')
   const [credential, setCredential] = useState<Member | null>(null)
+  const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([])
+  const [saving, setSaving] = useState(false)
+  const [noEmployees, setNoEmployees] = useState(false)
 
   const applyMembers = (members: Member[]) => {
     setAdmins(members.filter(m => m.role !== 'staff'))
@@ -56,7 +59,24 @@ export function Users() {
     ? members.filter(m => m.name.toLowerCase().includes(query) || m.id.toLowerCase().includes(query))
     : members
 
-  const openAdd = () => setForm({ open: true, editing: null })
+  const openAdd = () => {
+    setNoEmployees(false)
+    setAvailableUsers([])
+    api.org.hrm.getEmployees()
+      .then((emps) => {
+        const mapped = emps.map(e => ({ id: e.id, name: e.name, email: e.email, username: e.userId || '', userId: e.userId }))
+        setAvailableUsers(mapped)
+        if (emps.length === 0) {
+          setNoEmployees(true)
+        } else {
+          setForm({ open: true, editing: null })
+        }
+      })
+      .catch(() => {
+        setAvailableUsers([])
+        setNoEmployees(true)
+      })
+  }
   const openEdit = (member: Member) => setForm({ open: true, editing: member })
   const closeForm = () => setForm({ open: false, editing: null })
 
@@ -74,16 +94,21 @@ export function Users() {
       if (editing.role !== 'super-admin' && data.role && data.role !== editing.role) {
         patch.role = data.role
       }
-      api.org.updateUser(editing.id, patch).then(loadMembers)
+      setSaving(true)
+      api.org.updateUser(editing.id, patch)
+        .then(loadMembers)
+        .finally(() => setSaving(false))
+      closeForm()
     } else {
       const role = active === 'admin' ? (data.role || 'admin') : 'staff'
+      setSaving(true)
       api.org.addUser(toMember(data, role)).then(created => {
         loadMembers()
         setCredential(created)
         console.log(created)
-      })
+        closeForm()
+      }).finally(() => setSaving(false))
     }
-    closeForm()
   }
   
   const handleToggleActive = (member: Member) => {
@@ -147,7 +172,7 @@ export function Users() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder="Search by name or ID..."
-        style={{ width: '100%', height: '40px', padding: '0 14px', border: '1px solid var(--border-default)', borderRadius: '8px', fontSize: '13px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
+        style={{ width: '100%', height: '40px', padding: '0 14px', border: '1px solid var(--border-default)', borderRadius: '8px', fontSize: '16px', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-primary)', boxSizing: 'border-box' }}
       />
 
       {loading ? (
@@ -175,9 +200,28 @@ export function Users() {
           kind={form.editing ? (form.editing.role === 'staff' ? 'staff' : 'admin') : prefix === 'STF' ? 'staff' : 'admin'}
           lockRole={form.editing?.role === 'super-admin'}
           initial={toFormData(form.editing)}
+          users={form.editing ? undefined : availableUsers}
+          saving={saving}
           onSave={handleSave}
           onClose={closeForm}
         />
+      )}
+
+      {noEmployees && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }} onClick={() => setNoEmployees(false)}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: '12px', padding: '24px', width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '14px', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>No employees yet</h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-primary)', margin: 0 }}>
+              You can't create a user until employees are registered. Add an employee in the <strong>HRM (Human Resources)</strong> section first, then come back here to give them platform access.
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+              This prevents creating unlinked or unknown accounts. Users can only be created from registered employees.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <button onClick={() => setNoEmployees(false)} style={{ flex: 1, height: '42px', fontSize: '13px', fontWeight: 500, background: 'var(--bg-nav-active)', color: 'var(--text-on-dark)', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Got it</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {credential && (

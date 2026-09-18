@@ -19,6 +19,7 @@ export function MobileMarketSearch({ value, onChange, onClose }: MobileMarketSea
         alignItems: "center",
         gap: "0.5rem",
         width: "100%",
+        
       }}
     >
       <div
@@ -31,6 +32,7 @@ export function MobileMarketSearch({ value, onChange, onClose }: MobileMarketSea
           borderRadius: "1rem",
           background: "var(--bg-surface)",
           border: "1px solid var(--border-default)",
+          
         }}
       >
         <Search style={{ width: "16px", height: "16px", color: "var(--text-placeholder)", flexShrink: 0 }} />

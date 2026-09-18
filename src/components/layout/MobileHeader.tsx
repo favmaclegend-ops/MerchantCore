@@ -24,6 +24,9 @@ const pageConfig: Record<string, { title: string; subtitle?: string }> = {
   '/home/hrm': { title: 'HRM' },
   '/home/finance': { title: 'Finance' },
   '/home/market': { title: 'Market' },
+  '/home/services': {title: 'Services'},
+  '/home/service-requests': {title: 'Service Requests'},
+  '/home/inbox': {title: 'Inbox'}
 }
 
 export function MobileHeader() {
@@ -63,6 +66,10 @@ export function MobileHeader() {
   }, [])
 
   if (bp.lg) return null
+
+  // Hide the app header on a shop/store page — the shop renders its own
+  // immersive header/back button over the cover image.
+  if (isShopPage) return null
 
   return (
     <header

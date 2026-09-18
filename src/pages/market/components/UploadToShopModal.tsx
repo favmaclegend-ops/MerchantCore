@@ -33,6 +33,7 @@ import {
   type LocationSelection,
 } from "./LocationAutocomplete";
 import { store } from "@/context/store";
+import { useConfirm } from "@/components/confirm/confirm";
 
 export function UploadToShopModal({ onClose }: { onClose: () => void }) {
   const bp = useBreakpoint();
@@ -355,6 +356,7 @@ function CreateShopForm({
 function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
   const { orgUser } = useContext(Authcontext);
   const { ownerKey } = useShopOwner();
+  const { confirm } = useConfirm();
   const posApi = orgUser ? api.org : api;
   const bp = useBreakpoint();
   const [products, setProducts] = useState<PosSourceProduct[] | null>(null);
@@ -442,8 +444,8 @@ function UploadItemsForm({ shop }: { shop: MarketStoreShop }) {
 
   const doRemove = async (product: PosSourceProduct) => {
     if (
-      !window.confirm(
-        `Remove "${product.name}" from ${shop.shop_name}? It stays in your POS inventory.`,
+      !await confirm(
+        { title: `Remove "${product.name}" from ${shop.shop_name}? It stays in your POS inventory.` }
       )
     )
       return;

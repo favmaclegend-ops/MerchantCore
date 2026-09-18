@@ -13,8 +13,15 @@ export type OrgPermissions = 'finance' | 'hrm' | 'users' | 'supply'
 
 export const isOrgMember = (orgUser: OrgMember | null): orgUser is OrgMember => !!orgUser
 
-export function canManageUsers(orgUser: OrgMember | null): boolean {
+// Admin = the org owner (super-admin) or an admin. Distinguishes the people who
+// can perform administrative actions (create/delete services, manage users,
+// etc.) from regular employees/staff.
+export function isOrgAdmin(orgUser: OrgMember | null): boolean {
   return !!orgUser && (orgUser.role === 'super-admin' || orgUser.role === 'admin')
+}
+
+export function canManageUsers(orgUser: OrgMember | null): boolean {
+  return isOrgAdmin(orgUser)
 }
 
 export function canManageFinance(orgUser: OrgMember | null): boolean {

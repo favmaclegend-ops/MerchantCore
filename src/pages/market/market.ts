@@ -49,3 +49,17 @@ export const resolveShopForProduct = (
   );
 };
 
+/**
+ * Base path for market routes.
+ *
+ * The market is mounted twice: `/market/*` (public guest shell with a login
+ * header) and `/home/market/*` (inside the authenticated app shell with the
+ * side/bottom navigation). Links must stay within the shell the user is
+ * currently in, otherwise a logged-in user gets dropped into the guest shell
+ * and loses the app navigation.
+ */
+export const marketBasePath = (): string => {
+  if (typeof window === "undefined") return "/market";
+  return window.location.pathname.startsWith("/market") ? "/market" : "/home/market";
+};
+

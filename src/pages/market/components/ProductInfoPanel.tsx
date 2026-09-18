@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -28,6 +29,7 @@ import { addToMarketCart } from "../cart";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { GracefulImage } from "@/components/GracefulImage";
+import { marketUiStore } from "../marketUiStore";
 
 export function ProductInfoPanel({
   product,
@@ -95,10 +97,20 @@ export function ProductInfoPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // Hide the app's floating bottom navigation and the market page header while
+  // the panel is open so the product takes a clean full screen. Restore on
+  // unmount.
+  useEffect(() => {
+    marketUiStore.setState({ navHidden: true, headerHidden: true });
+    return () => marketUiStore.setState({ navHidden: false, headerHidden: false });
+  }, []);
+
   const handleShopClick = () => {
     if (!shop) return;
     onClose();
-    const base = window.location.pathname.startsWith('/market') ? '/market' : '/home/market';
+    const base = window.location.pathname.startsWith("/market")
+      ? "/market"
+      : "/home/market";
     navigate(`${base}/${shop.shop_id}`);
   };
 
@@ -109,18 +121,18 @@ export function ProductInfoPanel({
     setTimeout(() => setAdded(false), 2000);
   };
 
-  return (
+  return createPortal(
     <div
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        background: "rgba(2,6,23,.6)",
-        backdropFilter: "blur(4px)",
+        background: bp.sm ? "var(--bg-surface)" : "rgba(2,6,23,.6)",
+        backdropFilter: bp.sm ? "none" : "blur(4px)",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: bp.sm ? ".5rem" : "1.5rem",
+        alignItems: bp.sm ? "flex-start" : "center",
+        justifyContent: bp.sm ? "unset" : "center",
+        padding: bp.sm ? 0 : "1.5rem",
       }}
       onClick={onClose}
     >
@@ -131,13 +143,17 @@ export function ProductInfoPanel({
           flexDirection: "column",
           width: "100%",
           maxWidth: "520px",
-          maxHeight: "90vh",
+          height: bp.sm ? "100dvh" : "auto",
+          maxHeight: bp.sm ? "100dvh" : "90vh",
+          boxSizing: "border-box",
           background: "var(--bg-surface)",
-          border: "1px solid var(--border-default)",
-          borderRadius: "1.25rem",
+          border: bp.sm ? "none" : "1px solid var(--border-default)",
+          borderRadius: bp.sm ? "0" : "1.25rem",
           overflow: "hidden",
           boxShadow: "var(--shadow-menu)",
           position: "relative",
+          paddingTop: bp.sm ? "var(--safe-top)" : 0,
+          paddingBottom: bp.sm ? "var(--safe-bottom)" : 0,
         }}
       >
         <button
@@ -146,28 +162,29 @@ export function ProductInfoPanel({
           aria-label="Close"
           style={{
             position: "absolute",
-            top: ".75rem",
+            top: "calc(var(--safe-top) + .6rem)",
             right: ".75rem",
-            zIndex: 10,
+            zIndex: 30,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: ".4rem",
+            padding: ".5rem",
             borderRadius: "50%",
             cursor: "pointer",
-            background: "rgba(2,6,23,.5)",
-            border: "none",
-            backdropFilter: "blur(4px)",
+            background: "rgba(15,23,42,.85)",
+            border: "1px solid rgba(255,255,255,.3)",
+            boxShadow: "0 2px 10px rgba(2,6,23,.35)",
           }}
         >
-          <X size={18} color="var(--bg-surface)" />
+          <X size={20} color="#fff" />
         </button>
 
         <div
           style={{
             position: "relative",
             width: "100%",
-            height: bp.sm ? "14rem" : "18rem",
+            height: bp.sm ? "34dvh" : "15rem",
+            minHeight: bp.sm ? "11rem" : "15rem",
             background: "var(--bg-tertiary)",
             overflow: "hidden",
             touchAction: "pan-y",
@@ -271,6 +288,7 @@ export function ProductInfoPanel({
                   display: "flex",
                   alignItems: "center",
                   gap: ".35rem",
+                  
                 }}
               >
                 {images.map((_, i) => (
@@ -304,13 +322,16 @@ export function ProductInfoPanel({
             flexDirection: "column",
             gap: "1rem",
             padding: "1.25rem",
+            paddingBottom: "calc(var(--safe-bottom) + 5.75rem)",
             overflowY: "auto",
             flex: 1,
             minHeight: 0,
           }}
         >
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: ".5rem",  }}
+            >
               <span
                 style={{
                   fontSize: ".7rem",
@@ -356,8 +377,17 @@ export function ProductInfoPanel({
             >
               {product.product_name}
             </h2>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "1rem", marginTop: ".25rem" }}>
-              <strong style={{ fontSize: "1.4rem", color: "var(--text-primary)" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: "1rem",
+                marginTop: ".25rem",
+              }}
+            >
+              <strong
+                style={{ fontSize: "1.4rem", color: "var(--text-primary)" }}
+              >
                 NLE{valueFormater(product.product_price)}
               </strong>
               <span
@@ -458,9 +488,7 @@ export function ProductInfoPanel({
                         </span>
                       )}
                       {label}
-                      {active && (
-                        <Check size={14} color="var(--text-info)" />
-                      )}
+                      {active && <Check size={14} color="var(--text-info)" />}
                     </button>
                   );
                 })}
@@ -540,7 +568,9 @@ export function ProductInfoPanel({
                   );
                 })}
               </div>
-              <strong style={{ fontSize: ".95rem", color: "var(--text-primary)" }}>
+              <strong
+                style={{ fontSize: ".95rem", color: "var(--text-primary)" }}
+              >
                 {ratings.count > 0
                   ? `${ratings.average.toFixed(1)} / 5`
                   : "No ratings yet"}
@@ -558,7 +588,13 @@ export function ProductInfoPanel({
                 : "Tap a star to rate this product"}
             </span>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: ".35rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: ".35rem",
+              }}
+            >
               {ratings.levels.map((level) => (
                 <div
                   key={level.star}
@@ -605,60 +641,81 @@ export function ProductInfoPanel({
               ))}
             </div>
           </div>
-
-          <button
-            className="click"
-            onClick={handleAddToCart}
-            disabled={!product.inStock}
+          <div
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              gap: ".5rem",
+              justifyContent: "space-between",
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
               width: "100%",
-              padding: ".85rem",
-              borderRadius: "1rem",
-              cursor: product.inStock ? "pointer" : "not-allowed",
-              background: product.inStock
-                ? "var(--bg-nav-active)"
-                : "var(--text-placeholder)",
-              border: "none",
-              opacity: product.inStock ? 1 : 0.5,
+              gap: "1rem",
+              padding: ".75rem 1rem calc(var(--safe-bottom) + .75rem)",
+              boxSizing: "border-box",
+              background: "var(--bg-surface)",
+              borderTop: "1px solid var(--border-default)",
+              boxShadow: "0 -6px 16px rgba(2,6,23,.06)",
             }}
           >
-            <ShoppingCart size={18} color="var(--bg-surface)" />
-            <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
-              {added
-                ? "Added to Cart"
-                : product.inStock
-                  ? "Add to Cart"
-                  : "Sold out"}
-            </span>
-          </button>
+            <button
+              className="click"
+              onClick={handleAddToCart}
+              disabled={!product.inStock}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: ".5rem",
+                width: "100%",
+                padding: ".85rem",
 
-          <button
-            className="click"
-            onClick={handleShopClick}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: ".5rem",
-              width: "100%",
-              padding: ".85rem",
-              borderRadius: "1rem",
-              cursor: "pointer",
-              background: "var(--bg-nav-active)",
-              border: "none",
-            }}
-          >
-            <Store size={18} color="var(--bg-surface)" />
-            <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
-              Visit {shop ? shop.shop_name : product.shop_name}
-            </span>
-          </button>
+                borderRadius: "1rem",
+                cursor: product.inStock ? "pointer" : "not-allowed",
+                background: product.inStock
+                  ? "var(--bg-nav-active)"
+                  : "var(--text-placeholder)",
+                border: "none",
+                opacity: product.inStock ? 1 : 0.5,
+              }}
+            >
+              <ShoppingCart size={18} color="var(--bg-surface)" />
+              <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
+                {added
+                  ? "Added to Cart"
+                  : product.inStock
+                    ? "Add to Cart"
+                    : "Sold out"}
+              </span>
+            </button>
+
+            <button
+              className="click"
+              onClick={handleShopClick}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+
+                gap: ".5rem",
+                width: "100%",
+                padding: ".85rem",
+                borderRadius: "1rem",
+                cursor: "pointer",
+                background: "var(--bg-nav-active)",
+                border: "none",
+              }}
+            >
+              <Store size={18} color="var(--bg-surface)" />
+              <span style={{ color: "var(--bg-surface)", fontWeight: 600 }}>
+                Visit {shop ? shop.shop_name : product.shop_name}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

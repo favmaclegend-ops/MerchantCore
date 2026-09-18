@@ -1,6 +1,7 @@
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { Markets } from "./Markets";
-import { valueFormater } from "./market";
+import { valueFormater, marketBasePath } from "./market";
 import {
   CheckCircle,
   CreditCard,
@@ -31,8 +32,12 @@ import type { MarketCheckoutResult, MarketOrderAlert } from "./marketApi";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { MarketOrdersPage } from "./MarketOrdersPage";
 import { MarketScanPage } from "./MarketScanPage";
+import { ServicesPage } from "./ServicesPage";
+import { ServiceDetailPage } from "./ServiceDetailPage";
+import { ProductsPage } from "./ProductsPage";
 import { ChatRoute } from "./chat/ChatRoute";
 import { BottomSheet } from "@/components/BottomSheet";
+import { safeBottomInset } from "@/lib/browser";
 
 interface CartPanelProps {
   cart: MarketCartItem[];
@@ -479,6 +484,7 @@ function CartPanel({
 
 export function MarketPage() {
   const bp = useBreakpoint();
+  const keyboardOpen = useKeyboardOpen();
   const location = useLocation();
   const isChatRoute = /\/market\/chat(\/|$)/.test(location.pathname);
   const { items: cart } = useStore(marketCartStore);
@@ -553,13 +559,16 @@ export function MarketPage() {
           <Route path="/chat/:threadId" element={<ChatRoute />} />
           <Route path="/orders" element={<MarketOrdersPage />} />
           <Route path="/orders/scan" element={<MarketScanPage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/services/:id" element={<ServiceDetailPage />} />
+          <Route path="/products" element={<ProductsPage />} />
           <Route path="/:id/*" element={<ShopPage />} />
         </Routes>
 
         {!isChatRoute && bp.mlg ? (
           <CartPanel {...cartPanelProps} />
         ) : (
-          !isChatRoute && (
+          !isChatRoute && !keyboardOpen && (
           <button
             onClick={() => setIsCartOpen(true)}
             style={{
@@ -593,7 +602,7 @@ export function MarketPage() {
             onClose={() => setIsCartOpen(false)}
             zIndex={950}
             maxHeight="85vh"
-            bottom="calc(16px + var(--safe-bottom))"
+            bottom={safeBottomInset(16)}
           >
             <div
               style={{
@@ -909,10 +918,6 @@ function ShopAlert({ alert }: { alert: MarketOrderAlert }) {
       </span>
     </div>
   );
-}
-
-function marketBasePath(): string {
-  return window.location.pathname.startsWith("/market") ? "/market" : "/home/market";
 }
 
 function OrdersLink() {

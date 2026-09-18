@@ -1,26 +1,38 @@
 import { useState, useContext, useRef, useLayoutEffect, useEffect } from 'react'
 import type { ElementType } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle } from 'lucide-react'
+import { LayoutGrid, Package, CreditCard, ShoppingCart, Calculator, Users, UserCog, Settings, MoreHorizontal, ChevronRight, Wallet, Contact, Clock, Truck, FileSpreadsheet, ReceiptText, MessageCircle, Building, ClipboardList, Inbox } from 'lucide-react'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { Authcontext } from '@/context/auth_context'
 import { canAccess, type OrgPermissions } from '@/lib/orgAccess'
 import { preloadRoute } from '@/lib/routePreload'
+import { safeBottomInset } from '@/lib/browser'
+
+// Extra raise above the safe-area inset for the floating bottom nav on browsers
+// that are NOT iOS Safari. iOS Safari reports the real safe-area inset, while
+// other browsers typically resolve it to 0 — so we lift the nav by a fixed
+// amount so the home-indicator / system UI never overlaps it. See `lib/browser`.
+const SAFE_BOTTOM_EXTRA = 16
+const NAV_SAFE_BOTTOM = safeBottomInset(SAFE_BOTTOM_EXTRA)
 
 const primaryItems = [
   { path: '/home/dashboard', label: 'Sales', icon: LayoutGrid },
   { path: '/home/market', label: 'Market', icon: ShoppingCart },
   { path: '/home/inventory', label: 'Stock', icon: Package },
   { path: '/home/pos', label: 'POS', icon: CreditCard },
-  { path: '/home/credit', label: 'Credit', icon: Wallet },
+  { path: '/home/services', label: 'Services', icon: Building, orgMemberOnly: true },
+
 ]
 
-type MoreItem = { path: string; label: string; icon: ElementType; permission?: OrgPermissions; orgMemberOnly?: boolean }
+type MoreItem = { path: string; label: string; icon: ElementType; permission?: OrgPermissions; orgMemberOnly?: boolean; personalOnly?: boolean }
 
 const moreItems: MoreItem[] = [
   { path: '/home/customers', label: 'Customers', icon: Users },
+  { path: '/home/credit', label: 'Credit', icon: Wallet },
   { path: '/home/market/orders', label: 'Orders', icon: ReceiptText },
   { path: '/home/market/chat', label: 'Chat', icon: MessageCircle },
+  { path: '/home/service-requests', label: 'Svc Requests', icon: ClipboardList, orgMemberOnly: true },
+  { path: '/home/inbox', label: 'Inbox', icon: Inbox, personalOnly: true },
   { path: '/home/finance', label: 'Finance', icon: Wallet, permission: 'finance' },
   { path: '/home/hrm', label: 'HRM', icon: Contact, permission: 'hrm' },
   { path: '/home/supply', label: 'Supply Chain', icon: Truck, permission: 'supply' },
@@ -34,23 +46,29 @@ const moreItems: MoreItem[] = [
 export function MobileNavbar() {
   const location = useLocation()
   const bp = useBreakpoint()
-  const { orgUser } = useContext(Authcontext)
+  const { user, orgUser } = useContext(Authcontext)
   const [open, setOpen] = useState(false)
+
+  const visiblePrimary = primaryItems.filter((item) =>
+    item.orgMemberOnly ? !!orgUser : true,
+  )
 
   const visibleMoreItems = moreItems.filter(item =>
     item.permission
       ? canAccess(orgUser, item.permission)
       : item.orgMemberOnly
         ? !!orgUser
-        : true,
+        : item.personalOnly
+          ? !!user
+          : true,
   )
 
   const isMoreActive = open || visibleMoreItems.some(i => location.pathname === i.path)
 
   const getActiveIndex = () => {
-    const p = primaryItems.findIndex(i => location.pathname === i.path)
+    const p = visiblePrimary.findIndex(i => location.pathname === i.path)
     if (p !== -1) return p
-    if (isMoreActive) return primaryItems.length
+    if (isMoreActive) return visiblePrimary.length
     return -1
   }
   const activeIndex = getActiveIndex()
@@ -136,8 +154,8 @@ export function MobileNavbar() {
     const nav = navRef.current
     const indicator = indicatorRef.current
     if (!nav || !indicator) return
-    const p = primaryItems.findIndex(i => location.pathname === i.path)
-    const idx = p !== -1 ? p : isMoreActive ? primaryItems.length : -1
+    const p = visiblePrimary.findIndex(i => location.pathname === i.path)
+    const idx = p !== -1 ? p : isMoreActive ? visiblePrimary.length : -1
     if (idx < 0) return
     const nodes = Array.from(nav.querySelectorAll('[data-nav-index]'))
     const node = nodes[idx] as HTMLElement | undefined
@@ -214,9 +232,9 @@ export function MobileNavbar() {
       }
       if (target) {
         const idx = Number(target.dataset.navIndex)
-        if (idx < primaryItems.length) {
+        if (idx < visiblePrimary.length) {
           draggedRef.current = false
-          navigate(primaryItems[idx].path)
+          navigate(visiblePrimary[idx].path)
           setOpen(false)
           return
         }
@@ -269,7 +287,7 @@ export function MobileNavbar() {
             position: 'fixed',
             left: '12px',
             right: '12px',
-            bottom: 'calc(16px + var(--safe-bottom))',
+            bottom: NAV_SAFE_BOTTOM,
             background: 'var(--bg-surface)',
             borderRadius: '20px',
             boxShadow: '0 16px 48px rgba(0,0,0,0.15), 0 0 0 1px var(--border-default)',
@@ -326,7 +344,7 @@ export function MobileNavbar() {
         className="mobile-navbar"
         style={{
           position: 'fixed',
-          bottom: 'calc(var(--safe-bottom))',
+          bottom: NAV_SAFE_BOTTOM,
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
@@ -359,7 +377,7 @@ export function MobileNavbar() {
             />
           </div>
         )}
-        {primaryItems.map((item, i) => {
+        {visiblePrimary.map((item, i) => {
           const Icon = item.icon
           const isActive = location.pathname === item.path
           return (
@@ -403,7 +421,7 @@ export function MobileNavbar() {
             }
             setOpen(p => !p)
           }}
-          data-nav-index={primaryItems.length}
+          data-nav-index={visiblePrimary.length}
           style={{
             position: 'relative',
             zIndex: 1,

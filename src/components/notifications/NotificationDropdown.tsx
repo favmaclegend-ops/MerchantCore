@@ -105,7 +105,7 @@ export function NotificationDropdown({ onClose }: Props) {
           />
         ))}
         {!loading && !orgUser && notifications.map((n) => (
-          <NotificationItem key={n.id} notification={n as Notification} onMarkRead={markAsRead} />
+          <NotificationItem key={n.id} notification={n as Notification} onMarkRead={markAsRead} onDelete={personal.deleteNotification} />
         ))}
       </div>
 
@@ -124,7 +124,7 @@ export function NotificationDropdown({ onClose }: Props) {
   )
 }
 
-function NotificationItem({ notification: n, onMarkRead }: { notification: Notification; onMarkRead: (id: string) => Promise<void> }) {
+function NotificationItem({ notification: n, onMarkRead, onDelete }: { notification: Notification; onMarkRead: (id: string) => Promise<void>; onDelete: (id: string) => Promise<void> }) {
   const cfg = typeConfig[n.type] || typeConfig.system
   const Icon = cfg.icon
 
@@ -151,6 +151,13 @@ function NotificationItem({ notification: n, onMarkRead }: { notification: Notif
           {new Date(n.created_at).toLocaleString()}
         </p>
       </div>
+      <button
+        onClick={(e) => { e.stopPropagation(); onDelete(n.id) }}
+        title="Delete notification"
+        style={{ flexShrink: 0, alignSelf: 'center', color: 'var(--text-placeholder)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+      >
+        <Trash2 style={{ width: '14px', height: '14px' }} />
+      </button>
       {!n.is_read && (
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text-info)' }} />

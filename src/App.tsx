@@ -36,7 +36,7 @@ export default function App() {
           }
         />
         <Route path="/market/*" element={<PublicMarketLayout />} />
-        <Route path="/home/*" element={<Home />} />
+        <Route  path="/home/*" element={<Home />} />
       </Routes>
     </>
   );

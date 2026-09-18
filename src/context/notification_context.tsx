@@ -17,6 +17,7 @@ interface NotificationContextType {
   fetchNotifications: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
 }
 
 export const NotificationContext = createContext<NotificationContextType>({
@@ -26,4 +27,5 @@ export const NotificationContext = createContext<NotificationContextType>({
   fetchNotifications: async () => {},
   markAsRead: async () => {},
   markAllAsRead: async () => {},
+  deleteNotification: async () => {},
 });

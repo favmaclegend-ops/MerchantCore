@@ -13,6 +13,7 @@ export type MemberFormData = {
   phone: string
   jobTitle: string
   role: OrgRole
+  userId?: string
 }
 
 export const TABS: { id: TabId; label: string }[] = [
@@ -64,6 +65,7 @@ export const toMember = (form: MemberFormData, role: OrgRole): Omit<Member, 'id'
     password: form.password || cred.password,
     phone: form.phone,
     role,
+    userId: form.userId,
     jobTitle: role === 'staff'
       ? form.jobTitle || 'Staff'
       : role === 'hrm-manager'
@@ -87,4 +89,5 @@ export const toFormData = (member?: Member | null): MemberFormData => ({
   phone: member?.phone || '',
   jobTitle: member?.role === 'staff' ? member.jobTitle || '' : '',
   role: member?.role ?? 'admin',
+  userId: member?.userId,
 })
